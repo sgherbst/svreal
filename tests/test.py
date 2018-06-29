@@ -18,18 +18,19 @@ def main():
 
     # get path to the directory with real number library
     this_file_path = os.path.realpath(os.path.expanduser(__file__))
-    real_dir = os.path.join(os.path.dirname(os.path.dirname(this_file_path)), 'real')
+    svreal_dir = os.path.join(os.path.dirname(os.path.dirname(this_file_path)), 'svreal')
 
     # assemble the command line options
     cmd = []
     cmd.append(args.xrun)
-    cmd.extend(['-incdir', real_dir])
-    cmd.extend(['-y', real_dir])
+    cmd.extend(['-incdir', svreal_dir])
+    cmd.extend(['-y', svreal_dir])
     cmd.append('+libext+.sv')
     if args.debug:
         cmd.append('+define+DEBUG_REAL')
     if args.float:
         cmd.append('+define+FLOAT_REAL')
+    cmd.append('-q')
     cmd.append(args.file)
 
     # run the simulation command

@@ -87,6 +87,20 @@
         real `PROBE_NAME_REAL(name); \
         assign `PROBE_NAME_REAL(name) = `TO_REAL(name)
 
+    `define PRINT_REAL(name) $display(`"name = %f`", `TO_REAL(name))
+
+    // force a real number
+
+    `define FROM_REAL(expr, name) \
+        `ifdef FLOAT_REAL \
+            (expr) \
+        `else \
+            (int'(1.0*(expr)*`POW2_MATH(-`EXPONENT_PARAM_REAL(name)))) \
+        `endif
+
+    `define FORCE_REAL(expr, name) \
+        name = `FROM_REAL(expr, name)
+
     // assert that real number is within specified range
 
     `define ASSERTION_REAL(in_name) \
@@ -135,7 +149,7 @@
         `CLOG2_MATH(1.0 * (range_expr) / (`POW2_MATH((width_expr) - 1.0) - 1.0))
 
     `define MAKE_GENERIC_REAL(name, range_expr, width_expr) \
-        `MAKE_FORMAT_REAL(name, range_expr, width_expr, `CALC_EXPONENT_REAL(range_expr, width_expr)) \
+        `MAKE_FORMAT_REAL(name, range_expr, width_expr, `CALC_EXPONENT_REAL(range_expr, width_expr)); \
         `MAKE_NEGATIVE_REAL(name)
 
     `define MAKE_SHORT_REAL(name, range_expr) \
@@ -165,11 +179,7 @@
     // fixed-point representation falls within the range
 
     `define ASSIGN_CONST_REAL(const_expr, name) \
-        `ifdef FLOAT_REAL \
-            assign name = (const_expr) \
-        `else \
-            assign name = int'(1.0*(const_expr)*`POW2_MATH(-`EXPONENT_PARAM_REAL(name))) \
-        `endif
+        assign name = `FROM_REAL(const_expr, name)
 
     `define CONST_RANGE_REAL(const_expr) \
         (1.01*`ABS_MATH(const_expr))
