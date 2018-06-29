@@ -25,9 +25,31 @@ This example shows the usage of typical operations such as variable creation, ad
 ```shell
 > cd svreal/tests
 > ./test.py simple.sv --xrun `which xrun`
-...
+a = 1.200000
+b = 3.400000
+c = 4.600000
+d = 5.600000
+e = 43.679932
+f = 200.927673
+g = -2.200000
+h = 2.200000
+i = -2.200000
+j = 2.200000
+k = 3.400000
+{a_gt_b, a_ge_b, a_lt_b, a_le_b}: 0011
 > ./test.py simple.sv --float --xrun `which xrun`
-...
+a = 1.200000
+b = 3.400000
+c = 4.600000
+d = 5.600000
+e = 43.680000
+f = 200.928000
+g = -2.200000
+h = 2.200000
+i = -2.200000
+j = 2.200000
+k = 3.400000
+{a_gt_b, a_ge_b, a_lt_b, a_le_b}: 0011
 ```
 
 ## state.sv
@@ -37,9 +59,29 @@ This example illustrates how to implement a state variable; a real-valued variab
 ```shell
 > cd svreal/tests
 > ./test.py state.sv --xrun `which xrun`
-...
+curr = 0.000000
+curr = 0.500000
+curr = 1.000000
+curr = 1.500000
+curr = 2.000000
+curr = 2.500000
+curr = 3.000000
+curr = 3.500000
+curr = -4.000000
+curr = -3.500000
+curr = -3.000000
 > ./test.py state.sv --float --xrun `which xrun`
-...
+curr = 0.000000
+curr = 0.500000
+curr = 1.000000
+curr = 1.500000
+curr = 2.000000
+curr = 2.500000
+curr = 3.000000
+curr = 3.500000
+curr = 4.000000
+curr = 4.500000
+curr = 5.000000
 ```
 
 The problem is that the user has specific a range for the state variable that is too small.  To catch this error, the **--debug** flag can be used.  This option causes assertions to continually monitor real-valued variables to determine if their stated range is exceded.
@@ -47,7 +89,13 @@ The problem is that the user has specific a range for the state variable that is
 ```shell
 > cd svreal/tests
 > ./test.py state.sv --float --debug --xrun `which xrun`
-...
+curr = 0.000000
+curr = 0.500000
+curr = 1.000000
+curr = 1.500000
+curr = 2.000000
+curr = 2.500000
+Real number 3.500000 out of range (-3.000000 to 3.000000).
 ```
 
 ## module.sv
@@ -56,6 +104,23 @@ This file demonstrates how a hierarchical design can be created using **svreal**
 
 ```shell
 > cd svreal/tests
-> ./test.py clamp.sv --float --xrun `which xrun`
-...
+> ./test.py module.sv --xrun `which xrun`
+clamp_in = -4.000000
+clamp_out = -2.500000
+clamp_in = -3.000000
+clamp_out = -2.500000
+clamp_in = -2.000000
+clamp_out = -2.000000
+clamp_in = -1.000000
+clamp_out = -1.000000
+clamp_in = 0.000000
+clamp_out = 0.000000
+clamp_in = 1.000000
+clamp_out = 1.000000
+clamp_in = 2.000000
+clamp_out = 2.000000
+clamp_in = 3.000000
+clamp_out = 2.500000
+clamp_in = 4.000000
+clamp_out = 2.500000
 ```
