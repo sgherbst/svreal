@@ -1,0 +1,13 @@
+waves.shm
+xcelium.d
+.simvision
+xrun.history
+xrun.log
+xmprof.out
+INCA_libs
+irun.history
+irun.log
+ncvlog.log
+xrun.key
+*.diag
+*.err
