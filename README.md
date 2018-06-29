@@ -22,6 +22,8 @@ The command should also work with **\`which irun\`**, in case you have Incisive,
 
 This example shows the usage of typical operations such as variable creation, addition, and subtraction.  By using the **--float** flag, the user can switch to a floating-point implementation.  This flag will work with any code written using the **svreal** library.
 
+As shown below, slight differences of a few parts per million may be observed between fixed-point and floating-point implementations, since the default settings assume that fixed-point numbers are 25 bits wide (although their binary point locations are in general different).  If more precision is needed, the width can be increased globally or locally, however FPGA resource utilization may increase.
+
 ```shell
 > cd svreal/tests
 > ./test.py simple.sv --xrun `which xrun`
