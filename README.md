@@ -2,6 +2,35 @@
 
 **svreal** is a SystemVerilog library to facilitate real number computation on an FPGA.  The user can switch between a fixed-point implementation (for synthesis or simulation) and a floating point implementation (for simulation) by changing a single flag.  The details of the fixed-point implementation are mostly hidden from the user: it is usually only necessary to define the range of the real-valued state variables and module I/Os.  Common operations such as addition, multiplication, comparison, and conditional assignment are all supported.
 
+# Prerequisites
+
+1. Python 3 must be installed.  (These instructions were tested with Python 3.6.5)
+2. Xilinx Vivado must be installed.  (These instructions were tested with Xilinx Vivado 2018.2)
+
+# Path Setup
+
+The Xilinx binary directory must be added to the PATH.  This directory is typically located somewhere like "C:\Xilinx\Vivado\2018.2", and should contain the programs xvlog.bat, xelab.bat, and xsim.bat.
+
+To add to the path in Windows:
+
+1. Click on the lower-left search bar ("Type here to search"), then type "environment".
+2. Click on the option "Edit the system environment variables" that appears.  
+3. Click "Environment Variables".
+4. In the window that appears, click "Path" under "User variables", then click "Edit..." under "User variables".
+5. In the window that appears, click "New" and enter the path to the Xilinx binary directory.
+6. Click "OK" to close all three of the open windows.
+
+To make sure that this worked, open the command terminal (hold shift, then right-click, then click "Open PowerShell window here").  Then make sure that the Vivado programs can be located:
+
+```shell
+> xvlog -version
+Vivado Simulator 2018.2
+> xelab -version
+Vivado Simulator 2018.2
+> xsim -version
+Vivado Simulator 2018.2 
+```
+
 # Examples
 
 Several samples are provided in the repository to illustrate the features of the library.
@@ -12,11 +41,9 @@ This first example tests that the simulator can be invoked.
 
 ```shell
 > cd svreal/tests
-> ./test.py hello.sv --xrun `which xrun`
+> python test.py -i hello.sv
 Hello, world!
 ```
-
-The command should also work with **\`which irun\`**, in case you have Incisive, rather than Xcelium.  
 
 ## simple.sv
 
@@ -26,7 +53,7 @@ As shown below, slight differences of a few parts per million may be observed be
 
 ```shell
 > cd svreal/tests
-> ./test.py simple.sv --xrun `which xrun`
+> ./test.p -i simple.sv
 a = 1.200000
 b = 3.400000
 c = 4.600000
@@ -39,7 +66,7 @@ i = -2.200000
 j = 2.200000
 k = 3.400000
 {a_gt_b, a_ge_b, a_lt_b, a_le_b}: 0011
-> ./test.py simple.sv --float --xrun `which xrun`
+> ./test.py simple.sv --float
 a = 1.200000
 b = 3.400000
 c = 4.600000
@@ -60,7 +87,7 @@ This example illustrates how to implement a state variable; a real-valued variab
 
 ```shell
 > cd svreal/tests
-> ./test.py state.sv --xrun `which xrun`
+> ./test.py -i state.sv
 curr = 0.000000
 curr = 0.500000
 curr = 1.000000
@@ -72,7 +99,7 @@ curr = 3.500000
 curr = -4.000000
 curr = -3.500000
 curr = -3.000000
-> ./test.py state.sv --float --xrun `which xrun`
+> ./test.py -i state.sv --float
 curr = 0.000000
 curr = 0.500000
 curr = 1.000000
@@ -90,7 +117,7 @@ The problem is that the user has specific a range for the state variable that is
 
 ```shell
 > cd svreal/tests
-> ./test.py state.sv --float --debug --xrun `which xrun`
+> ./test.py -i state.sv --float --debug
 curr = 0.000000
 curr = 0.500000
 curr = 1.000000
@@ -106,7 +133,7 @@ This file demonstrates how a hierarchical design can be created using **svreal**
 
 ```shell
 > cd svreal/tests
-> ./test.py module.sv --xrun `which xrun`
+> ./test.py -i module.sv
 clamp_in = -4.000000
 clamp_out = -2.500000
 clamp_in = -3.000000
