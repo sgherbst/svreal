@@ -9,27 +9,16 @@
 
 # Path Setup
 
-The Xilinx binary directory must be added to the PATH.  This directory is typically located somewhere like "C:\Xilinx\Vivado\2018.2", and should contain the programs xvlog.bat, xelab.bat, and xsim.bat.
+The Xilinx install directory must be stored in an environment variable so that the path to the simulation tools is well-defined.
 
-To add to the path in Windows:
+To add this environment variable in Windows:
 
 1. Click on the lower-left search bar ("Type here to search"), then type "environment".
 2. Click on the option "Edit the system environment variables" that appears.  
 3. Click "Environment Variables".
-4. In the window that appears, click "Path" under "User variables", then click "Edit..." under "User variables".
-5. In the window that appears, click "New" and enter the path to the Xilinx binary directory.
+4. In the window that appears, click "New..." under "User variables".
+5. In the window that appears, enter "VIVADO_INSTALL_PATH" as the variable name.  For the variable value, enter the path to the Xilinx install directory.  This directory is typically located somewhere like "C:\Xilinx\Vivado\2018.2".
 6. Click "OK" to close all three of the open windows.
-
-To make sure that this worked, open the command terminal (hold shift, then right-click, then click "Open PowerShell window here").  Then make sure that the Vivado programs can be located:
-
-```shell
-> xvlog -version
-Vivado Simulator 2018.2
-> xelab -version
-Vivado Simulator 2018.2
-> xsim -version
-Vivado Simulator 2018.2 
-```
 
 # Examples
 
