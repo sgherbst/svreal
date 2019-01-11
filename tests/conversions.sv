@@ -7,7 +7,7 @@
 
 `include "real.sv"
 
-`define PRINT_INT(name) $display(`"name: %d`", name)
+`define PRINT_INT(name) $display(`"name = %d`", name)
 `define INT_WIDTH 8
 `define INT_TYPE logic signed[`INT_WIDTH-1:0]
 
