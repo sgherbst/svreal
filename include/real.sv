@@ -389,26 +389,30 @@
         
     // conversion from real number to integer
     
-    `define REAL_TO_INT(in, int_width, out) \
+    `define REAL_TO_INT(in_name, int_width_expr, out_name) \
         `ifdef FLOAT_REAL \
-            logic signed[((int_width)-1):0] out; \
-            assign out = integer'(in) \
+            logic signed[((int_width_expr)-1):0] out_name; \
+            assign out_name = integer'(in_name) \
         `else \
-            `MAKE_FORMAT_REAL(out, `POW2_MATH(int_width-1), int_width, 0); \
-            `ASSIGN_REAL(in, out) \
+            `MAKE_FORMAT_REAL(out_name, `POW2_MATH(int_width_expr-1), int_width_expr, 0); \
+            `ASSIGN_REAL(in_name, out_name) \
         `endif
     
-    `define REAL_INTO_INT(in, int_width, out) \
-        `REAL_TO_INT(in, int_width, `TMP_REAL(out)); \
-        assign out = `TMP_REAL(out)
+    `define REAL_INTO_INT(in_name, int_width_expr, out_name) \
+        `REAL_TO_INT(in_name, int_width_expr, `TMP_REAL(out_name)); \
+        assign out_name = `TMP_REAL(out_name)
         
     // conversion from integer to real number
     
-    `define INT_TO_REAL(in, int_width, out) \
-        `MAKE_FORMAT_REAL(out, `POW2_MATH(int_width-1), int_width, 0); \
-        assign out = in
+    `define INT_TO_REAL(in_name, int_width_expr, out_name) \
+        `MAKE_FORMAT_REAL(out_name, `POW2_MATH(int_width_expr-1), int_width_expr, 0); \
+        `ifdef FLOAT_REAL \
+            assign out_name = 1.0*in_name \
+        `else \
+            assign out_name = in_name \
+        `endif
         
-    `define INT_INTO_REAL(in, int_width, out) \
-        `INT_TO_REAL(in, int_width, `TMP_REAL(out)); \
-        `ASSIGN_REAL(`TMP_REAL(out), out)
+    `define INT_INTO_REAL(in_name, int_width_expr, out_name) \
+        `INT_TO_REAL(in_name, int_width_expr, `TMP_REAL(out_name)); \
+        `ASSIGN_REAL(`TMP_REAL(out_name), out_name)
 `endif
