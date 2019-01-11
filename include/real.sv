@@ -39,7 +39,7 @@
         `else \
             logic signed [((width_expr)-1):0] \
         `endif
-    
+            
     // naming prefixes.  "zzz" is used at the beginning so that these
     // variables show up at the end of the waveform viewing list
 
@@ -386,5 +386,29 @@
     `define MEM_REAL(in_name, out_name) \
         `COPY_FORMAT_REAL(in_name, out_name); \
         `MEM_INTO_REAL(in_name, out_name)
-
+        
+    // conversion from real number to integer
+    
+    `define REAL_TO_INT(in, int_width, out) \
+        `ifdef FLOAT_REAL \
+            logic signed[((int_width)-1):0] out; \
+            assign out = integer'(in) \
+        `else \
+            `MAKE_FORMAT_REAL(out, `POW2_MATH(int_width-1), int_width, 0); \
+            `ASSIGN_REAL(in, out) \
+        `endif
+    
+    `define REAL_INTO_INT(in, int_width, out) \
+        `REAL_TO_INT(in, int_width, `TMP_REAL(out)); \
+        assign out = `TMP_REAL(out)
+        
+    // conversion from integer to real number
+    
+    `define INT_TO_REAL(in, int_width, out) \
+        `MAKE_FORMAT_REAL(out, `POW2_MATH(int_width-1), int_width, 0); \
+        assign out = in
+        
+    `define INT_INTO_REAL(in, int_width, out) \
+        `INT_TO_REAL(in, int_width, `TMP_REAL(out)); \
+        `ASSIGN_REAL(`TMP_REAL(out), out)
 `endif
