@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from glob import glob
-from shutil import which
 
+import shutil
 import os
 import os.path
 import sys
@@ -25,8 +25,21 @@ def get_dir(*args, mkdir_p=True):
 
     return path
 
+def which(cmd):
+    VIVADO_INSTALL_PATH = os.environ.get('VIVADO_INSTALL_PATH', None)
+    
+    if VIVADO_INSTALL_PATH is not None:
+        path = shutil.which(cmd, path=os.path.join(VIVADO_INSTALL_PATH, 'bin'))
+        if path is not None:
+            return path
+    else:
+        return shutil.which(cmd)
+
 def call(cmd):
-    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stdout)
+    ret = subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stdout)
+    
+    if ret != 0:
+        raise RuntimeError('Command exited with non-zero code.')
 
 def verilog_define(name, value=None):
     retval = ''
@@ -40,6 +53,7 @@ def xvlog(args):
     cmd = []
     
     cmd.append(which('xvlog'))
+        
     cmd.append(args.input)
     cmd.extend(glob(get_file('src', '*.sv')))
     cmd.extend(['-i', get_dir('include')])
@@ -48,12 +62,12 @@ def xvlog(args):
     cmd.append('-sv')
     
     if args.debug:
-        cmd.append(verilog_define('DEBUG_REAL'))
+        cmd.extend(['-d', 'DEBUG_REAL'])
     if args.float:
-        cmd.append(verilog_define('FLOAT_REAL'))
+        cmd.extend(['-d', 'FLOAT_REAL'])
 
     call(cmd)
-    
+
 def xelab(args):
     cmd = []
     
