@@ -142,3 +142,40 @@ clamp_out = 2.500000
 clamp_in = 4.000000
 clamp_out = 2.500000
 ```
+
+## conversions.sv
+
+This example shows how real numbers can be converted to bit vectors of a given width and vice versa.  The intent of these conversion functions is to aid in implementing ADCs and DACs.
+
+```shell
+> cd svreal/tests
+> python test.py -i conversions.sv
+a = 12.300000
+b =   12
+c = 89.800003
+d =   89
+e =   56
+f = 56.000000
+g =   45
+h = 45.000000
+```
+
+## filter.sv
+
+This example shows the implementation of a simple first-order filter, and could serve as an example for implementing more complex analog dynamics.
+
+```shell
+> cd svreal/tests
+> python test.py -i filter.sv
+tb.v_out = 0.000000
+tb.v_out = 0.299999
+tb.v_out = 0.509998
+tb.v_out = 0.656996
+tb.v_out = 0.759894
+tb.v_out = 0.831923
+tb.v_out = 0.882343
+tb.v_out = 0.917636
+tb.v_out = 0.942342
+tb.v_out = 0.959636
+tb.v_out = 0.971741
+```
