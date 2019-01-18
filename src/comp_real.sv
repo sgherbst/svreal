@@ -32,6 +32,10 @@ module comp_real #(
             assign c = (a_aligned <  b_aligned) ? 1'b1 : 1'b0;
         end else if (opcode == `LE_OPCODE_REAL) begin
             assign c = (a_aligned <= b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `EQ_OPCODE_REAL) begin
+            assign c = (a_aligned == b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `NE_OPCODE_REAL) begin
+            assign c = (a_aligned != b_aligned) ? 1'b1 : 1'b0;
         end else begin
             $error("Invalid opcode.");
         end

@@ -350,6 +350,28 @@
         logic c_name; \
         `LE_INTO_REAL(a_name, b_name, c_name)
 
+    // equal to
+
+    `define EQ_OPCODE_REAL 4
+
+    `define EQ_INTO_REAL(a_name, b_name, c_name) \
+        `COMP_INTO_REAL(`EQ_OPCODE_REAL, a_name, b_name, c_name)
+
+    `define EQ_REAL(a_name, b_name, c_name) \
+        logic c_name; \
+        `EQ_INTO_REAL(a_name, b_name, c_name)
+
+    // not equal to
+
+    `define NE_OPCODE_REAL 5
+
+    `define NE_INTO_REAL(a_name, b_name, c_name) \
+        `COMP_INTO_REAL(`NE_OPCODE_REAL, a_name, b_name, c_name)
+
+    `define NE_REAL(a_name, b_name, c_name) \
+        logic c_name; \
+        `NE_INTO_REAL(a_name, b_name, c_name)
+
     // max of two variables
 
     `define MAX_INTO_REAL(a_name, b_name, c_name) \
