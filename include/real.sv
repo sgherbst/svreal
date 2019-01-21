@@ -82,6 +82,32 @@
 
     `define PRINT_REAL(name) $display(`"name = %f`", `TO_REAL(name))
 
+    // Dumping waveforms for simulation
+
+    `define DUMP_REAL(in_name) \
+        dump_real #( \
+            `PASS_REAL(in, in_name), \
+            .filename(`"``in_name``.txt`") \
+        ) dump_real_``in_name``_i ( \
+            .in(in_name), \
+            .clk(clk), \
+            .rst(rst) \
+        )
+
+    // Probing waveforms
+
+    `define PROBE_NAME_REAL(in_name) \
+        ``in_name``_probe
+
+    `define PROBE_REAL(signal) \
+        `ifdef SIMULATION_REAL \
+            real `PROBE_NAME_REAL(signal); \
+            assign `PROBE_NAME_REAL(signal) = `TO_REAL(signal); \
+            `DUMP_REAL(signal) \
+        `else \
+            (* mark_debug = `"true`", fp_exponent = `EXPONENT_PARAM_REAL(signal), fp_width = `WIDTH_PARAM_REAL(signal) *) `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(signal)) `PROBE_NAME_REAL(signal) \
+        `endif
+
     // force a real number
 
     `define FROM_REAL(expr, name) \
