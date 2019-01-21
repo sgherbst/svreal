@@ -7,18 +7,15 @@
 1. Python 3 must be installed.  (These instructions were tested with Python 3.6.5)
 2. Xilinx Vivado must be installed.  (These instructions were tested with Xilinx Vivado 2018.2)
 
-# Path Setup
+# Installation
 
-The Xilinx install directory must be stored in an environment variable so that the path to the simulation tools is well-defined.
+Clone the **svreal** repository, navigate to the top-level directory, and use **pip** to install the package.
 
-To add this environment variable in Windows:
-
-1. Click on the lower-left search bar ("Type here to search"), then type "environment".
-2. Click on the option "Edit the system environment variables" that appears.  
-3. Click "Environment Variables".
-4. In the window that appears, click "New..." under "User variables".
-5. In the window that appears, enter "VIVADO_INSTALL_PATH" as the variable name.  For the variable value, enter the path to the Xilinx install directory.  This directory is typically located somewhere like "C:\Xilinx\Vivado\2018.2".
-6. Click "OK" to close all three of the open windows.
+```shell
+> git clone https://github.com/sgherbst/svreal/
+> cd svreal
+> pip install -e .
+```
 
 # Examples
 
