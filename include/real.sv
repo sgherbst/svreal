@@ -71,7 +71,7 @@
     `define OUTPUT_REAL(port) \
         output `PORT_REAL(port)
 
-    // probe real number
+    // Displaying real number signals
     
     `define TO_REAL(name) \
         `ifdef FLOAT_REAL \
@@ -79,13 +79,6 @@
         `else \
             real'(name) * `POW2_MATH(`EXPONENT_PARAM_REAL(name)) \
         `endif
-
-    `define PROBE_NAME_REAL(name) \
-        ``name``_probe
-
-    `define PROBE_REAL(name) \
-        real `PROBE_NAME_REAL(name); \
-        assign `PROBE_NAME_REAL(name) = `TO_REAL(name)
 
     `define PRINT_REAL(name) $display(`"name = %f`", `TO_REAL(name))
 
@@ -120,7 +113,6 @@
         localparam integer `WIDTH_PARAM_REAL(name) = width_expr; \
         localparam integer `EXPONENT_PARAM_REAL(name) = exponent_expr \
         `ifdef DEBUG_REAL \
-            ; `PROBE_REAL(name) \
             ; `ASSERTION_REAL(name) \
         `endif
 
