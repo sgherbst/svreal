@@ -103,7 +103,8 @@
         `ifdef SIMULATION_REAL \
             `DUMP_REAL(signal) \
         `else \
-            (* mark_debug = `"true`", fp_exponent = `EXPONENT_PARAM_REAL(signal), fp_width = `WIDTH_PARAM_REAL(signal) *) `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(signal)) `PROBE_NAME_REAL(signal) \
+            (* mark_debug = `"true`", fp_exponent = `EXPONENT_PARAM_REAL(signal), fp_width = `WIDTH_PARAM_REAL(signal) *) `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(signal)) `PROBE_NAME_REAL(signal); \
+            assign `PROBE_NAME_REAL(signal) = signal \
         `endif
 
     // force a real number
