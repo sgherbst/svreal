@@ -15,7 +15,7 @@
         `define SHORT_WIDTH_REAL 18
     `endif
     
-    `ifndef LONG_WIDTH
+    `ifndef LONG_WIDTH_REAL
         `define LONG_WIDTH_REAL 25
     `endif
 
@@ -77,35 +77,10 @@
         `ifdef FLOAT_REAL \
             name \
         `else \
-            real'(name) * `POW2_MATH(`EXPONENT_PARAM_REAL(name)) \
+            (1.0*name) * `POW2_MATH(`EXPONENT_PARAM_REAL(name)) \
         `endif
 
     `define PRINT_REAL(name) $display(`"name = %f`", `TO_REAL(name))
-
-    // Dumping waveforms for simulation
-
-    `define DUMP_REAL(in_name) \
-        dump_real #( \
-            `PASS_REAL(in, in_name), \
-            .filename(`"``in_name``.txt`") \
-        ) dump_real_``in_name``_i ( \
-            .in(in_name), \
-            .clk(clk), \
-            .rst(rst) \
-        )
-
-    // Probing waveforms
-
-    `define PROBE_NAME_REAL(in_name) \
-        ``in_name``_probe
-
-    `define PROBE_REAL(signal) \
-        `ifdef SIMULATION_REAL \
-            `DUMP_REAL(signal) \
-        `else \
-            (* mark_debug = `"true`", fp_exponent = `EXPONENT_PARAM_REAL(signal), fp_width = `WIDTH_PARAM_REAL(signal) *) `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(signal)) `PROBE_NAME_REAL(signal); \
-            assign `PROBE_NAME_REAL(signal) = signal \
-        `endif
 
     // force a real number
 
@@ -141,21 +116,24 @@
             ; `ASSERTION_REAL(name) \
         `endif
 
-    // copying
+    // copying real number format
 
-    `define COPY_FORMAT_REAL(in, out) \
-        `MAKE_FORMAT_REAL(out, `RANGE_PARAM_REAL(in), `WIDTH_PARAM_REAL(in), `EXPONENT_PARAM_REAL(in))
+    `define GET_FORMAT_REAL(in_name) \
+        `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(in_name))
+
+    `define COPY_FORMAT_REAL(in_name, out_name) \
+        `MAKE_FORMAT_REAL(out_name, `RANGE_PARAM_REAL(in_name), `WIDTH_PARAM_REAL(in_name), `EXPONENT_PARAM_REAL(in_name))
 
     // negation
     // note that since the range of a fixed-point number is defined as +/- |range|, the negation of 
     // the fixed point numbers can always be represented in the original format.
 
-    `define NEGATE_INTO_REAL(in, out) \
-        assign out = -(in)
+    `define NEGATE_INTO_REAL(in_name, out_name) \
+        assign out_name = -(in_name)
 
-    `define NEGATE_REAL(in, out) \
-        `COPY_FORMAT_REAL(in, out); \
-        `NEGATE_INTO_REAL(in, out)
+    `define NEGATE_REAL(in_name, out_name) \
+        `COPY_FORMAT_REAL(in_name, out_name); \
+        `NEGATE_INTO_REAL(in_name, out_name)
 
     `define MAKE_NEGATIVE_REAL(name) \
         `NEGATE_REAL(name, `MINUS_REAL(name))
@@ -409,23 +387,6 @@
         `MAKE_REAL(c_name, `MAX_MATH(`RANGE_PARAM_REAL(a_name), `RANGE_PARAM_REAL(b_name))); \
         `MIN_INTO_REAL(a_name, b_name, c_name)
 
-    // memory
-    
-    `define MEM_INTO_REAL(in_name, out_name) \
-        mem_real #( \
-            `PASS_REAL(in, in_name), \
-            `PASS_REAL(out, out_name) \
-        ) mem_real_``out_name``_i ( \
-            .in(in_name), \
-            .out(out_name), \
-            .clk(clk), \
-            .rst(rst) \
-        )
-
-    `define MEM_REAL(in_name, out_name) \
-        `COPY_FORMAT_REAL(in_name, out_name); \
-        `MEM_INTO_REAL(in_name, out_name)
-        
     // conversion from real number to integer
     
     `define REAL_TO_INT(in_name, int_width_expr, out_name) \
