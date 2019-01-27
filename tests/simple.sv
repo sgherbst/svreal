@@ -7,7 +7,7 @@
 
 `include "real.sv"
 
-module test;
+module top;
     // addition of two constants
     `MAKE_CONST_REAL(1.2, a);
     `MAKE_CONST_REAL(3.4, b);

@@ -14,9 +14,9 @@ module assertion_real #(
     localparam real max = +(`RANGE_PARAM_REAL(in));
 
     always @(in) begin
-        assert ((min <= `TO_REAL(in)) && (`TO_REAL(in) <= max)) else begin
+        if (!((min <= `TO_REAL(in)) && (`TO_REAL(in) <= max))) begin
             $display("Real number %f out of range (%f to %f).", `TO_REAL(in), min, max);
-            $fatal;
+            $finish;
         end
     end
                         

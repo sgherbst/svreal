@@ -11,7 +11,7 @@
 `define INT_WIDTH 8
 `define INT_TYPE logic signed[`INT_WIDTH-1:0]
 
-module test;
+module top;
     `MAKE_CONST_REAL(12.3, a);
     `REAL_TO_INT(a, `INT_WIDTH, b);
     

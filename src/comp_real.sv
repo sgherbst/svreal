@@ -37,7 +37,10 @@ module comp_real #(
         end else if (opcode == `NE_OPCODE_REAL) begin
             assign c = (a_aligned != b_aligned) ? 1'b1 : 1'b0;
         end else begin
-            $error("Invalid opcode.");
+            initial begin
+                $display("ERROR: Invalid opcode.");
+                $finish;
+            end
         end
     endgenerate
                         

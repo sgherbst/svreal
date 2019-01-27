@@ -7,7 +7,7 @@
 
 `include "real.sv"
 
-module test;
+module top;
     // create input variable with range +/- 10
     `MAKE_REAL(clamp_in, 10);
 
@@ -25,10 +25,11 @@ module test;
         .in(clamp_in),
         .out(clamp_out)
     );
-        
+
     // simulation termination
+    real x;
     initial begin
-        for (real x=-4; x<=+4; x=x+1) begin
+        for (x=-4.0; x<=+4.0; x=x+1.0) begin
             `FORCE_REAL(x, clamp_in);
             #1;
             `PRINT_REAL(clamp_in);
@@ -38,8 +39,8 @@ module test;
 endmodule
 
 module clamp #(
-    real min = -1,
-    real max = +1,
+    parameter real min = -1,
+    parameter real max = +1,
     `DECL_REAL(in),
     `DECL_REAL(out)
 ) (

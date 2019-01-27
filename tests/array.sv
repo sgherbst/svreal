@@ -7,7 +7,7 @@
 
 `include "real.sv"
 
-module test;
+module top;
     `MAKE_REAL(coeff, 10);
     
     logic [1:0] addr;

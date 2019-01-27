@@ -1,0 +1,59 @@
+CAPI=2:
+name : ::tests:0
+
+filesets:
+  svreal_files:
+    files:
+      - include/real.sv : {is_include_file: true}
+      - include/math.sv : {is_include_file: true}
+      - src/add_real.sv
+      - src/assertion_real.sv
+      - src/assign_real.sv
+      - src/comp_real.sv
+      - src/ite_real.sv
+      - src/mul_real.sv
+    file_type: verilogSource
+  hello_files:
+    files:
+      - tests/hello.sv : {file_type : verilogSource}
+  simple_files:
+    files:
+      - tests/simple.sv : {file_type : verilogSource}
+  array_files:
+    files:
+      - tests/array.sv : {file_type : verilogSource}
+  conversions_files:
+    files:
+      - tests/conversions.sv : {file_type : verilogSource}
+  module_files:
+    files:
+      - tests/module.sv : {file_type : verilogSource}
+
+targets:
+  hello:
+    filesets : [hello_files, svreal_files]
+    toplevel : [top]
+  simple:
+    filesets : [simple_files, svreal_files]
+    toplevel : [top]
+    tools:
+      icarus:
+        iverilog_options : [-g2012]
+  module:
+    filesets : [module_files, svreal_files]
+    toplevel : [top]
+    tools:
+      icarus:
+        iverilog_options : [-g2012]
+  array:
+    filesets : [array_files, svreal_files]
+    toplevel : [top]
+    tools:
+      icarus:
+        iverilog_options : [-g2012]
+  conversions:
+    filesets : [conversions_files, svreal_files]
+    toplevel : [top]
+    tools:
+      icarus:
+        iverilog_options : [-g2012]
