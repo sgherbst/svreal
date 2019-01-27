@@ -1,0 +1,7 @@
++incdir+../include
+../src/add_real.sv
+../src/assertion_real.sv
+../src/assign_real.sv
+../src/comp_real.sv
+../src/ite_real.sv
+../src/mul_real.sv
