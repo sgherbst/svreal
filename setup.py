@@ -9,7 +9,6 @@ setup(
     author_email='sherbst@stanford.edu',
     packages=['svreal'],
     install_requires=[
-        'fusesoc'
     ],
     include_package_data=True,
     zip_safe=False,
