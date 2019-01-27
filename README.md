@@ -27,3 +27,10 @@ Each of the examples is contained in a single SystemVerilog file in the **tests*
 > vvp a.out
 Hello, world!
 ```
+
+## Example Descriptions:
+* **tests/array.sv**: Illustrates how to make a real-number lookup table using the library.
+* **tests/conversions.sv**: Shows how to convert back and forth between integer and real number types.
+* **tests/hello.sv**: Simple check to make sure that commands are working correctly.
+* **tests/module.sv**: Illustrates how to declare and instantiate modules with real-input inputs.
+* **tests/simple.sv**: Demonstrations of artithmetic operations and comparisons.
