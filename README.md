@@ -34,3 +34,19 @@ Hello, world!
 * **tests/hello.sv**: Simple check to make sure that commands are working correctly.
 * **tests/module.sv**: Illustrates how to declare and instantiate modules with real-input inputs.
 * **tests/simple.sv**: Demonstrations of artithmetic operations and comparisons.
+
+## Other Options:
+### Floating-point datatype
+All examples can be run using the floating-point datatype **real** from Verilog by defining **FLOAT_REAL**.  For example, here is how to run **tests/simple.sv** using a floating-point datatype:
+```shell
+> iverilog -c test.scr -g2012 -D FLOAT_REAL tests/hello.sv
+> vvp a.out
+...
+```
+### Range-checking assertions
+Another option is to attach range-checking assertions to all real-number types.  This can be done by defining **DEBUG_REAL**.  In general, it is recommended to define **FLOAT_REAL** whenever **DEBUG_REAL** is setup, since it is otherwise possible for a variable to overflow before itself declared range has been exceeded.  So, in order to run **tests/simple.sv** with range-checking assertions, try:
+```shell
+> iverilog -c test.scr -g2012 -D FLOAT_REAL -D DEBUG_REAL tests/hello.sv
+> vvp a.out
+...
+```
