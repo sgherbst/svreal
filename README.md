@@ -14,4 +14,16 @@ Clone the **svreal** repository, navigate to the top-level directory, and use **
 
 # Running the Examples
 
-This part of the project is being restructured, stay tuned...
+## Installing Icarus Verilog
+The first step is to install the simulator [Icarus Verilog](http://iverilog.icarus.com) if it is not already installed:
+* Windows: use the latest setup binary from [this website](http://bleyer.org/icarus/).
+* Mac (via Homebrew): `brew install icarus-verilog`
+* Ubuntu Linux: `sudo apt-get install iverilog`
+
+## Using Icarus Verilog
+Each of the examples is contained in a single SystemVerilog file in the **tests** directory.  All tests are run in the same way: **iverilog** is first called to compile the Verilog code, and then **vvp** is called on its output to run the simulation.  For example, the "Hello World" example (which just tests that the environment is set up properly) is run like this from the top-level **svreal** directory:
+```shell
+> iverilog -c test.scr -g2012 tests/hello.sv
+> vvp a.out
+Hello, world!
+```
