@@ -27,7 +27,7 @@ Each of the examples is contained in a single SystemVerilog file in the **tests*
 > vvp a.out
 Hello, world!
 ```
-
+The `-c test.scr` option specifies a command file that lists the files needed to compile Verilog projects with **svreal**, while the `-g2012` flag enables SystemVerilog support.  **svreal** does use a few features that are specific to SystemVerilog, such as type-casting.  Both options should be used when simulating the examples.
 ## Example Descriptions:
 * **tests/array.sv**: Illustrates how to make a real-number lookup table using the library.
 * **tests/conversions.sv**: Shows how to convert back and forth between integer and real number types.
