@@ -39,14 +39,14 @@ The `-c test.scr` option specifies a command file that lists the files needed to
 ### Floating-point datatype
 All examples can be run using the floating-point datatype **real** from Verilog by defining **FLOAT_REAL**.  For example, here is how to run **tests/simple.sv** using a floating-point datatype:
 ```shell
-> iverilog -c test.scr -g2012 -D FLOAT_REAL tests/hello.sv
+> iverilog -c test.scr -g2012 -D FLOAT_REAL tests/simple.sv
 > vvp a.out
 ...
 ```
 ### Range-checking assertions
 Another option is to attach range-checking assertions to all real-number types.  This can be done by defining **DEBUG_REAL**.  In general, it is recommended to define **FLOAT_REAL** whenever **DEBUG_REAL** is setup, since it is otherwise possible for a variable to overflow before itself declared range has been exceeded.  So, in order to run **tests/simple.sv** with range-checking assertions, try:
 ```shell
-> iverilog -c test.scr -g2012 -D FLOAT_REAL -D DEBUG_REAL tests/hello.sv
+> iverilog -c test.scr -g2012 -D FLOAT_REAL -D DEBUG_REAL tests/simple.sv
 > vvp a.out
 ...
 ```
