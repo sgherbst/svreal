@@ -11,7 +11,10 @@
 `define INT_WIDTH 8
 `define INT_TYPE logic signed[`INT_WIDTH-1:0]
 
-module top;
+module top(
+    input clk,
+    input rst
+);
     `MAKE_CONST_REAL(12.3, a);
     `REAL_TO_INT(a, `INT_WIDTH, b);
     
@@ -26,19 +29,22 @@ module top;
     `MAKE_REAL(h, 500);
     `INT_INTO_REAL(g, `INT_WIDTH, h);
 
-    initial begin
-        #1;
-        `PRINT_REAL(a);
-        `PRINT_INT(b);
-        
-        `PRINT_REAL(c);
-        `PRINT_INT(d);
-        
-        `PRINT_INT(e);
-        `PRINT_REAL(f);
-        
-        `PRINT_INT(g);
-        `PRINT_REAL(h);
-        $finish;
+    always @(posedge clk) begin
+        if (rst == 1'b1) begin
+            // nothing
+        end else begin
+            `PRINT_REAL(a);
+            `PRINT_INT(b);
+
+            `PRINT_REAL(c);
+            `PRINT_INT(d);
+
+            `PRINT_INT(e);
+            `PRINT_REAL(f);
+
+            `PRINT_INT(g);
+            `PRINT_REAL(h);
+            $finish;
+        end
     end
 endmodule

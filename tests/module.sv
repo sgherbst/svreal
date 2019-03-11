@@ -7,7 +7,10 @@
 
 `include "real.sv"
 
-module top;
+module top(
+    input clk,
+    input rst
+);
     // create input variable with range +/- 10
     `MAKE_REAL(clamp_in, 10);
 
@@ -26,14 +29,35 @@ module top;
         .out(clamp_out)
     );
 
-    // simulation termination
-    real x;
-    initial begin
-        for (x=-4.0; x<=+4.0; x=x+1.0) begin
-            `FORCE_REAL(x, clamp_in);
-            #1;
+    logic [31:0] addr;
+    always @(*) begin
+        case (addr)
+            'd0: `FORCE_REAL(-4.0, clamp_in);
+            'd1: `FORCE_REAL(-3.0, clamp_in);
+            'd2: `FORCE_REAL(-2.0, clamp_in);
+            'd3: `FORCE_REAL(-1.0, clamp_in);
+            'd4: `FORCE_REAL( 0.0, clamp_in);
+            'd5: `FORCE_REAL(+1.0, clamp_in);
+            'd6: `FORCE_REAL(+2.0, clamp_in);
+            'd7: `FORCE_REAL(+3.0, clamp_in);
+            'd8: `FORCE_REAL(+4.0, clamp_in);
+	    default: `FORCE_REAL(0.0, clamp_in);
+        endcase
+    end
+
+    // apply stimulus
+    always @(posedge clk) begin
+        if (rst == 1'b1) begin
+            addr <= 0;
+        end else begin
             `PRINT_REAL(clamp_in);
             `PRINT_REAL(clamp_out);
+
+            if (addr == 'd8) begin
+                $finish;
+            end else begin
+                addr <= addr + 1;
+            end
         end
     end
 endmodule

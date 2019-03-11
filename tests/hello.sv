@@ -5,9 +5,16 @@
 
 `timescale 1ns/1ps
 
-module top;
-    initial begin
-        $display("Hello, world!");
-        $finish;
+module top(
+    input clk,
+    input rst
+);
+    always @(posedge clk) begin
+        if (rst == 1'b1) begin
+            // nothing
+        end else begin
+            $display("Hello, world!");
+            $finish;
+        end
     end
 endmodule

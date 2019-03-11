@@ -7,7 +7,10 @@
 
 `include "real.sv"
 
-module top;
+module top(
+    input clk,
+    input rst
+);
     // addition of two constants
     `MAKE_CONST_REAL(1.2, a);
     `MAKE_CONST_REAL(3.4, b);
@@ -42,20 +45,23 @@ module top;
     `LT_REAL(a, b, a_lt_b);
     `LE_REAL(a, b, a_le_b);
 
-    initial begin
-        #1;
-        `PRINT_REAL(a);
-        `PRINT_REAL(b);
-        `PRINT_REAL(c);
-        `PRINT_REAL(d);
-        `PRINT_REAL(e);
-        `PRINT_REAL(f);
-        `PRINT_REAL(g);
-        `PRINT_REAL(h);
-        `PRINT_REAL(i);
-        `PRINT_REAL(j);
-        `PRINT_REAL(k);
-        $display("{a_gt_b, a_ge_b, a_lt_b, a_le_b}: %b", {a_gt_b, a_ge_b, a_lt_b, a_le_b});
-        $finish;
+    always @(posedge clk) begin
+        if (rst == 1'b1) begin
+            // nothing
+        end else begin
+            `PRINT_REAL(a);
+            `PRINT_REAL(b);
+            `PRINT_REAL(c);
+            `PRINT_REAL(d);
+            `PRINT_REAL(e);
+            `PRINT_REAL(f);
+            `PRINT_REAL(g);
+            `PRINT_REAL(h);
+            `PRINT_REAL(i);
+            `PRINT_REAL(j);
+            `PRINT_REAL(k);
+            $display("{a_gt_b, a_ge_b, a_lt_b, a_le_b}: %b", {a_gt_b, a_ge_b, a_lt_b, a_le_b});
+            $finish;
+        end
     end
 endmodule
