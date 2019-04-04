@@ -7,7 +7,13 @@ TOP_NAME = top
 CPP_FILE = test.cpp
 SV_FILE = $(TOP_NAME).sv
 OBJ_DIR = obj_dir
-EXE_FILE = $(OBJ_DIR)/V$(TOP_NAME).exe
+
+# OS-dependent executable file extension
+ifeq ($(OS),Windows_NT)
+    EXE_FILE = $(OBJ_DIR)/V$(TOP_NAME).exe
+else
+    EXE_FILE = $(OBJ_DIR)/V$(TOP_NAME)
+endif
 
 .PHONY: run build clean
 
@@ -16,7 +22,7 @@ run: build
 
 build:
 	cp $(TEST_DIR)/$(target).sv $(SV_FILE)
-	verilator +1800-2017ext+sv +incdir+include -y src -Wall -Wno-fatal --cc $(SV_FILE) --exe $(CPP_FILE) 
+	verilator +1800-2012ext+sv +incdir+include -y src -Wall -Wno-fatal --cc $(SV_FILE) --exe $(CPP_FILE) 
 	make -C $(OBJ_DIR) -j -f V$(TOP_NAME).mk V$(TOP_NAME)
 
 clean:
