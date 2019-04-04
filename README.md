@@ -5,7 +5,7 @@
 # Installation
 
 1. Open a terminal, and note the current directory, since the **pip** command below will clone some code from GitHub and place it in a subdirectory called **src**.  If you prefer to place the cloned code in a different directory, you can specify that by providing the **--src** flag to **pip**.
-2. Install msdsl:
+2. Install **svreal**:
 ```shell
 > pip install -e git+https://github.com/sgherbst/svreal.git#egg=svreal
 ```
