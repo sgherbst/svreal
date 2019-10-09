@@ -59,7 +59,11 @@
         .`EXPONENT_PARAM_REAL(port)(`EXPONENT_PARAM_REAL(name))
 
     `define PORT_REAL(port) \
-        wire `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(port)) port 
+        `ifdef FLOAT_REAL \
+            `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(port)) port \
+        `else \
+            wire `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(port)) port \
+        `endif
 
     `define INPUT_REAL(port) \
         input `PORT_REAL(port)
