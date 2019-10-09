@@ -98,7 +98,8 @@
 
     `define ASSERTION_REAL(in_name) \
         assertion_real #( \
-            `PASS_REAL(in, in_name) \
+            `PASS_REAL(in, in_name), \
+            .name(`"in_name`") \
         ) assertion_real_``in_name``_i ( \
             .in(in_name) \
         )
@@ -112,7 +113,7 @@
         localparam real `RANGE_PARAM_REAL(name) = range_expr; \
         localparam integer `WIDTH_PARAM_REAL(name) = width_expr; \
         localparam integer `EXPONENT_PARAM_REAL(name) = exponent_expr \
-        `ifdef DEBUG_REAL \
+        `ifdef RANGE_ASSERTIONS \
             ; `ASSERTION_REAL(name) \
         `endif
 

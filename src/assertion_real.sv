@@ -5,7 +5,8 @@
 `default_nettype none
 
 module assertion_real #(
-    `DECL_REAL(in)
+    `DECL_REAL(in),
+    parameter name = "name"
 ) (
     `INPUT_REAL(in)
 );
@@ -15,8 +16,8 @@ module assertion_real #(
 
     always @(in) begin
         if (!((min <= `TO_REAL(in)) && (`TO_REAL(in) <= max))) begin
-            $display("Real number %f out of range (%f to %f).", `TO_REAL(in), min, max);
-            $finish;
+            $display("Real number %s with value %f out of range (%f to %f).", name, `TO_REAL(in), min, max);
+            $fatal;
         end
     end
                         
