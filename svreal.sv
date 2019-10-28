@@ -224,7 +224,7 @@ module svreal_negate_mod (
     generate
         // assign "a" directly into "b_neg", which has the same representation as "b"
         `SVREAL_DEF_WIDTH(b_width, `SVREAL_GET_WIDTH(b));
-        `SVREAL_DEF_EXPONENT(b_exponent, b.exponent);
+        `SVREAL_DEF_EXPONENT(b_exponent, `SVREAL_GET_EXPONENT(b));
         
         `MAKE_SVREAL(b_neg, b_width, b_exponent);
         `SVREAL_ASSIGN(a, b_neg);
@@ -248,7 +248,7 @@ module svreal_arith_mod #(
     generate
         if ((opcode == `SVREAL_OPCODE_ADD) || (opcode == `SVREAL_OPCODE_SUB)) begin
             `SVREAL_DEF_WIDTH(c_width, `SVREAL_GET_WIDTH(c));
-            `SVREAL_DEF_EXPONENT(c_exponent, c.exponent);
+            `SVREAL_DEF_EXPONENT(c_exponent, `SVREAL_GET_EXPONENT(c));
         
             `MAKE_SVREAL(a_aligned, c_width, c_exponent);
             `MAKE_SVREAL(b_aligned, c_width, c_exponent);
@@ -268,7 +268,7 @@ module svreal_arith_mod #(
             end
         end else if (opcode == `SVREAL_OPCODE_MUL) begin
             `SVREAL_DEF_WIDTH(prod_width, `SVREAL_GET_WIDTH(a) + `SVREAL_GET_WIDTH(b));
-            `SVREAL_DEF_EXPONENT(prod_exponent, a.exponent + b.exponent);
+            `SVREAL_DEF_EXPONENT(prod_exponent, `SVREAL_GET_EXPONENT(a) + `SVREAL_GET_EXPONENT(b));
             `MAKE_SVREAL(prod, prod_width, prod_exponent);
             assign prod.value = a.value * b.value;
             `SVREAL_ASSIGN(prod, c);
@@ -296,7 +296,7 @@ module svreal_comp_mod #(
         // compute representation of aligned numbers
         `SVREAL_DEF_WIDTH(a_width, `SVREAL_GET_WIDTH(a));
         `SVREAL_DEF_WIDTH(b_width, `SVREAL_GET_WIDTH(b));
-        `SVREAL_DEF_EXPONENT(exponent, `SVREAL_EXPR_MAX(a.exponent, b.exponent));
+        `SVREAL_DEF_EXPONENT(exponent, `SVREAL_EXPR_MAX(`SVREAL_GET_EXPONENT(a), `SVREAL_GET_EXPONENT(b)));
 
         // create the aligned representations
         `MAKE_SVREAL(a_aligned, a_width, exponent);
@@ -338,7 +338,7 @@ module svreal_mux_mod (
 
     generate
         `SVREAL_DEF_WIDTH(d_width, `SVREAL_GET_WIDTH(d));
-        `SVREAL_DEF_EXPONENT(d_exponent, d.exponent);
+        `SVREAL_DEF_EXPONENT(d_exponent, `SVREAL_GET_EXPONENT(d));
         
         `MAKE_SVREAL(b_aligned, d_width, d_exponent);
         `MAKE_SVREAL(c_aligned, d_width, d_exponent);
