@@ -1,4 +1,6 @@
 .idea
 *.log
 *.egg-info
+xcelium.d/
+xrun.history
 __pycache__

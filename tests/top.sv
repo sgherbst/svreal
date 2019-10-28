@@ -57,14 +57,14 @@ module top;
     initial begin
         // print header
         $display("SVREAL TEST START");
-        #(0ns);
+        #(1ns);
 
         // test set #1
         $display("SVREAL TEST SET 1");
         `SVREAL_SET(a, 1.23);
         `SVREAL_SET(b, 4.56);
         sel = 1'b0;
-        #(0ns);
+        #(1ns);
         print_signals();
 
         // test set #2
@@ -72,7 +72,7 @@ module top;
         `SVREAL_SET(a, 1.23);
         `SVREAL_SET(b, 4.56);
         sel = 1'b1;
-        #(0ns);
+        #(1ns);
         print_signals();
 
         // test set #3
@@ -80,12 +80,12 @@ module top;
         `SVREAL_SET(a, 4.56);
         `SVREAL_SET(b, 1.23);
         sel = 1'b0;
-        #(0ns);
+        #(1ns);
         print_signals();
 
         // print footer
         $display("SVREAL TEST END");
-        #(0ns);
+        #(1ns);
     end
 
 endmodule

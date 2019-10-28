@@ -34,11 +34,17 @@ def parse_stdout(text):
         else:
             pass
 
-def test_ops():
-    # run simulation
+def test_ops_vivado():
     cmd = ['vivado', '-mode', 'batch', '-source', 'project.tcl', '-nolog', '-nojournal']
     res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
+    process_result(res)
 
+def test_ops_xrun():
+    cmd = ['xrun', 'top.sv', '+incdir+..']
+    res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
+    process_result(res)
+
+def process_result(res):
     # print results
     print_section('STDOUT', res.stdout)
     print_section('STDERR', res.stderr)
@@ -67,5 +73,6 @@ def test_ops():
     assert bool_eq(sec['ge_o'], 1)
 
 if __name__ == '__main__':
-    test_ops()
+    test_ops_xrun()
+    #test_ops_vivado()
     print('Success!')
