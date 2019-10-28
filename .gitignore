@@ -1,8 +1,4 @@
-a.out
 .idea
 *.log
-*.pb
 *.egg-info
 __pycache__
-obj_dir
-top.sv
