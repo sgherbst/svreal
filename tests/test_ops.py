@@ -6,13 +6,11 @@ FILES = ['test_ops.sv']
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
+    metafunc.parametrize('defs', [None, ['SVREAL_DEBUG']])
 
-def test_ops(simulator):
-    res=run_sim(*FILES, top=TOP, project=PROJECT, simulator=simulator)
-
-    # print results
-    print_section('STDOUT', res.stdout)
-    print_section('STDERR', res.stderr)
+def test_ops(simulator, defs):
+    # run sim
+    res=run_sim(*FILES, top=TOP, project=PROJECT, simulator=simulator, defs=defs)
 
     # parse results
     res = parse_stdout(res.stdout)

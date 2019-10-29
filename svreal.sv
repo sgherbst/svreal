@@ -17,7 +17,11 @@ typedef logic signed [31:0] svreal_exponent_t;
     localparam integer ``width_name`` = ``width_expr``
 
 `define SVREAL_GET_WIDTH(name) \
-    $size(``name``.value)
+    `ifndef SVREAL_DEBUG \
+        $size(``name``.value) \
+    `else \
+        $size(``name``.dummy) \
+    `endif
 
 `define SVREAL_DEF_EXPONENT(exp_name, exp_expr) \
     svreal_exponent_t ``exp_name``; \
@@ -41,28 +45,23 @@ interface svreal #(
         function integer to_fixed(input real x);
             to_fixed = (1.0*x)*((2.0)**(-exponent));
         endfunction
+        modport in (input exponent, input value);
+        modport out (input exponent, output value);
     `else
-        // debug operation
+        // debug operation: the width and exponent properties are preserved,
+        // but they are only used to check that the value doesn't go out of
+        // bounds.  the value itself is represented using a "real" datatype.
+        logic signed [(width-1):0] dummy;
         real value;
         function real to_float();
             to_float = value;
         endfunction
-        function integer to_fixed(input real x);
+        function real to_fixed(input real x);
             to_fixed = x;
         endfunction
+        modport in (input exponent, input value, input dummy);
+        modport out (input exponent, output value, input dummy);
     `endif
-
-    // compute bounds of the representation
-    function real min_float();
-        min_float = -(2.0**(width-1))*(2.0**(exponent));
-    endfunction
-    function real max_float();
-        max_float = ((2.0**(width-1))-1)*(2.0**(exponent));
-    endfunction
-
-    // modport definition
-    modport in (input exponent, input value);
-    modport out (input exponent, output value);
 
 endinterface 
 
@@ -201,12 +200,18 @@ module svreal_assign_mod (
             `SVREAL_DEF_EXPONENT(lshift, `SVREAL_GET_EXPONENT(a) - `SVREAL_GET_EXPONENT(b));
             assign b.value = (lshift >= 0) ? (a.value <<< (+lshift)) : (a.value >>> (-lshift));
         `else
-            // debug operation includes a range check
+            // assign real value straight through
             assign b.value = a.value;
+            // check that the value of a is within the range that can be represented by b
+            real b_min_float, b_max_float;
             always @(a.value) begin
-                if (!((b.min_float() <= a.to_float()) && (a.to_float() <= b.max_float()))) begin
-                    $display("Real number %0f outside of allowed range [%0f, %0f].", a.to_float(), b.min_float(), b.max_float());
-                    $fatal;
+                if (^b.exponent !== 1'bX) begin
+                    b_min_float = -(2.0**(b.width-1))*(2.0**(b.exponent));
+                    b_max_float = ((2.0**(b.width-1))-1)*(2.0**(b.exponent));
+                    if (!((b_min_float <= a.value) && (a.value <= b_max_float))) begin
+                        $display("Real number %0f outside of allowed range [%0f, %0f].", a.value, b_min_float, b_max_float);
+                        $fatal;
+                    end
                 end
             end
         `endif
