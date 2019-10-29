@@ -37,3 +37,6 @@ def test_ops(simulator):
     assert bool_eq(sec['le_o'], 0)
     assert bool_eq(sec['gt_o'], 1)
     assert bool_eq(sec['ge_o'], 1)
+    sec = res[4]
+    assert is_close(sec['r2i_o'], 56)
+    assert is_close(sec['i2r_o'], 78)

@@ -172,20 +172,20 @@ endinterface
 
 // conversion between integer and svreal
 
-`define SVREAL_TO_INT(a, b) \
+`define SVREAL_TO_INT(a_name, b_name) \
     svreal_to_int_mod #( \
-        .width($bits(``b``)) \
-    ) ``b``_mod_i ( \
-        .a(a), \
-        .b(b) \
+        .width($size(``b_name``)) \
+    ) ``b_name``_mod_i ( \
+        .a(``a_name``), \
+        .b(``b_name``) \
     )
 
-`define INT_TO_SVREAL(a, b) \
+`define INT_TO_SVREAL(a_name, b_name) \
     int_to_svreal_mod #( \
-        .width($bits(``a``)) \
-    ) ``b``_mod_i ( \
-        .a(a), \
-        .b(b) \
+        .width($size(``a_name``)) \
+    ) ``b_name``_mod_i ( \
+        .a(``a_name``), \
+        .b(``b_name``) \
     )
 
 // assign one svreal number to another

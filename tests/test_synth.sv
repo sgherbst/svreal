@@ -5,6 +5,7 @@
 module test_synth(
     input wire logic signed [15:0] a_ext,
     input wire logic signed [16:0] b_ext,
+    input wire logic signed [7:0] i2r_i_ext,
     input wire logic sel_ext,
     output wire logic signed [17:0] min_ext,
     output wire logic signed [17:0] max_ext,
@@ -12,6 +13,9 @@ module test_synth(
     output wire logic signed [17:0] sub_ext,
     output wire logic signed [17:0] mul_ext,
     output wire logic signed [17:0] mux_ext,
+    output wire logic signed [17:0] neg_ext,
+    output wire logic signed [17:0] i2r_o_ext,
+    output wire logic signed [7:0] r2i_o_ext,
     output wire logic lt_ext,
     output wire logic le_ext,
     output wire logic gt_ext,
@@ -53,6 +57,19 @@ module test_synth(
     `MAKE_SVREAL(mux_o, $size(mux_ext), -10);
     `SVREAL_MUX(sel_ext, a, b, mux_o);
     assign mux_ext = mux_o.value;
+
+    // negation
+    `MAKE_SVREAL(neg_o, $size(neg_ext), -10);
+    `SVREAL_NEGATE(a, neg_o);
+    assign neg_ext = neg_o.value;
+
+    // integer to real
+    `MAKE_SVREAL(i2r_o_int, 16, -8);
+    `INT_TO_SVREAL(i2r_i_ext, i2r_o_int);
+    assign i2r_o_ext = i2r_o_int.value;
+
+    // real to integer
+    `SVREAL_TO_INT(a, r2i_o_ext);
 
     // comparisons
     `SVREAL_LT(a, b, lt_ext);
