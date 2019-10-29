@@ -1,7 +1,7 @@
 # Create the Vivado project
 # ZC702: xc7z020clg484-1
 # PYNQ: xc7z020clg400-1
-create_project -force proj_test_synth proj_test_synth -part "xc7z020clg484-1"
+create_project -force "proj_test_synth" "tmp/proj_test_synth" -part "xc7z020clg484-1"
 
 # Add source files
 add_files "test_synth.sv"

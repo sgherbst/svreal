@@ -3,7 +3,7 @@ from shutil import which
 import subprocess
 
 VIVADO_SIM_TEMPL = '''\
-create_project -force {project_dir} {project_dir} -part "{part}"
+create_project -force {proj_name} {proj_dir} -part "{part}"
 {files}
 add_files "../svreal.sv"
 set_property file_type "Verilog Header" [get_files "../svreal.sv"]
@@ -84,14 +84,15 @@ def run_sim(*files, project, top, defs=None, part='xc7z020clg484-1', simulator='
 
 def vivado_sim(*files, project, top, part='xc7z020clg484-1'):
     # name the project directory
-    project_dir = f'proj_{project}'
+    proj_name = f'proj_{project}'
+    proj_dir = f'tmp/{proj_name}'
     
     # get list of files
     files = [f'add_files "{file_}"' for file_ in files]
     files = '\n'.join(files)
 
     # write TCL file
-    text = VIVADO_SIM_TEMPL.format(project_dir=project_dir, part=part, files=files, top=top)
+    text = VIVADO_SIM_TEMPL.format(proj_name=proj_name, proj_dir=proj_dir, part=part, files=files, top=top)
     tmp_dir = get_dir('tests/tmp')
     tmp_dir.mkdir(exist_ok=True)
     tcl = tmp_dir / f'{project}.tcl'
