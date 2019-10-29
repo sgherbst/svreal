@@ -1,4 +1,5 @@
 from svreal import *
+from shutil import which
 import subprocess
 
 VIVADO_SIM_TEMPL = '''\
@@ -9,6 +10,24 @@ set_property file_type "Verilog Header" [get_files "../svreal.sv"]
 set_property -name top -value {top} -objects [get_fileset sim_1]
 set_property -name "xsim.simulate.runtime" -value "-all" -objects [get_fileset sim_1]
 launch_simulation'''
+
+def pytest_sim_params(metafunc):
+    if 'simulator' in metafunc.fixturenames:
+        targets = []
+        for simulator in ['vcs', 'vivado', 'xrun']:
+            if which(simulator):
+                targets.append(simulator)
+
+        metafunc.parametrize('simulator', targets)
+
+def pytest_synth_params(metafunc):
+    if 'synth' in metafunc.fixturenames:
+        targets = []
+        for synth in ['vivado']:
+            if which(synth):
+                targets.append(synth)
+
+        metafunc.parametrize('synth', targets)
 
 def print_section(name, text):
     text = text.rstrip()
@@ -43,9 +62,25 @@ def parse_stdout(text):
         else:
             pass
 
+def run_synth(tcl, synth):
+    if synth == 'vivado':
+        return run_vivado_tcl(tcl)
+    else:
+        raise Exception(f'Unknown synth tool: {synth}.')
+
 def run_vivado_tcl(tcl):
     cmd = ['vivado', '-mode', 'batch', '-source', f'{tcl}', '-nolog', '-nojournal']
     return subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
+
+def run_sim(*files, project, top, defs=None, part='xc7z020clg484-1', simulator='vivado'):
+    if simulator == 'vivado':
+        return vivado_sim(*files, project=project, top=top, part=part)
+    elif simulator == 'xrun':
+        return xrun_sim(*files, defs=defs)
+    elif simulator == 'vcs':
+        return vcs_sim(*files, defs=defs, top=top)
+    else:
+        raise Exception(f'Invalid simulator: {simulator}.')
 
 def vivado_sim(*files, project, top, part='xc7z020clg484-1'):
     # name the project directory

@@ -4,19 +4,12 @@ TOP = 'test_ops'
 PROJECT = 'test_ops'
 FILES = ['test_ops.sv']
 
-def test_vivado():
-    res = vivado_sim(*FILES, top=TOP, project=PROJECT)
-    process_result(res)
+def pytest_generate_tests(metafunc):
+    pytest_sim_params(metafunc)
 
-def test_xrun():
-    res = xrun_sim(*FILES)
-    process_result(res)
+def test_ops(simulator):
+    res=run_sim(*FILES, top=TOP, project=PROJECT, simulator=simulator)
 
-def test_vcs():
-    res = vcs_sim(*FILES, top=TOP)
-    process_result(res)
-
-def process_result(res):
     # print results
     print_section('STDOUT', res.stdout)
     print_section('STDERR', res.stderr)
