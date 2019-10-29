@@ -10,7 +10,7 @@ steps:
       export PATH=$$PWD/conda_env/bin:$$PATH
       pip install -e .
       pip install pytest
-      pytest test_ops.py::test_ops_xrun test_ops.py::test_ops_vcs
+      pytest tests/test_ops.py::test_ops_xrun tests/test_ops.py::test_ops_vcs
     label: "test"
     timeout_in_minutes: 60
     agents:
