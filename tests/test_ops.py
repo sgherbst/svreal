@@ -35,18 +35,18 @@ def parse_stdout(text):
             pass
 
 def test_ops_vivado():
-    cmd = ['vivado', '-mode', 'batch', '-source', 'project.tcl', '-nolog', '-nojournal']
+    cmd = ['vivado', '-mode', 'batch', '-source', 'test_ops.tcl', '-nolog', '-nojournal']
     res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
     process_result(res)
 
 def test_ops_xrun():
-    cmd = ['xrun', 'top.sv', '+incdir+..']
+    cmd = ['xrun', 'test_ops.sv', '+incdir+..']
     res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
     process_result(res)
 
 def test_ops_vcs():
     # compile
-    cmd = ['vcs', 'top.sv', '+incdir+..', '+systemverilogext+sv', '-top', 'top']
+    cmd = ['vcs', 'test_ops.sv', '+incdir+..', '+systemverilogext+sv', '-top', 'test_ops']
     res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
     # run
     cmd = [get_file('tests/simv')]

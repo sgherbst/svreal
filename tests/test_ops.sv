@@ -2,7 +2,7 @@
 
 `include "svreal.sv"
 
-module top;
+module test_ops;
 
     // create signals
     `MAKE_SVREAL(a, 16, -8);
