@@ -33,6 +33,10 @@ module test_ops;
     logic sel;
     `SVREAL_MUX(sel, a, b, mux_o);
 
+    // negate
+    `MAKE_SVREAL(neg_o, 18, -10);
+    `SVREAL_NEGATE(a, neg_o);
+
     // comparisons
     logic lt_o, le_o, gt_o, ge_o;
     `SVREAL_LT(a, b, lt_o);
@@ -47,6 +51,7 @@ module test_ops;
         `SVREAL_PRINT(sub_o);
         `SVREAL_PRINT(mul_o);
         `SVREAL_PRINT(mux_o);
+        `SVREAL_PRINT(neg_o);
         $display("lt_o=%0b", lt_o);
         $display("le_o=%0b", le_o);
         $display("gt_o=%0b", gt_o);
