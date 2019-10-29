@@ -1,15 +1,19 @@
 from .common import *
 
-def test_ops_vivado():
-    res = vivado_sim('test_ops.tcl')
+TOP = 'test_ops'
+PROJECT = 'test_ops'
+FILES = ['test_ops.sv']
+
+def test_vivado():
+    res = vivado_sim(*FILES, top=TOP, project=PROJECT)
     process_result(res)
 
-def test_ops_xrun():
-    res = xrun_sim('test_ops.sv')
+def test_xrun():
+    res = xrun_sim(*FILES)
     process_result(res)
 
-def test_ops_vcs():
-    res = vcs_sim('test_ops.sv', top='test_ops')
+def test_vcs():
+    res = vcs_sim(*FILES, top=TOP)
     process_result(res)
 
 def process_result(res):
@@ -39,8 +43,3 @@ def process_result(res):
     assert bool_eq(sec['le_o'], 0)
     assert bool_eq(sec['gt_o'], 1)
     assert bool_eq(sec['ge_o'], 1)
-
-if __name__ == '__main__':
-    test_ops_xrun()
-    #test_ops_vivado()
-    print('Success!')

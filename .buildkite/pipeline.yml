@@ -10,7 +10,7 @@ steps:
       export PATH=$$PWD/conda_env/bin:$$PATH
       pip install -e .
       pip install pytest
-      pytest tests/test_ops.py::test_ops_xrun tests/test_ops.py::test_ops_vcs
+      pytest tests/test_ops.py::test_xrun tests/test_ops.py::test_vcs tests/test_hier.py::test_xrun tests/test_hier.py::test_vcs
     label: "test"
     timeout_in_minutes: 60
     agents:
@@ -22,7 +22,7 @@ steps:
       source venv/bin/activate
       pip install pytest
       pip install -e .
-      pytest tests/test_ops.py::test_ops_vivado tests/test_synth.py
+      pytest tests/test_ops.py::test_vivado tests/test_hier.py::test_vivado tests/test_synth.py
       deactivate
     label: "test_emu"
     timeout_in_minutes: 60
