@@ -1,56 +1,15 @@
-from svreal import *
-import subprocess
-
-def print_section(name, text):
-    text = text.rstrip()
-    if text != '':
-        print(f'<{name}>')
-        print(text)
-        print(f'</{name}>')
-
-def bool_eq(a, b):
-    return bool(int(a)) == bool(int(b))
-
-def is_close(a, b, abs_tol=0.01):
-    return abs(float(a)-float(b)) <= abs_tol
-
-def parse_stdout(text):
-    started = False
-    test_no = None
-    result = {}
-    for line in text.split('\n'):
-        line = line.strip()
-        if line == 'SVREAL TEST START':
-            started = True
-            continue
-        elif line == 'SVREAL TEST END':
-            return result
-        elif line.startswith('SVREAL TEST SET'):
-            test_no = int(line.split(' ')[3])
-            result[test_no] = {}
-        elif started and test_no is not None:
-            toks = line.split('=')
-            result[test_no][toks[0]] = toks[1]
-        else:
-            pass
+from .common import *
 
 def test_ops_vivado():
-    cmd = ['vivado', '-mode', 'batch', '-source', 'test_ops.tcl', '-nolog', '-nojournal']
-    res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
+    res = vivado_sim('test_ops.tcl')
     process_result(res)
 
 def test_ops_xrun():
-    cmd = ['xrun', 'test_ops.sv', '+incdir+..']
-    res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
+    res = xrun_sim('test_ops.sv')
     process_result(res)
 
 def test_ops_vcs():
-    # compile
-    cmd = ['vcs', 'test_ops.sv', '+incdir+..', '+systemverilogext+sv', '-top', 'test_ops']
-    res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
-    # run
-    cmd = [get_file('tests/simv')]
-    res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
+    res = vcs_sim('test_ops.sv', top='test_ops')
     process_result(res)
 
 def process_result(res):
