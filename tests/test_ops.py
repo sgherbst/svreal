@@ -1,4 +1,4 @@
-from svreal import get_dir
+from svreal import *
 import subprocess
 
 def print_section(name, text):
@@ -41,6 +41,15 @@ def test_ops_vivado():
 
 def test_ops_xrun():
     cmd = ['xrun', 'top.sv', '+incdir+..']
+    res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
+    process_result(res)
+
+def test_ops_vcs():
+    # compile
+    cmd = ['vcs', 'top.sv', '+incdir+..', '+systemverilogext+sv', '-top', 'top']
+    res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
+    # run
+    cmd = [get_file('tests/simv')]
     res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
     process_result(res)
 

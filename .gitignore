@@ -4,3 +4,7 @@
 xcelium.d/
 xrun.history
 __pycache__
+csrc/
+simv
+simv.daidir/
+ucli.key

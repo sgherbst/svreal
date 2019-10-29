@@ -5,13 +5,12 @@ steps:
       export LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:/usr/local/lib
       echo $$LD_LIBRARY_PATH
       source /cad/modules/tcl/init/bash
-      module load base
-      module load xcelium
+      module load base xcelium vcs
       conda create -p ./conda_env -m -y pip python=3.7.4
       export PATH=$$PWD/conda_env/bin:$$PATH
       pip install -e .
       pip install pytest
-      pytest tests/test_ops.py::test_ops_xrun
+      pytest test_ops.py::test_ops_xrun test_ops.py::test_ops_vcs
     label: "test"
     timeout_in_minutes: 60
     agents:
