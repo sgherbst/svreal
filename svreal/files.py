@@ -15,3 +15,6 @@ def get_files(*args):
 def get_dirs(*args):
     # alias for get_files
     return get_files(*args)
+
+def get_svreal_header():
+    return get_file('svreal.sv')
