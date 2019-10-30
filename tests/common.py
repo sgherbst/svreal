@@ -74,7 +74,7 @@ def parse_stdout(text):
             test_no = int(line.split(' ')[3])
             result[test_no] = {}
         elif started and test_no is not None:
-            toks = line.split('=')
+            toks = line.split('\t')[0].split('=')
             result[test_no][toks[0]] = toks[1]
         else:
             pass

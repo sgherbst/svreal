@@ -39,9 +39,9 @@
 interface svreal #(
     parameter integer width = 1,
     parameter integer exponent = 0
+) (
+    input logic signed [(width+exponent-1):exponent] format
 );
-
-     logic signed [(width+exponent-1):exponent] format;
 
      // represent real number as an integer or true float
      // depending on the debug mode
@@ -59,12 +59,16 @@ endinterface
 // macro to print svreal numbers
 
 `define SVREAL_PRINT(name) \
-    $display(`"``name``=%0f`", `SVREAL_TO_FLOAT(``name``))
+    `ifndef SVREAL_DEBUG \
+        $display(`"``name``=%0f\t{value=%0d, width=%0d, exponent=%0d}`", `SVREAL_TO_FLOAT(``name``), ``name``.value, `SVREAL_GET_WIDTH(``name``), `SVREAL_GET_EXPONENT(``name``)) \
+    `else \
+        $display(`"``name``=%0f\t{value=%0f, width=%0d, exponent=%0d}`", `SVREAL_TO_FLOAT(``name``), ``name``.value, `SVREAL_GET_WIDTH(``name``), `SVREAL_GET_EXPONENT(``name``)) \
+    `endif
 
 // macro to create svreal numbers conveniently
 
 `define MAKE_SVREAL(name, width_expr, exponent_expr) \
-    svreal #(.width(``width_expr``), .exponent(``exponent_expr``)) ``name`` ()
+    svreal #(.width(``width_expr``), .exponent(``exponent_expr``)) ``name`` (.format(0))
 
 // assign one svreal to another
 
@@ -185,7 +189,7 @@ endinterface
 
 // memory
 
-`define SVREAL_DFF(d_name, q_name, rst_name, clk_name, ce_name, init_expr) \
+`define SVREAL_DFF(d_name, q_name, rst_name, clk_name, en_name, init_expr) \
     svreal_dff_mod #( \
         .init(``init_expr``) \
     ) ``q_name``_mod_i ( \
@@ -193,7 +197,7 @@ endinterface
         .q(``q_name``), \
         .rst(``rst_name``), \
         .clk(``clk_name``), \
-        .ce(``ce_name``) \
+        .en(``en_name``) \
     );
 
 // assign one svreal number to another
@@ -450,7 +454,7 @@ module svreal_dff_mod #(
     svreal.out q,
     input wire logic rst,
     input wire logic clk,
-    input wire logic ce
+    input wire logic en
 );
 
     generate
@@ -470,7 +474,7 @@ module svreal_dff_mod #(
         always @(posedge clk) begin
             if (rst == 1'b1) begin
                 q.value <= init_wire.value;
-            end else if (ce == 1'b1) begin
+            end else if (en == 1'b1) begin
                 q.value <= d_aligned.value;
             end else begin
                 q.value <= q.value;

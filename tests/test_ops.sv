@@ -54,6 +54,8 @@ module test_ops;
     `SVREAL_GE(a, b, ge_o);
 
     task print_signals();
+        `SVREAL_PRINT(a);
+        `SVREAL_PRINT(b);
         `SVREAL_PRINT(min_o);
         `SVREAL_PRINT(max_o);
         `SVREAL_PRINT(add_o);
