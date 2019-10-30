@@ -11,68 +11,60 @@
 
 // interface used to represent fixed-point numbers
 
-typedef logic signed [31:0] svreal_exponent_t;
-
 `define SVREAL_DEF_WIDTH(width_name, width_expr) \
     localparam integer ``width_name`` = ``width_expr``
 
 `define SVREAL_GET_WIDTH(name) \
-    `ifndef SVREAL_DEBUG \
-        $size(``name``.value) \
-    `else \
-        $size(``name``.dummy) \
-    `endif
+    $size(``name``.format)
 
 `define SVREAL_DEF_EXPONENT(exp_name, exp_expr) \
-    svreal_exponent_t ``exp_name``; \
-    assign ``exp_name`` = ``exp_expr``
+    localparam integer ``exp_name`` = ``exp_expr``
 
 `define SVREAL_GET_EXPONENT(name) \
-    ``name``.exponent
+    $low(``name``.format)
+
+`define FLOAT_TO_FIXED(float_val, exponent) \
+     ((1.0*``float_val``)*((2.0)**(-(``exponent``))))
+
+`define FIXED_TO_FLOAT(fixed_val, exponent) \
+     ((1.0*``fixed_val``)*((2.0)**(+(``exponent``))))
+
+`define SVREAL_TO_FLOAT(svreal_name) \
+    `ifndef SVREAL_DEBUG \
+        `FIXED_TO_FLOAT(``svreal_name``.value, `SVREAL_GET_EXPONENT(``svreal_name``)) \
+    `else \
+        ``svreal_name``.value \
+    `endif
 
 interface svreal #(
-    parameter integer width = 1
-) (
-    input svreal_exponent_t exponent
+    parameter integer width = 1,
+    parameter integer exponent = 0
 );
 
+     logic signed [(width+exponent-1):exponent] format;
+
+     // represent real number as an integer or true float
+     // depending on the debug mode
     `ifndef SVREAL_DEBUG
-        // normal operation
         logic signed [(width-1):0] value;
-        function real to_float();
-            to_float = (1.0*value)*((2.0)**(exponent));
-        endfunction
-        function integer to_fixed(input real x);
-            to_fixed = (1.0*x)*((2.0)**(-exponent));
-        endfunction
-        modport in (input exponent, input value);
-        modport out (input exponent, output value);
     `else
-        // debug operation: the width and exponent properties are preserved,
-        // but they are only used to check that the value doesn't go out of
-        // bounds.  the value itself is represented using a "real" datatype.
-        logic signed [(width-1):0] dummy;
         real value;
-        function real to_float();
-            to_float = value;
-        endfunction
-        function real to_fixed(input real x);
-            to_fixed = x;
-        endfunction
-        modport in (input exponent, input value, input dummy);
-        modport out (input exponent, output value, input dummy);
     `endif
+
+    modport in (input value, input format);
+    modport out (output value, input format);
 
 endinterface 
 
 // macro to print svreal numbers
 
-`define SVREAL_PRINT(name) $display(`"``name``=%0f`", ``name``.to_float())
+`define SVREAL_PRINT(name) \
+    $display(`"``name``=%0f`", `SVREAL_TO_FLOAT(``name``))
 
 // macro to create svreal numbers conveniently
 
 `define MAKE_SVREAL(name, width_expr, exponent_expr) \
-    svreal #(.width(``width_expr``)) ``name`` (.exponent(``exponent_expr``))
+    svreal #(.width(``width_expr``), .exponent(``exponent_expr``)) ``name`` ()
 
 // assign one svreal to another
 
@@ -93,7 +85,11 @@ endinterface
 // assign a constant to an svreal (either as a continuous assignment or within a testbench context)
 
 `define SVREAL_SET(name, const_expr) \
-    ``name``.value = ``name``.to_fixed(const_expr)
+    `ifndef SVREAL_DEBUG \
+        ``name``.value = `FLOAT_TO_FIXED(``const_expr``, `SVREAL_GET_EXPONENT(``name``)) \
+    `else \
+        ``name``.value = ``const_expr`` \
+    `endif
 
 `define SVREAL_ASSIGN_CONST(name, const_expr) \
     assign `SVREAL_SET(name, const_expr)
@@ -189,8 +185,10 @@ endinterface
 
 // memory
 
-`define SVREAL_DFF(d_name, q_name, rst_name, clk_name, ce_name)\
-    svreal_dff_mod ``q_name``_mod_i ( \
+`define SVREAL_DFF(d_name, q_name, rst_name, clk_name, ce_name, init_expr) \
+    svreal_dff_mod #( \
+        .init(``init_expr``) \
+    ) ``q_name``_mod_i ( \
         .d(``d_name``), \
         .q(``q_name``), \
         .rst(``rst_name``), \
@@ -217,8 +215,8 @@ module svreal_assign_mod (
             real b_min_float, b_max_float;
             always @(a.value) begin
                 if (^b.exponent !== 1'bX) begin
-                    b_min_float = -(2.0**(b.width-1))*(2.0**(b.exponent));
-                    b_max_float = ((2.0**(b.width-1))-1)*(2.0**(b.exponent));
+                    b_min_float = `FIXED_TO_FLOAT(-(2.0**(b.width-1))-0, b.exponent);
+                    b_max_float = `FIXED_TO_FLOAT(+(2.0**(b.width-1))-1, b.exponent);
                     if (!((b_min_float <= a.value) && (a.value <= b_max_float))) begin
                         $display("Real number %0f outside of allowed range [%0f, %0f].", a.value, b_min_float, b_max_float);
                         $fatal;
@@ -445,7 +443,9 @@ endmodule
 
 // memory
 
-module svreal_dff_mod (
+module svreal_dff_mod #(
+    parameter real init=0
+) (
     svreal.in d,
     svreal.out q,
     input wire logic rst,
@@ -462,10 +462,14 @@ module svreal_dff_mod (
         `MAKE_SVREAL(d_aligned, q_width, q_exponent);
         `SVREAL_ASSIGN(d, d_aligned);
 
+        // align initial value to output format
+        `MAKE_SVREAL(init_wire, q_width, q_exponent);
+        `SVREAL_ASSIGN_CONST(init_wire, init);
+
         // main DFF logic
         always @(posedge clk) begin
             if (rst == 1'b1) begin
-                q.value <= '0;
+                q.value <= init_wire.value;
             end else if (ce == 1'b1) begin
                 q.value <= d_aligned.value;
             end else begin

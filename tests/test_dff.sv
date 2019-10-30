@@ -2,13 +2,15 @@
 
 `include "svreal.sv"
 
-module test_dff;
+module test_dff #(
+    parameter real dff_init=1.23
+); 
 
     // create signals
     `MAKE_SVREAL(d, 16, -8);
     `MAKE_SVREAL(q, 17, -9);
     logic clk, rst, ce;
-    `SVREAL_DFF(d, q, rst, clk, ce);
+    `SVREAL_DFF(d, q, rst, clk, ce, dff_init);
 
     task print_signals();
         `SVREAL_PRINT(d);

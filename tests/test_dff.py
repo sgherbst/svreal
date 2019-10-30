@@ -6,8 +6,7 @@ FILES = ['test_dff.sv']
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
-    #metafunc.parametrize('defs', [None, ['SVREAL_DEBUG']])
-    metafunc.parametrize('defs', [['SVREAL_DEBUG']])
+    metafunc.parametrize('defs', [None, ['SVREAL_DEBUG']])
 
 def test_ops(simulator, defs):
     # run sim
@@ -19,10 +18,10 @@ def test_ops(simulator, defs):
     # check results
     sec = res[1]
     assert is_close(sec['d'], +2.34)
-    assert is_close(sec['q'], +0.00)
+    assert is_close(sec['q'], +1.23)
     sec = res[2]
     assert is_close(sec['d'], +2.34)
-    assert is_close(sec['q'], +0.00)
+    assert is_close(sec['q'], +1.23)
     sec = res[3]
     assert is_close(sec['d'], +2.34)
     assert is_close(sec['q'], +2.34)

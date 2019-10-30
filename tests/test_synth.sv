@@ -2,7 +2,9 @@
 
 `include "svreal.sv"
 
-module test_synth (
+module test_synth #(
+    parameter real dff_init=1.23
+) (
     input wire logic signed [15:0] a_ext,
     input wire logic signed [16:0] b_ext,
     input wire logic signed [7:0] i2r_i_ext,
@@ -77,7 +79,7 @@ module test_synth (
 
     // dff
     `MAKE_SVREAL(dff_o, $size(dff_ext), -10);
-    `SVREAL_DFF(a, dff_o, rst_ext, clk_ext, ce_ext);
+    `SVREAL_DFF(a, dff_o, rst_ext, clk_ext, ce_ext, dff_init);
     assign dff_ext = dff_o.value;
 
     // comparisons
