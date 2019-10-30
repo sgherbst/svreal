@@ -187,6 +187,17 @@ endinterface
         .b(``b_name``) \
     )
 
+// memory
+
+`define SVREAL_DFF(d_name, q_name, rst_name, clk_name, ce_name)\
+    svreal_dff_mod ``q_name``_mod_i ( \
+        .d(``d_name``), \
+        .q(``q_name``), \
+        .rst(``rst_name``), \
+        .clk(``clk_name``), \
+        .ce(``ce_name``) \
+    );
+
 // assign one svreal number to another
 
 module svreal_assign_mod (
@@ -428,6 +439,39 @@ module svreal_extrema_mod #(
                 $fatal;
             end
         end
+    endgenerate
+
+endmodule
+
+// memory
+
+module svreal_dff_mod (
+    svreal.in d,
+    svreal.out q,
+    input wire logic rst,
+    input wire logic clk,
+    input wire logic ce
+);
+
+    generate
+        // get formatting info for the output
+        `SVREAL_DEF_WIDTH(q_width, `SVREAL_GET_WIDTH(q));
+        `SVREAL_DEF_EXPONENT(q_exponent, `SVREAL_GET_EXPONENT(q));
+        
+        // align input to output
+        `MAKE_SVREAL(d_aligned, q_width, q_exponent);
+        `SVREAL_ASSIGN(d, d_aligned);
+
+        // main DFF logic
+        always @(posedge clk) begin
+            if (rst == 1'b1) begin
+                q.value <= '0;
+            end else if (ce == 1'b1) begin
+                q.value <= d_aligned.value;
+            end else begin
+                q.value <= q.value;
+            end
+        end       
     endgenerate
 
 endmodule

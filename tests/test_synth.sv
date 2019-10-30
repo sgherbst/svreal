@@ -2,11 +2,14 @@
 
 `include "svreal.sv"
 
-module test_synth(
+module test_synth (
     input wire logic signed [15:0] a_ext,
     input wire logic signed [16:0] b_ext,
     input wire logic signed [7:0] i2r_i_ext,
     input wire logic sel_ext,
+    input wire logic rst_ext,
+    input wire logic clk_ext,
+    input wire logic ce_ext,
     output wire logic signed [17:0] min_ext,
     output wire logic signed [17:0] max_ext,
     output wire logic signed [17:0] add_ext,
@@ -16,6 +19,7 @@ module test_synth(
     output wire logic signed [17:0] neg_ext,
     output wire logic signed [17:0] i2r_o_ext,
     output wire logic signed [7:0] r2i_o_ext,
+    output wire logic signed [17:0] dff_ext,
     output wire logic lt_ext,
     output wire logic le_ext,
     output wire logic gt_ext,
@@ -70,6 +74,11 @@ module test_synth(
 
     // real to integer
     `SVREAL_TO_INT(a, r2i_o_ext);
+
+    // dff
+    `MAKE_SVREAL(dff_o, $size(dff_ext), -10);
+    `SVREAL_DFF(a, dff_o, rst_ext, clk_ext, ce_ext);
+    assign dff_ext = dff_o.value;
 
     // comparisons
     `SVREAL_LT(a, b, lt_ext);
