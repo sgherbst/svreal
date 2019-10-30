@@ -99,7 +99,7 @@ def run_sim(*files, project, top, defs=None, part='xc7z020clg484-1', simulator='
     if simulator == 'vivado':
         return vivado_sim(*files, defs=defs, top=top, part=part, project=project)
     elif simulator == 'xrun':
-        return xrun_sim(*files, defs=defs)
+        return xrun_sim(*files, defs=defs, top=top)
     elif simulator == 'vcs':
         return vcs_sim(*files, defs=defs, top=top)
     else:
@@ -133,7 +133,7 @@ def vivado_sim(*files, project, top, part='xc7z020clg484-1', defs=None):
     # run the command
     return run_vivado_tcl(tcl)
 
-def xrun_sim(*files, defs=None):
+def xrun_sim(*files, defs=None, top=None):
     if defs is None:
         defs = []
 
@@ -141,6 +141,8 @@ def xrun_sim(*files, defs=None):
     cmd += [f'{file_}' for file_ in files]
     cmd += ['+incdir+..']
     cmd += [f'+define+{def_}' for def_ in defs]
+    if top is not None:
+        cmd += ['-top', f'{top}']
     res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
 
     print('*** RUNNING XRUN SIMULATION ***')
