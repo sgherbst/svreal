@@ -60,6 +60,9 @@ endinterface
 `define MAKE_SVREAL(name, width_expr, exponent_expr) \
     svreal #(.width(``width_expr``), .exponent(``exponent_expr``)) ``name`` (.format({(``width_expr``){1'b0}}))
 
+`define SVREAL_COPY_FORMAT(in, out) \
+    `MAKE_SVREAL(``out``, `SVREAL_GET_WIDTH(``in``), `SVREAL_GET_EXPONENT(``in``))
+
 // assign one svreal to another
 
 `define SVREAL_ASSIGN(a_name, b_name) \
@@ -230,7 +233,7 @@ module svreal_negate_mod (
 
     generate
         // assign "a" directly into "b_neg", which has the same representation as "b"
-        `MAKE_SVREAL(b_neg, `SVREAL_GET_WIDTH(b), `SVREAL_GET_EXPONENT(b));
+        `SVREAL_COPY_FORMAT(b, b_neg);
         `SVREAL_ASSIGN(a, b_neg);
         
         // assign the negated "b_neg" signal into b.value
@@ -251,8 +254,8 @@ module svreal_arith_mod #(
 
     generate
         if ((opcode == `SVREAL_OPCODE_ADD) || (opcode == `SVREAL_OPCODE_SUB)) begin
-            `MAKE_SVREAL(a_aligned, `SVREAL_GET_WIDTH(c), `SVREAL_GET_EXPONENT(c));
-            `MAKE_SVREAL(b_aligned, `SVREAL_GET_WIDTH(c), `SVREAL_GET_EXPONENT(c));
+            `SVREAL_COPY_FORMAT(c, a_aligned);
+            `SVREAL_COPY_FORMAT(c, b_aligned);
         
             `SVREAL_ASSIGN(a, a_aligned);
             `SVREAL_ASSIGN(b, b_aligned);
@@ -331,9 +334,9 @@ module svreal_mux_mod (
 );
 
     generate
-        `MAKE_SVREAL(b_aligned, `SVREAL_GET_WIDTH(d), `SVREAL_GET_EXPONENT(d));
-        `MAKE_SVREAL(c_aligned, `SVREAL_GET_WIDTH(d), `SVREAL_GET_EXPONENT(d));
-        
+        `SVREAL_COPY_FORMAT(d, b_aligned);
+        `SVREAL_COPY_FORMAT(d, c_aligned);
+
         `SVREAL_ASSIGN(b, b_aligned);
         `SVREAL_ASSIGN(c, c_aligned);
         
@@ -432,11 +435,11 @@ module svreal_dff_mod #(
 
     generate
         // align input to output
-        `MAKE_SVREAL(d_aligned, `SVREAL_GET_WIDTH(q), `SVREAL_GET_EXPONENT(q));
+        `SVREAL_COPY_FORMAT(q, d_aligned);
         `SVREAL_ASSIGN(d, d_aligned);
 
         // align initial value to output format
-        `MAKE_SVREAL(init_wire, `SVREAL_GET_WIDTH(q), `SVREAL_GET_EXPONENT(q));
+        `SVREAL_COPY_FORMAT(q, init_wire);
         `SVREAL_ASSIGN_CONST(init_wire, init);
 
         // main DFF logic
