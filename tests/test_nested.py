@@ -1,3 +1,4 @@
+import pytest
 from .common import *
 
 TOP = 'test_nested'
@@ -8,6 +9,7 @@ def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
     metafunc.parametrize('defs', [None, ['SVREAL_DEBUG']])
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_nested(simulator, defs):
     # run sim
     res=run_sim(*FILES, top=TOP, project=PROJECT, simulator=simulator, defs=defs)
