@@ -132,7 +132,7 @@
 // assign a constant to an svreal (either as a continuous assignment or within a testbench context)
 
 `define SVREAL_SET(name, expr) \
-    ``name`` = `FLOAT_TO_SVREAL(``expr``, ``name``)
+    `SVREAL_SIGNIFICAND(``name``) = `FLOAT_TO_SVREAL(``expr``, ``name``)
 
 // arithmetic functions
 
@@ -166,12 +166,11 @@
     svreal_comp_mod #( \
         .opcode(``opcode_expr``), \
         `PASS_SVREAL_PARAMS(a, ``a_name``), \
-        `PASS_SVREAL_PARAMS(b, ``b_name``), \
-        `PASS_SVREAL_PARAMS(c, ``c_name``) \
+        `PASS_SVREAL_PARAMS(b, ``b_name``) \
     ) ``c_name``_mod_i ( \
         `PASS_SVREAL_SIGNALS(a, ``a_name``), \
         `PASS_SVREAL_SIGNALS(b, ``b_name``), \
-        `PASS_SVREAL_SIGNALS(c, ``c_name``) \
+        .c(``c_name``) \
     )
     
 `define SVREAL_OPCODE_GT 0
@@ -192,12 +191,11 @@
 
 `define SVREAL_MUX(a_name, b_name, c_name, d_name) \
     svreal_mux_mod #( \
-        `PASS_SVREAL_PARAMS(a, ``a_name``), \
         `PASS_SVREAL_PARAMS(b, ``b_name``), \
         `PASS_SVREAL_PARAMS(c, ``c_name``), \
         `PASS_SVREAL_PARAMS(d, ``d_name``) \
     ) ``d_name``_mod_i ( \
-        `PASS_SVREAL_SIGNALS(a, ``a_name``), \
+        .a(``a_name``), \
         `PASS_SVREAL_SIGNALS(b, ``b_name``), \
         `PASS_SVREAL_SIGNALS(c, ``c_name``), \
         `PASS_SVREAL_SIGNALS(d, ``d_name``) \
@@ -347,7 +345,7 @@ module svreal_comp_mod #(
     generate
         // create the aligned representations
         `MAKE_SVREAL(a_aligned, `SVREAL_SIGNIFICAND_WIDTH(a), `SVREAL_MAX_EXPONENT(a, b));
-        `MAKE_SVREAL(a_aligned, `SVREAL_SIGNIFICAND_WIDTH(b), `SVREAL_MAX_EXPONENT(a, b));
+        `MAKE_SVREAL(b_aligned, `SVREAL_SIGNIFICAND_WIDTH(b), `SVREAL_MAX_EXPONENT(a, b));
         `SVREAL_ASSIGN(a, a_aligned);
         `SVREAL_ASSIGN(b, b_aligned);
 
