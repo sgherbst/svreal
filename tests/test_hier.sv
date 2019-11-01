@@ -3,6 +3,7 @@
 `include "svreal.sv"
 
 module level3 (svreal.in a, svreal.in b, svreal.out c);
+    generate
     svreal_mul_mod #(
         `PASS_SVREAL_PARAMS(a, a.value),
         `PASS_SVREAL_PARAMS(b, b.value),
@@ -12,6 +13,7 @@ module level3 (svreal.in a, svreal.in b, svreal.out c);
         `PASS_SVREAL_SIGNALS(b, b.value),
         `PASS_SVREAL_SIGNALS(c, c.value)
     );
+    endgenerate
 endmodule
 
 module level2 (svreal.in a, svreal.in b, svreal.out c);
