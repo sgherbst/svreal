@@ -3,7 +3,15 @@
 `include "svreal.sv"
 
 module level3 (svreal.in a, svreal.in b, svreal.out c);
-    `SVREAL_MUL(a, b, c);
+    svreal_mul_mod #(
+        `PASS_SVREAL_PARAMS(a, a.value),
+        `PASS_SVREAL_PARAMS(b, b.value),
+        `PASS_SVREAL_PARAMS(c, c.value)
+    ) mul_i (
+        `PASS_SVREAL_SIGNALS(a, a.value),
+        `PASS_SVREAL_SIGNALS(b, b.value),
+        `PASS_SVREAL_SIGNALS(c, c.value)
+    );
 endmodule
 
 module level2 (svreal.in a, svreal.in b, svreal.out c);
@@ -16,15 +24,15 @@ endmodule
 
 module test_hier;
 
-    `MAKE_SVREAL(a, 16, -8);
-    `MAKE_SVREAL(b, 17, -9);
-    `MAKE_SVREAL(c, 18, -10);
+    `MAKE_SVREAL_INTF(a, 16, -8);
+    `MAKE_SVREAL_INTF(b, 17, -9);
+    `MAKE_SVREAL_INTF(c, 18, -10);
     level1 inner(.a(a), .b(b), .c(c));
 
     task print_signals();
-        `SVREAL_PRINT(a);
-        `SVREAL_PRINT(b);
-        `SVREAL_PRINT(c);
+        `SVREAL_PRINT(a.value);
+        `SVREAL_PRINT(b.value);
+        `SVREAL_PRINT(c.value);
     endtask
 
     // create testbench
@@ -35,8 +43,8 @@ module test_hier;
 
         // test set #1
         $display("SVREAL TEST SET 1");
-        `SVREAL_SET(a, 1.23);
-        `SVREAL_SET(b, 4.56);
+        `SVREAL_SET(a.value, 1.23);
+        `SVREAL_SET(b.value, 4.56);
         #(1ns);
         print_signals();
 

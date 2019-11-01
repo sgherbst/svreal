@@ -75,9 +75,12 @@
 
 // macro to create svreal numbers conveniently
 
-`define MAKE_SVREAL(name, width, exponent) \
+`define DECL_SVREAL_TYPE(name, width) \
     `SVREAL_SIGNIFICAND_TYPE(``width``) `SVREAL_SIGNIFICAND(``name``); \
-    `SVREAL_EXPONENT_TYPE `SVREAL_EXPONENT(``name``) \
+    `SVREAL_EXPONENT_TYPE `SVREAL_EXPONENT(``name``)
+
+`define MAKE_SVREAL(name, width, exponent) \
+    `DECL_SVREAL_TYPE(``name``, ``width``) \
     `ifndef SVREAL_DEBUG \
         ; assign `SVREAL_EXPONENT(``name``) = ``exponent`` \
     `else \
@@ -106,6 +109,32 @@
 `define PASS_SVREAL_SIGNALS(internal_name, external_name) \
     .`SVREAL_SIGNIFICAND(``internal_name``)(`SVREAL_SIGNIFICAND(``external_name``)), \
     .`SVREAL_EXPONENT(``internal_name``)(`SVREAL_EXPONENT(``external_name``)) \
+
+// interface for conveniently passing around a single svreal value
+
+`define SVREAL_MODPORT_IN(name) \
+    input `SVREAL_SIGNIFICAND(``name``), \
+    input `SVREAL_EXPONENT(``name``)
+
+`define SVREAL_MODPORT_OUT(name) \
+    output `SVREAL_SIGNIFICAND(``name``), \
+    input `SVREAL_EXPONENT(``name``)
+
+interface svreal #(
+    parameter integer width=-1
+);
+    `DECL_SVREAL_TYPE(value, width);
+    modport in (`SVREAL_MODPORT_IN(value));
+    modport out (`SVREAL_MODPORT_OUT(value));
+endinterface
+
+`define MAKE_SVREAL_INTF(name, width_expr, exponent) \
+    svreal #(.width(``width_expr``)) ``name`` () \
+    `ifndef SVREAL_DEBUG \
+        ; assign `SVREAL_EXPONENT(``name``.value) = ``exponent`` \
+    `else \
+        ; assign `SVREAL_EXPONENT(``name``.value) = 0 \
+    `endif
 
 // assign one svreal to another
 

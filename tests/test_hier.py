@@ -17,6 +17,6 @@ def test_hier(simulator, defs):
 
     # check results
     sec = res[1]
-    assert is_close(sec['a'], +1.23)
-    assert is_close(sec['b'], +4.56)
-    assert is_close(sec['c'], +5.6088)
+    assert is_close(sec['a.value'], +1.23)
+    assert is_close(sec['b.value'], +4.56)
+    assert is_close(sec['c.value'], +5.6088)
