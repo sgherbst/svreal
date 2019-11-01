@@ -25,8 +25,7 @@
 
 // exponent format
 
-`define SVREAL_EXPONENT(name) \
-    ``name``_exponent
+`define SVREAL_EXPONENT(name) ``name``_exponent
 
 `define SVREAL_EXPONENT_WIDTH 16
 
@@ -41,8 +40,7 @@
 
 // significand format
 
-`define SVREAL_SIGNIFICAND(name) \
-    ``name``_significand
+`define SVREAL_SIGNIFICAND(name) ``name``_significand
 
 `define SVREAL_SIGNIFICAND_TYPE(width) \
     `ifndef SVREAL_DEBUG \
@@ -78,8 +76,8 @@
 // macro to create svreal numbers conveniently
 
 `define MAKE_SVREAL(name, width, exponent) \
-    `SVREAL_SIGNIFICAND_TYPE(``width``) ``SVREAL_SIGNIFICAND(``name``); \
-    `SVREAL_EXPONENT_TYPE ``SVREAL_EXPONENT(``name``) \
+    `SVREAL_SIGNIFICAND_TYPE(``width``) `SVREAL_SIGNIFICAND(``name``); \
+    `SVREAL_EXPONENT_TYPE `SVREAL_EXPONENT(``name``) \
     `ifndef SVREAL_DEBUG \
         ; assign `SVREAL_EXPONENT(``name``) = ``exponent`` \
     `else \
@@ -89,20 +87,19 @@
 `define SVREAL_COPY_FORMAT(in, out) \
     `MAKE_SVREAL(``out``, `SVREAL_SIGNIFICAND_WIDTH(``in``), `SVREAL_EXPONENT(``in``))
 
-`define SVREAL_SIGNIFICAND_WIDTH_PARAM(name) \
-    `SVREAL_SIGNIFICAND(``name``)_width
+`define SVREAL_SIGNIFICAND_WIDTH_PARAM(name) ``name``_significand_width
 
 `define PASS_SVREAL_PARAMS(internal_name, external_name) \
     .`SVREAL_SIGNIFICAND_WIDTH_PARAM(``internal_name``)(`SVREAL_SIGNIFICAND_WIDTH(``external_name``))
 
 `define DECL_SVREAL_PARAMS(name) \
-    parameter integer `SVREAL_SIGNIFICAND_WIDTH_PARAM(``name``)=-1
+    parameter integer `SVREAL_SIGNIFICAND_WIDTH_PARAM(``name``) = -1
 
 `define DECL_SVREAL_INPUT(name) \
     input `SVREAL_SIGNIFICAND_TYPE(`SVREAL_SIGNIFICAND_WIDTH_PARAM(``name``)) `SVREAL_SIGNIFICAND(``name``), \
     input `SVREAL_EXPONENT_TYPE `SVREAL_EXPONENT(``name``)
 
-`define DECL_SVREAL_OUTPUT(pin_name) \
+`define DECL_SVREAL_OUTPUT(name) \
     output `SVREAL_SIGNIFICAND_TYPE(`SVREAL_SIGNIFICAND_WIDTH_PARAM(``name``)) `SVREAL_SIGNIFICAND(``name``), \
     input `SVREAL_EXPONENT_TYPE `SVREAL_EXPONENT(``name``)
 
@@ -167,7 +164,7 @@
 
 `define SVREAL_COMP(opcode_expr, a_name, b_name, c_name) \
     svreal_comp_mod #( \
-        .opcode(``opcode_expr``) \
+        .opcode(``opcode_expr``), \
         `PASS_SVREAL_PARAMS(a, ``a_name``), \
         `PASS_SVREAL_PARAMS(b, ``b_name``), \
         `PASS_SVREAL_PARAMS(c, ``c_name``) \
@@ -291,9 +288,9 @@ module svreal_arith_mod #(
     `DECL_SVREAL_PARAMS(c),
     parameter integer opcode=0
 ) (
-    `SVREAL_DECL_INPUT(a),
-    `SVREAL_DECL_INPUT(b),
-    `SVREAL_DECL_OUTPUT(c)
+    `DECL_SVREAL_INPUT(a),
+    `DECL_SVREAL_INPUT(b),
+    `DECL_SVREAL_OUTPUT(c)
 );
 
     generate
@@ -342,15 +339,15 @@ module svreal_comp_mod #(
     `DECL_SVREAL_PARAMS(b),
     parameter integer opcode=0
 ) (
-    `SVREAL_DECL_INPUT(a),
-    `SVREAL_DECL_INPUT(b),
+    `DECL_SVREAL_INPUT(a),
+    `DECL_SVREAL_INPUT(b),
     output wire logic c
 );
 
     generate
         // create the aligned representations
-        `MAKE_SVREAL(a_aligned, `SVREAL_GET_WIDTH(a), `SVREAL_MAX_EXPONENT(a, b));
-        `MAKE_SVREAL(a_aligned, `SVREAL_GET_WIDTH(b), `SVREAL_MAX_EXPONENT(a, b));
+        `MAKE_SVREAL(a_aligned, `SVREAL_SIGNIFICAND_WIDTH(a), `SVREAL_MAX_EXPONENT(a, b));
+        `MAKE_SVREAL(a_aligned, `SVREAL_SIGNIFICAND_WIDTH(b), `SVREAL_MAX_EXPONENT(a, b));
         `SVREAL_ASSIGN(a, a_aligned);
         `SVREAL_ASSIGN(b, b_aligned);
 
@@ -382,9 +379,9 @@ module svreal_mux_mod #(
     `DECL_SVREAL_PARAMS(d)
 ) (
     input wire logic a,
-    `SVREAL_DECL_INPUT(b),
-    `SVREAL_DECL_INPUT(c),
-    `SVREAL_DECL_OUTPUT(d)
+    `DECL_SVREAL_INPUT(b),
+    `DECL_SVREAL_INPUT(c),
+    `DECL_SVREAL_OUTPUT(d)
 );
 
     generate
@@ -405,7 +402,7 @@ module svreal_to_int_mod #(
     `DECL_SVREAL_PARAMS(a),
     parameter integer width=1
 ) (
-    `SVREAL_DECL_INPUT(a),
+    `DECL_SVREAL_INPUT(a),
     output wire logic signed [(width-1):0] b
 );
 
@@ -430,7 +427,7 @@ module int_to_svreal_mod #(
     `DECL_SVREAL_PARAMS(b)
 ) (
     input wire logic signed [(width-1):0] a,
-    `SVREAL_DECL_OUTPUT(b)
+    `DECL_SVREAL_OUTPUT(b)
 );
 
     generate
@@ -454,9 +451,9 @@ module svreal_dff_mod #(
     `DECL_SVREAL_PARAMS(q),
     `DECL_SVREAL_PARAMS(init)
 ) (
-    `SVREAL_DECL_INPUT(d),
-    `SVREAL_DECL_OUTPUT(q),
-    `SVREAL_DECL_INPUT(init),
+    `DECL_SVREAL_INPUT(d),
+    `DECL_SVREAL_OUTPUT(q),
+    `DECL_SVREAL_INPUT(init),
     input wire logic rst,
     input wire logic clk,
     input wire logic cke
