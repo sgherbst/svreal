@@ -106,6 +106,10 @@
     output `SVREAL_SIGNIFICAND_TYPE(`SVREAL_SIGNIFICAND_WIDTH_PARAM(``name``)) `SVREAL_SIGNIFICAND(``name``), \
     input `SVREAL_EXPONENT_TYPE `SVREAL_EXPONENT(``name``)
 
+`define PASS_SVREAL_SIGNALS(internal_name, external_name) \
+    .`SVREAL_SIGNIFICAND(``internal_name``)(`SVREAL_SIGNIFICAND(``external_name``)), \
+    .`SVREAL_EXPONENT(``internal_name``)(`SVREAL_EXPONENT(``external_name``)) \
+
 // assign one svreal to another
 
 `define SVREAL_ASSIGN(a_name, b_name) \
@@ -120,7 +124,7 @@
 // negate an svreal
 
 `define SVREAL_NEGATE(a_name, b_name) \
-    svreal_negate_mod #(
+    svreal_negate_mod #( \
         `PASS_SVREAL_PARAMS(a, ``a_name``), \
         `PASS_SVREAL_PARAMS(b, ``b_name``) \
     ) ``b_name``_mod_i ( \
