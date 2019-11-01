@@ -2,22 +2,22 @@
 
 `include "svreal.sv"
 
-module test_dff #(
-    parameter real dff_init=1.23
-); 
+module test_dff;
 
     // create signals
     `MAKE_SVREAL(d, 16, -8);
     `MAKE_SVREAL(q, 17, -9);
-    logic clk, rst, ce;
-    `SVREAL_DFF(d, q, rst, clk, ce, dff_init);
+    `MAKE_SVREAL(init, 18, -10);
+    logic clk, rst, cke;
+    `SVREAL_DFF(d, q, rst, clk, cke, init);
 
     task print_signals();
         `SVREAL_PRINT(d);
         `SVREAL_PRINT(q);
+        `SVREAL_PRINT(init);
         $display("clk=%0b", clk);
         $display("rst=%0b", rst);
-        $display("ce=%0b", ce);
+        $display("cke=%0b", cke);
     endtask
 
     // create testbench
@@ -27,10 +27,11 @@ module test_dff #(
         #(1ns);
 
         // read out the reset value
+        `SVREAL_SET(init, 1.23);
         `SVREAL_SET(d, 2.34);
         clk = 1'b0;
         rst = 1'b1;
-        ce = 1'b1;
+        cke = 1'b1;
         #(1ns);
         clk = 1'b1;
         #(1ns);
@@ -41,7 +42,7 @@ module test_dff #(
         `SVREAL_SET(d, 2.34);
         clk = 1'b0;
         rst = 1'b0;
-        ce = 1'b1;
+        cke = 1'b1;
         #(1ns);
         clk = 1'b1;
         $display("SVREAL TEST SET 2");
@@ -54,7 +55,7 @@ module test_dff #(
         `SVREAL_SET(d, 3.45);
         clk = 1'b0;
         rst = 1'b0;
-        ce = 1'b1;
+        cke = 1'b1;
         #(1ns);
         $display("SVREAL TEST SET 4");
         print_signals();
@@ -67,7 +68,7 @@ module test_dff #(
         `SVREAL_SET(d, 4.56);
         clk = 1'b0;
         rst = 1'b0;
-        ce = 1'b0;
+        cke = 1'b0;
         #(1ns);
         $display("SVREAL TEST SET 6");
         print_signals();
