@@ -87,10 +87,10 @@
         ; assign `SVREAL_EXPONENT(``name``) = 0 \
     `endif
 
+`define SVREAL_SIGNIFICAND_WIDTH_PARAM(name) ``name``_significand_width
+
 `define SVREAL_COPY_FORMAT(in, out) \
     `MAKE_SVREAL(``out``, `SVREAL_SIGNIFICAND_WIDTH(``in``), `SVREAL_EXPONENT(``in``))
-
-`define SVREAL_SIGNIFICAND_WIDTH_PARAM(name) ``name``_significand_width
 
 `define PASS_SVREAL_PARAMS(internal_name, external_name) \
     .`SVREAL_SIGNIFICAND_WIDTH_PARAM(``internal_name``)(`SVREAL_SIGNIFICAND_WIDTH(``external_name``))
@@ -138,24 +138,24 @@ endinterface
 
 // assign one svreal to another
 
-`define SVREAL_ASSIGN(a_name, b_name) \
+`define SVREAL_ASSIGN(in_name, out_name) \
     svreal_assign_mod #( \
-        `PASS_SVREAL_PARAMS(a, ``a_name``), \
-        `PASS_SVREAL_PARAMS(b, ``b_name``) \
-    ) ``b_name``_mod_i ( \
-        `PASS_SVREAL_SIGNALS(a, ``a_name``), \
-        `PASS_SVREAL_SIGNALS(b, ``b_name``) \
+        `PASS_SVREAL_PARAMS(in, ``in_name``), \
+        `PASS_SVREAL_PARAMS(out, ``out_name``) \
+    ) ``out_name``_mod_i ( \
+        `PASS_SVREAL_SIGNALS(in, ``in_name``), \
+        `PASS_SVREAL_SIGNALS(out, ``out_name``) \
     )
 
 // negate an svreal
 
-`define SVREAL_NEGATE(a_name, b_name) \
+`define SVREAL_NEGATE(in_name, out_name) \
     svreal_negate_mod #( \
-        `PASS_SVREAL_PARAMS(a, ``a_name``), \
-        `PASS_SVREAL_PARAMS(b, ``b_name``) \
-    ) ``b_name``_mod_i ( \
-        `PASS_SVREAL_SIGNALS(a, ``a_name``), \
-        `PASS_SVREAL_SIGNALS(b, ``b_name``) \
+        `PASS_SVREAL_PARAMS(in, ``in_name``), \
+        `PASS_SVREAL_PARAMS(out, ``out_name``) \
+    ) ``out_name``_mod_i ( \
+        `PASS_SVREAL_SIGNALS(in, ``in_name``), \
+        `PASS_SVREAL_SIGNALS(out, ``out_name``) \
     )
 
 // assign a constant to an svreal (either as a continuous assignment or within a testbench context)
@@ -245,36 +245,36 @@ endinterface
 
 // multiplex between two values
 
-`define SVREAL_MUX(a_name, b_name, c_name, d_name) \
+`define SVREAL_MUX(sel_name, in0_name, in1_name, out_name) \
     svreal_mux_mod #( \
-        `PASS_SVREAL_PARAMS(b, ``b_name``), \
-        `PASS_SVREAL_PARAMS(c, ``c_name``), \
-        `PASS_SVREAL_PARAMS(d, ``d_name``) \
-    ) ``d_name``_mod_i ( \
-        .a(``a_name``), \
-        `PASS_SVREAL_SIGNALS(b, ``b_name``), \
-        `PASS_SVREAL_SIGNALS(c, ``c_name``), \
-        `PASS_SVREAL_SIGNALS(d, ``d_name``) \
+        `PASS_SVREAL_PARAMS(in0, ``in0_name``), \
+        `PASS_SVREAL_PARAMS(in1, ``in1_name``), \
+        `PASS_SVREAL_PARAMS(out, ``out_name``) \
+    ) ``out_name``_mod_i ( \
+        .sel(``sel_name``), \
+        `PASS_SVREAL_SIGNALS(in0, ``in0_name``), \
+        `PASS_SVREAL_SIGNALS(in1, ``in1_name``), \
+        `PASS_SVREAL_SIGNALS(out, ``out_name``) \
     )
 
 // conversion between integer and svreal
 
-`define SVREAL_TO_INT(a_name, b_name) \
+`define SVREAL_TO_INT(in_name, out_name) \
     svreal_to_int_mod #( \
-        `PASS_SVREAL_PARAMS(a, ``a_name``), \
-        .width($size(``b_name``)) \
-    ) ``b_name``_mod_i ( \
-        `PASS_SVREAL_SIGNALS(a, ``a_name``), \
-        .b(``b_name``) \
+        `PASS_SVREAL_PARAMS(in, ``in_name``), \
+        .out_width($size(``out_name``)) \
+    ) ``out_name``_mod_i ( \
+        `PASS_SVREAL_SIGNALS(in, ``in_name``), \
+        .out(``out_name``) \
     )
 
-`define INT_TO_SVREAL(a_name, b_name) \
+`define INT_TO_SVREAL(in_name, out_name) \
     int_to_svreal_mod #( \
-        .width($size(``a_name``)), \
-        `PASS_SVREAL_PARAMS(b, ``b_name``) \
-    ) ``b_name``_mod_i ( \
-        .a(``a_name``), \
-        `PASS_SVREAL_SIGNALS(b, ``b_name``) \
+        .in_width($size(``in_name``)), \
+        `PASS_SVREAL_PARAMS(out, ``out_name``) \
+    ) ``out_name``_mod_i ( \
+        .in(``in_name``), \
+        `PASS_SVREAL_SIGNALS(out, ``out_name``) \
     )
 
 // memory
@@ -296,21 +296,21 @@ endinterface
 // assign one svreal number to another
 
 module svreal_assign_mod #(
-    `DECL_SVREAL_PARAMS(a),
-    `DECL_SVREAL_PARAMS(b)
+    `DECL_SVREAL_PARAMS(in),
+    `DECL_SVREAL_PARAMS(out)
 ) (
-    `DECL_SVREAL_INPUT(a),
-    `DECL_SVREAL_OUTPUT(b)
+    `DECL_SVREAL_INPUT(in),
+    `DECL_SVREAL_OUTPUT(out)
 );
     generate
 
-    `ifndef SVREAL_DEBUG
-        `SVREAL_EXPONENT_TYPE lshift;
-        assign lshift = `SVREAL_EXPONENT(a) - `SVREAL_EXPONENT(b);
-        assign `SVREAL_SIGNIFICAND(b) = `SVREAL_EXPR_LSHIFT(`SVREAL_SIGNIFICAND(a), lshift);
-    `else
-        assign `SVREAL_SIGNIFICAND(b) = `SVREAL_SIGNIFICAND(a);
-    `endif
+        `ifndef SVREAL_DEBUG
+            `SVREAL_EXPONENT_TYPE lshift;
+            assign lshift = `SVREAL_EXPONENT(in) - `SVREAL_EXPONENT(out);
+            assign `SVREAL_SIGNIFICAND(out) = `SVREAL_EXPR_LSHIFT(`SVREAL_SIGNIFICAND(in), lshift);
+        `else
+            assign `SVREAL_SIGNIFICAND(out) = `SVREAL_SIGNIFICAND(in);
+        `endif
 
     endgenerate
 endmodule
@@ -318,20 +318,20 @@ endmodule
 // negate an svreal value
 
 module svreal_negate_mod #(
-    `DECL_SVREAL_PARAMS(a),
-    `DECL_SVREAL_PARAMS(b)
+    `DECL_SVREAL_PARAMS(in),
+    `DECL_SVREAL_PARAMS(out)
 ) (
-    `DECL_SVREAL_INPUT(a),
-    `DECL_SVREAL_OUTPUT(b)
+    `DECL_SVREAL_INPUT(in),
+    `DECL_SVREAL_OUTPUT(out)
 );
     generate
 
-    // assign "a" directly into "b_neg", which has the same representation as "b"
-    `SVREAL_COPY_FORMAT(b, b_neg);
-    `SVREAL_ASSIGN(a, b_neg);
-    
-    // assign the negated "b_neg" signal into b.value
-    assign `SVREAL_SIGNIFICAND(b) = -`SVREAL_SIGNIFICAND(b_neg);
+        // assign "in" directly into "out_neg", which has the same representation as "out"
+        `SVREAL_COPY_FORMAT(out, out_neg);
+        `SVREAL_ASSIGN(in, out_neg);
+        
+        // assign the negated "out_neg" signal into out
+        assign `SVREAL_SIGNIFICAND(out) = -`SVREAL_SIGNIFICAND(out_neg);
 
     endgenerate
 endmodule
@@ -350,19 +350,19 @@ module svreal_addsub_mod #(
 );
     generate   
 
-    `SVREAL_COPY_FORMAT(c, a_aligned);
-    `SVREAL_COPY_FORMAT(c, b_aligned);
-    
-    `SVREAL_ASSIGN(a, a_aligned);
-    `SVREAL_ASSIGN(b, b_aligned);
-     
-    if (opcode == `SVREAL_OPCODE_ADD) begin
-        assign `SVREAL_SIGNIFICAND(c) = `SVREAL_SIGNIFICAND(a_aligned) + `SVREAL_SIGNIFICAND(b_aligned);
-    end else if (opcode == `SVREAL_OPCODE_SUB) begin
-        assign `SVREAL_SIGNIFICAND(c) = `SVREAL_SIGNIFICAND(a_aligned) - `SVREAL_SIGNIFICAND(b_aligned);
-    end else begin
-        `SVREAL_ERROR
-    end
+        `SVREAL_COPY_FORMAT(c, a_aligned);
+        `SVREAL_COPY_FORMAT(c, b_aligned);
+        
+        `SVREAL_ASSIGN(a, a_aligned);
+        `SVREAL_ASSIGN(b, b_aligned);
+         
+        if (opcode == `SVREAL_OPCODE_ADD) begin
+            assign `SVREAL_SIGNIFICAND(c) = `SVREAL_SIGNIFICAND(a_aligned) + `SVREAL_SIGNIFICAND(b_aligned);
+        end else if (opcode == `SVREAL_OPCODE_SUB) begin
+            assign `SVREAL_SIGNIFICAND(c) = `SVREAL_SIGNIFICAND(a_aligned) - `SVREAL_SIGNIFICAND(b_aligned);
+        end else begin
+            `SVREAL_ERROR
+        end
 
     endgenerate
 endmodule
@@ -380,21 +380,16 @@ module svreal_mul_mod #(
 );
     generate
 
-    // determine the width of the intermediate result
-    localparam integer __a_significand_width = `SVREAL_SIGNIFICAND_WIDTH(a);
-    localparam integer __b_significand_width = `SVREAL_SIGNIFICAND_WIDTH(b);
-    localparam integer __prod_significand_width = __a_significand_width + __b_significand_width;
+        // determine the exponent of the intermediate result
+        `SVREAL_EXPONENT_TYPE prod_exponent_value;
+        assign prod_exponent_value = `SVREAL_EXPONENT(a) + `SVREAL_EXPONENT(b);
 
-    // determine the exponent of the intermediate result
-    `SVREAL_EXPONENT_TYPE __prod_exponent;
-    assign __prod_exponent = `SVREAL_EXPONENT(a) + `SVREAL_EXPONENT(b);
+        // compute intermediate result
+        `MAKE_SVREAL(prod, (`SVREAL_SIGNIFICAND_WIDTH_PARAM(a) + `SVREAL_SIGNIFICAND_WIDTH_PARAM(b)), prod_exponent_value);
+        assign `SVREAL_SIGNIFICAND(prod) = `SVREAL_SIGNIFICAND(a) * `SVREAL_SIGNIFICAND(b);
 
-    // compute intermediate result
-    `MAKE_SVREAL(prod, __prod_significand_width, __prod_exponent);
-    assign `SVREAL_SIGNIFICAND(prod) = `SVREAL_SIGNIFICAND(a) * `SVREAL_SIGNIFICAND(b);
-
-    // assign intermediate result to output (with appropriate shifting)
-    `SVREAL_ASSIGN(prod, c);
+        // assign intermediate result to output (with appropriate shifting)
+        `SVREAL_ASSIGN(prod, c);
     
     endgenerate    
 endmodule
@@ -413,18 +408,18 @@ module svreal_minmax_mod #(
 );
     generate
 
-    // mux between a and b
-    logic sel;
-    `SVREAL_MUX(sel, a, b, c);
-    
-    // pick min or max depending on the opcode
-    if          (opcode == `SVREAL_OPCODE_MIN) begin
-        `SVREAL_LT(b, a, sel);
-    end else if (opcode == `SVREAL_OPCODE_MAX) begin
-        `SVREAL_GT(b, a, sel);
-    end else begin
-        `SVREAL_ERROR
-    end
+        // mux between a and b
+        logic sel;
+        `SVREAL_MUX(sel, a, b, c);
+        
+        // pick min or max depending on the opcode
+        if          (opcode == `SVREAL_OPCODE_MIN) begin
+            `SVREAL_LT(b, a, sel);
+        end else if (opcode == `SVREAL_OPCODE_MAX) begin
+            `SVREAL_GT(b, a, sel);
+        end else begin
+            `SVREAL_ERROR
+        end
 
     endgenerate
 endmodule
@@ -442,38 +437,32 @@ module svreal_comp_mod #(
 );
     generate
 
-    // get widths of "a" and "b" significands
-    // seems to be necessary to read into a localparam to
-    // avoid a bug specific to Xcelium
-    localparam integer __a_significand_width = `SVREAL_SIGNIFICAND_WIDTH(a);
-    localparam integer __b_significand_width = `SVREAL_SIGNIFICAND_WIDTH(b);
+        // compute the maximum exponent of "a" and "b"
+        `SVREAL_EXPONENT_TYPE max_exponent;
+        assign max_exponent = `SVREAL_MAX_EXPONENT(a, b);
 
-    // compute the maximum exponent of "a" and "b"
-    `SVREAL_EXPONENT_TYPE max_exponent;
-    assign max_exponent = `SVREAL_MAX_EXPONENT(a, b);
-
-    // make a versions of "a" and "b" that are aligned to each other
-    `MAKE_SVREAL(a_aligned, __a_significand_width, max_exponent);
-    `MAKE_SVREAL(b_aligned, __b_significand_width, max_exponent);
-    `SVREAL_ASSIGN(a, a_aligned);
-    `SVREAL_ASSIGN(b, b_aligned);
-    
-    // perform the desired comparison
-    if          (opcode == `SVREAL_OPCODE_GT) begin
-        assign c = (`SVREAL_SIGNIFICAND(a_aligned) >  `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-    end else if (opcode == `SVREAL_OPCODE_GE) begin
-        assign c = (`SVREAL_SIGNIFICAND(a_aligned) >= `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-    end else if (opcode == `SVREAL_OPCODE_LT) begin
-        assign c = (`SVREAL_SIGNIFICAND(a_aligned) <  `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-    end else if (opcode == `SVREAL_OPCODE_LE) begin
-        assign c = (`SVREAL_SIGNIFICAND(a_aligned) <= `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-    end else if (opcode == `SVREAL_OPCODE_EQ) begin
-        assign c = (`SVREAL_SIGNIFICAND(a_aligned) == `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-    end else if (opcode == `SVREAL_OPCODE_NE) begin
-        assign c = (`SVREAL_SIGNIFICAND(a_aligned) != `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-    end else begin
-        `SVREAL_ERROR
-    end
+        // make a versions of "a" and "b" that are aligned to each other
+        `MAKE_SVREAL(a_aligned, `SVREAL_SIGNIFICAND_WIDTH_PARAM(a), max_exponent);
+        `MAKE_SVREAL(b_aligned, `SVREAL_SIGNIFICAND_WIDTH_PARAM(b), max_exponent);
+        `SVREAL_ASSIGN(a, a_aligned);
+        `SVREAL_ASSIGN(b, b_aligned);
+        
+        // perform the desired comparison
+        if          (opcode == `SVREAL_OPCODE_GT) begin
+            assign c = (`SVREAL_SIGNIFICAND(a_aligned) >  `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
+        end else if (opcode == `SVREAL_OPCODE_GE) begin
+            assign c = (`SVREAL_SIGNIFICAND(a_aligned) >= `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
+        end else if (opcode == `SVREAL_OPCODE_LT) begin
+            assign c = (`SVREAL_SIGNIFICAND(a_aligned) <  `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
+        end else if (opcode == `SVREAL_OPCODE_LE) begin
+            assign c = (`SVREAL_SIGNIFICAND(a_aligned) <= `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
+        end else if (opcode == `SVREAL_OPCODE_EQ) begin
+            assign c = (`SVREAL_SIGNIFICAND(a_aligned) == `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
+        end else if (opcode == `SVREAL_OPCODE_NE) begin
+            assign c = (`SVREAL_SIGNIFICAND(a_aligned) != `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
+        end else begin
+            `SVREAL_ERROR
+        end
 
     endgenerate
 endmodule
@@ -481,24 +470,24 @@ endmodule
 // multiplex between two values
 
 module svreal_mux_mod #(
-    `DECL_SVREAL_PARAMS(b),
-    `DECL_SVREAL_PARAMS(c),
-    `DECL_SVREAL_PARAMS(d)
+    `DECL_SVREAL_PARAMS(in0),
+    `DECL_SVREAL_PARAMS(in1),
+    `DECL_SVREAL_PARAMS(out)
 ) (
-    input wire logic a,
-    `DECL_SVREAL_INPUT(b),
-    `DECL_SVREAL_INPUT(c),
-    `DECL_SVREAL_OUTPUT(d)
+    input wire logic sel,
+    `DECL_SVREAL_INPUT(in0),
+    `DECL_SVREAL_INPUT(in1),
+    `DECL_SVREAL_OUTPUT(out)
 );
     generate
 
-    `SVREAL_COPY_FORMAT(d, b_aligned);
-    `SVREAL_COPY_FORMAT(d, c_aligned);
-    
-    `SVREAL_ASSIGN(b, b_aligned);
-    `SVREAL_ASSIGN(c, c_aligned);
-    
-    assign `SVREAL_SIGNIFICAND(d) = (a == 1'b0) ? `SVREAL_SIGNIFICAND(b_aligned) : `SVREAL_SIGNIFICAND(c_aligned);
+        `SVREAL_COPY_FORMAT(out, in0_aligned);
+        `SVREAL_COPY_FORMAT(out, in1_aligned);
+        
+        `SVREAL_ASSIGN(in0, in0_aligned);
+        `SVREAL_ASSIGN(in1, in1_aligned);
+        
+        assign `SVREAL_SIGNIFICAND(out) = (sel == 1'b0) ? `SVREAL_SIGNIFICAND(in0_aligned) : `SVREAL_SIGNIFICAND(in1_aligned);
 
     endgenerate
 endmodule
@@ -506,23 +495,24 @@ endmodule
 // convert svreal to int
 
 module svreal_to_int_mod #(
-    `DECL_SVREAL_PARAMS(a),
-    parameter integer width=1
+    `DECL_SVREAL_PARAMS(in),
+    parameter integer out_width=1
 ) (
-    `DECL_SVREAL_INPUT(a),
-    output wire logic signed [(width-1):0] b
+    `DECL_SVREAL_INPUT(in),
+    output wire logic signed [(out_width-1):0] out
 );
     generate
     
-    `MAKE_SVREAL(a_aligned, width, 0);
-    `SVREAL_ASSIGN(a, a_aligned);
-    `ifndef SVREAL_DEBUG
-        // normal operation
-        assign b = `SVREAL_SIGNIFICAND(a_aligned);
-    `else
-        // debug operation
-        assign b = integer'(`SVREAL_SIGNIFICAND(a_aligned));
-    `endif
+        `MAKE_SVREAL(in_aligned, out_width, 0);
+        `SVREAL_ASSIGN(in, in_aligned);
+
+        `ifndef SVREAL_DEBUG
+            // normal operation
+            assign out = `SVREAL_SIGNIFICAND(in_aligned);
+        `else
+            // debug operation
+            assign out = integer'(`SVREAL_SIGNIFICAND(in_aligned));
+        `endif
 
     endgenerate
 endmodule
@@ -530,23 +520,23 @@ endmodule
 // convert int to svreal
 
 module int_to_svreal_mod #(
-    parameter integer width=1,
-    `DECL_SVREAL_PARAMS(b)
+    parameter integer in_width=1,
+    `DECL_SVREAL_PARAMS(out)
 ) (
-    input wire logic signed [(width-1):0] a,
-    `DECL_SVREAL_OUTPUT(b)
+    input wire logic signed [(in_width-1):0] in,
+    `DECL_SVREAL_OUTPUT(out)
 );
     generate
 
-    `MAKE_SVREAL(a_aligned, width, 0);   
-    `ifndef SVREAL_DEBUG
-        // normal operation
-        assign `SVREAL_SIGNIFICAND(a_aligned) = a;
-    `else
-        // debug operation
-        assign `SVREAL_SIGNIFICAND(a_aligned) = 1.0*a;
-    `endif
-    `SVREAL_ASSIGN(a_aligned, b);
+        `MAKE_SVREAL(in_aligned, in_width, 0);   
+        `ifndef SVREAL_DEBUG
+            // normal operation
+            assign `SVREAL_SIGNIFICAND(in_aligned) = in;
+        `else
+            // debug operation
+            assign `SVREAL_SIGNIFICAND(in_aligned) = 1.0*in;
+        `endif
+        `SVREAL_ASSIGN(in_aligned, out);
 
     endgenerate
 endmodule
@@ -567,24 +557,24 @@ module svreal_dff_mod #(
 );
     generate
 
-    // align input to output
-    `SVREAL_COPY_FORMAT(q, d_aligned);
-    `SVREAL_ASSIGN(d, d_aligned);
-    
-    // align initial value to output format
-    `SVREAL_COPY_FORMAT(q, init_aligned);
-    `SVREAL_ASSIGN(init, init_aligned);
-    
-    // main DFF logic
-    always @(posedge clk) begin
-        if (rst == 1'b1) begin
-            `SVREAL_SIGNIFICAND(q) <= `SVREAL_SIGNIFICAND(init_aligned);
-        end else if (cke == 1'b1) begin
-            `SVREAL_SIGNIFICAND(q) <= `SVREAL_SIGNIFICAND(d_aligned);
-        end else begin
-            `SVREAL_SIGNIFICAND(q) <= `SVREAL_SIGNIFICAND(q);
-        end
-    end       
+        // align input to output
+        `SVREAL_COPY_FORMAT(q, d_aligned);
+        `SVREAL_ASSIGN(d, d_aligned);
+        
+        // align initial value to output format
+        `SVREAL_COPY_FORMAT(q, init_aligned);
+        `SVREAL_ASSIGN(init, init_aligned);
+        
+        // main DFF logic
+        always @(posedge clk) begin
+            if (rst == 1'b1) begin
+                `SVREAL_SIGNIFICAND(q) <= `SVREAL_SIGNIFICAND(init_aligned);
+            end else if (cke == 1'b1) begin
+                `SVREAL_SIGNIFICAND(q) <= `SVREAL_SIGNIFICAND(d_aligned);
+            end else begin
+                `SVREAL_SIGNIFICAND(q) <= `SVREAL_SIGNIFICAND(q);
+            end
+        end       
 
     endgenerate
 endmodule
