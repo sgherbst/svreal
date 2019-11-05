@@ -118,19 +118,19 @@
     output `SVREAL_SIGNIFICAND(``name``), \
     input `SVREAL_EXPONENT(``name``)
 
-`define SVREAL_UNPACK_FORMAT(port_name, local_name) \
+`define SVREAL_ALIAS_FORMAT(port_name, local_name) \
     `ifndef SVREAL_DEBUG \
         `MAKE_SVREAL(local_name, $size(`SVREAL_SIGNIFICAND(``port_name``)), `SVREAL_EXPONENT(``port_name``)); \
     `else \
         `MAKE_SVREAL(local_name, -1, `SVREAL_EXPONENT(``port_name``)); \
     `endif
 
-`define SVREAL_UNPACK_INPUT(port_name, local_name) \
-    `SVREAL_UNPACK_FORMAT(``port_name``, ``local_name``); \
+`define SVREAL_ALIAS_INPUT(port_name, local_name) \
+    `SVREAL_ALIAS_FORMAT(``port_name``, ``local_name``); \
     assign `SVREAL_SIGNIFICAND(``local_name``) = `SVREAL_SIGNIFICAND(``port_name``)
 
-`define SVREAL_UNPACK_OUTPUT(port_name, local_name) \
-    `SVREAL_UNPACK_FORMAT(``port_name``, ``local_name``); \
+`define SVREAL_ALIAS_OUTPUT(port_name, local_name) \
+    `SVREAL_ALIAS_FORMAT(``port_name``, ``local_name``); \
     assign `SVREAL_SIGNIFICAND(``port_name``) = `SVREAL_SIGNIFICAND(``local_name``)
 
 // as a convenience, an implementation of an interface with one svreal value is provided

@@ -4,9 +4,9 @@
 
 module level3 (svreal.in a, svreal.in b, svreal.out c);
     generate
-        `SVREAL_UNPACK_INPUT(a.value, a_value);
-        `SVREAL_UNPACK_INPUT(b.value, b_value);
-        `SVREAL_UNPACK_OUTPUT(c.value, c_value);
+        `SVREAL_ALIAS_INPUT(a.value, a_value);
+        `SVREAL_ALIAS_INPUT(b.value, b_value);
+        `SVREAL_ALIAS_OUTPUT(c.value, c_value);
         `SVREAL_MUL(a_value, b_value, c_value);
     endgenerate
 endmodule

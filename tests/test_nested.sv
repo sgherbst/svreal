@@ -31,10 +31,10 @@ module mymod (
     two_number.out to
 );
     generate
-        `SVREAL_UNPACK_INPUT(ti.a, ti_a);
-        `SVREAL_UNPACK_INPUT(ti.b, ti_b);
-        `SVREAL_UNPACK_OUTPUT(to.a, to_a);
-        `SVREAL_UNPACK_OUTPUT(to.b, to_b);
+        `SVREAL_ALIAS_INPUT(ti.a, ti_a);
+        `SVREAL_ALIAS_INPUT(ti.b, ti_b);
+        `SVREAL_ALIAS_OUTPUT(to.a, to_a);
+        `SVREAL_ALIAS_OUTPUT(to.b, to_b);
 
         `SVREAL_ADD(ti_a, ti_b, to_a);
         `SVREAL_SUB(ti_a, ti_b, to_b);
