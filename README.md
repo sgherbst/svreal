@@ -20,7 +20,7 @@ If you get a permissions error when running the **pip** command, you can try add
 
 ## Simple example
 
-Here's a simple **svreal** example to get started:
+Here's a simple **svreal** example to get started.  Note that we only have to include a single file, "svreal.sv":
 ```verilog
 `include "svreal.sv"
 `MAKE_SVREAL(a, 16, -8);
@@ -51,23 +51,46 @@ Suppose that the range of **c** is not sufficient to contain the sum of **a** an
 ## Operations available
 
 Here is a partial list of operations that can be performed with **svreal**:
+
+### Assignment and negation
+
 ```verilog
-// arithmetic operations
+`SVREAL_ASSIGN(in, out);
+`SVREAL_NEGATE(in, out);
+```
+
+These operations take one input (first argument) and produce one output (second argument).  Note that \`SVREAL_ASSIGN should *always* be used in place of a raw **assign** statement.  This is because \`SVREAL_ASSIGN performs alignment as necessary.
+
+### Arithmetic operations
+
+```verilog
 `SVREAL_MIN(a, b, out);
 `SVREAL_MAX(a, b, out);
 `SVREAL_ADD(a, b, out);
 `SVREAL_SUB(a, b, out);
 `SVREAL_MUL(a, b, out);
-`SVREAL_ASSIGN(in, out);
-`SVREAL_NEGATE(in, out);
+```
 
-// mux
+These operations take two inputs (first and second arguments) and produce one output (third argument).  Note the ordering of the subtraction operation: \`SVREAL_SUB(a, b, out) means "out := a - b".
+
+### Mux operations
+
+```verilog
 `SVREAL_MUX(sel, in0, in1, out);
+```
 
-// real <-> integer
+This is a handy operation when constructing conditional operations: if **sel** is "0", then **in0** is muxed to **out**, otherwise if **sel** is "1", then **in1** is muxed to **out**.  Note that this is not implemented as a literal mux, but instead performs alignment as necessary. Hence, the formats of all three fixed-point numbers can be different.
+
+### Real <-> integer conversion
+
+```verilog
 `SVREAL_TO_INT(in, out, $size(out));
 `INT_TO_SVREAL(in, out, $size(in));
+```
 
+### Comparisons
+
+```verilog
 // comparisons
 `SVREAL_LT(lhs, rhs, out);
 `SVREAL_LE(lhs, rhs, out);
@@ -77,9 +100,46 @@ Here is a partial list of operations that can be performed with **svreal**:
 `SVREAL_NE(lhs, rhs, out);
 ```
 
-To see usage examples of all of the fixed-point operations available, please look at the [tests/test_ops.sv](tests/test_ops.sv) file.  The only operation not tested there is the fixed-point memory element, which is tested in [tests/test_dff.sv](tests/test_dff.sv).
+### Memory
 
-# a
+```verilog
+```
+
+# Using fixed-point numbers in interfaces
+
+One of the key features of **svreal** is the ability to use one or more fixed-point numbers in an interface.  This makes it much more convenient to pass around bundles of numbers with arbitrary formats.
+
+## Interface with one fixed-point number
+The simplest case would be an interface that contains just one fixed-point number and nothing else.  Since this is such a common case, it is built right into the **svreal** library itself.  The following code is an example demonstrating this capability:
+
+```verilog
+`include "svreal.sv"
+module mytop;
+    `MAKE_SVREAL_INTF(a, 16, -8);
+    `MAKE_SVREAL_INTF(b, 17, -9);
+    `MAKE_SVREAL_INTF(c, 18, -10);
+    mymod mymod_i (.a(a), .b(b), .c(c));
+endmodule
+module mymod (svreal.in a, svreal.in b, svreal.out c);
+    generate
+        `SVREAL_ALIAS_INPUT(a.value, a_value);
+        `SVREAL_ALIAS_INPUT(b.value, b_value);
+        `SVREAL_ALIAS_OUTPUT(c.value, c_value);
+        `SVREAL_MUL(a_value, b_value, c_value);
+    endgenerate
+endmodule
+```
+
+In **mytop**, we create three instances of the parameterized **svreal** interface with the same formatting as the "simple example" above.  These signals can then be passed directly into **mymod** using the standard verilog dot notation.
+
+Within the **mymod** implementation, note that the directions of **a**, **b**, and **c** are indicated as modports of the parameterized **svreal** interface.  There are two unusual details to be aware of:
+1. The body of the **mymod** implementation has to go in a **generate** block.  (This is due to a Vivado-specific bug)
+2. The **value** of each of the ports has to be aliased to a local signal name without dots.  (This has to do with how **svreal** generates module and parameter names)
+After the I/O aliasing has been done, the user can then perform all **svreal** operations on the aliased signals.
+
+The effect is that passing arbitrary **svreal** types through the hierarchy is straightforward, although performing operations on ports of the **svreal** interface type requires a bit of boilerplate code.
+
+## Custom interface with multiple fixed-point numbers
 
 # Running the Tests
 
