@@ -39,12 +39,12 @@ module test_ops;
 
     // real to integer
     logic signed [7:0] r2i_o;
-    `SVREAL_TO_INT(a, r2i_o);
+    `SVREAL_TO_INT(a, r2i_o, $size(r2i_o));
 
     // integer to real
     logic signed [7:0] i2r_i;
     `MAKE_SVREAL(i2r_o, 16, -8);
-    `INT_TO_SVREAL(i2r_i, i2r_o);
+    `INT_TO_SVREAL(i2r_i, i2r_o, $size(i2r_i));
 
     // comparisons
     logic lt_o, le_o, gt_o, ge_o;

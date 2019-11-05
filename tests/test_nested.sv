@@ -3,38 +3,49 @@
 `include "svreal.sv"
 
 interface two_number #(
-    parameter integer a_width=1,
-    parameter integer a_exponent=0,
-    parameter integer b_width=1,
-    parameter integer b_exponent=0
+    `DECL_SVREAL_PARAMS(a),
+    `DECL_SVREAL_PARAMS(b)
 );
-
-    `MAKE_SVREAL(a, a_width, a_exponent);
-    `MAKE_SVREAL(b, b_width, b_exponent);
-
+    `DECL_SVREAL_TYPE(a, `SVREAL_SIGNIFICAND_WIDTH(a));
+    `DECL_SVREAL_TYPE(b, `SVREAL_SIGNIFICAND_WIDTH(b));
+    modport in (
+        `SVREAL_MODPORT_IN(a),
+        `SVREAL_MODPORT_IN(b)
+    );
+    modport out (
+        `SVREAL_MODPORT_OUT(a),
+        `SVREAL_MODPORT_OUT(b)
+    );
 endinterface
 
+`define MAKE_TWO_NUMBER(name, a_width_expr, a_exponent_expr, b_width_expr, b_exponent_expr) \
+    two_number #( \
+        .`SVREAL_SIGNIFICAND_WIDTH(a)(``a_width_expr``), \
+        .`SVREAL_SIGNIFICAND_WIDTH(b)(``b_width_expr``) \
+    ) ``name`` (); \
+    assign `SVREAL_EXPONENT(``name``.a) = ``a_exponent_expr``; \
+    assign `SVREAL_EXPONENT(``name``.b) = ``b_exponent_expr``
+
 module mymod (
-    two_number ti,
-    two_number to
+    two_number.in ti,
+    two_number.out to
 );
+    generate
+        `SVREAL_UNPACK_INPUT(ti.a, ti_a);
+        `SVREAL_UNPACK_INPUT(ti.b, ti_b);
+        `SVREAL_UNPACK_OUTPUT(to.a, to_a);
+        `SVREAL_UNPACK_OUTPUT(to.b, to_b);
 
-    `SVREAL_COPY_FORMAT(to.a, to_a);
-    `SVREAL_COPY_FORMAT(to.b, to_b);
-
-    `SVREAL_ADD(ti.a, ti.b, to_a);
-    `SVREAL_SUB(ti.a, ti.b, to_b);
-
-    assign to.a.value = to_a.value;
-    assign to.b.value = to_b.value;
-
+        `SVREAL_ADD(ti_a, ti_b, to_a);
+        `SVREAL_SUB(ti_a, ti_b, to_b);
+    endgenerate
 endmodule
 
 module test_nested; 
 
     // create signals
-    two_number #(.a_width(16), .a_exponent(-8), .b_width(17), .b_exponent(-9)) ti();
-    two_number #(.a_width(18), .a_exponent(-10), .b_width(19), .b_exponent(-11)) to();
+    `MAKE_TWO_NUMBER(ti, 16, -8, 17, -9);
+    `MAKE_TWO_NUMBER(to, 18, -10, 19, -11);
 
     // instantiate test module
     mymod mymod_i (

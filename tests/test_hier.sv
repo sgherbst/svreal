@@ -4,15 +4,10 @@
 
 module level3 (svreal.in a, svreal.in b, svreal.out c);
     generate
-    svreal_mul_mod #(
-        `PASS_SVREAL_PARAMS(a, a.value),
-        `PASS_SVREAL_PARAMS(b, b.value),
-        `PASS_SVREAL_PARAMS(c, c.value)
-    ) mul_i (
-        `PASS_SVREAL_SIGNALS(a, a.value),
-        `PASS_SVREAL_SIGNALS(b, b.value),
-        `PASS_SVREAL_SIGNALS(c, c.value)
-    );
+        `SVREAL_UNPACK_INPUT(a.value, a_value);
+        `SVREAL_UNPACK_INPUT(b.value, b_value);
+        `SVREAL_UNPACK_OUTPUT(c.value, c_value);
+        `SVREAL_MUL(a_value, b_value, c_value);
     endgenerate
 endmodule
 
@@ -25,7 +20,6 @@ module level1 (svreal.in a, svreal.in b, svreal.out c);
 endmodule
 
 module test_hier;
-
     `MAKE_SVREAL_INTF(a, 16, -8);
     `MAKE_SVREAL_INTF(b, 17, -9);
     `MAKE_SVREAL_INTF(c, 18, -10);

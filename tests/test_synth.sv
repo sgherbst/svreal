@@ -72,11 +72,11 @@ module test_synth (
 
     // integer to real
     `MAKE_SVREAL(i2r_o_int, 16, -8);
-    `INT_TO_SVREAL(i2r_i_ext, i2r_o_int);
+    `INT_TO_SVREAL(i2r_i_ext, i2r_o_int, $size(i2r_i_ext));
     assign i2r_o_ext = `SVREAL_SIGNIFICAND(i2r_o_int);
 
     // real to integer
-    `SVREAL_TO_INT(a, r2i_o_ext);
+    `SVREAL_TO_INT(a, r2i_o_ext, $size(r2i_o_ext));
 
     // dff
     `MAKE_SVREAL(dff_o, $size(dff_ext), -10);
