@@ -12,10 +12,14 @@ set_property -name "xsim.simulate.runtime" -value "-all" -objects [get_fileset s
 {vlog_defs}
 launch_simulation'''
 
-def pytest_sim_params(metafunc):
+def pytest_sim_params(metafunc, simulators=None):
+    if simulators is None:
+        simulators = ['vcs', 'vivado', 'xrun', 'iverilog']
+
+    # parameterize with the simulators available
     if 'simulator' in metafunc.fixturenames:
         targets = []
-        for simulator in ['vcs', 'vivado', 'xrun']:
+        for simulator in simulators:
             if which(simulator):
                 targets.append(simulator)
 
@@ -102,6 +106,8 @@ def run_sim(*files, project, top, defs=None, part='xc7z020clg484-1', simulator='
         return xrun_sim(*files, defs=defs, top=top)
     elif simulator == 'vcs':
         return vcs_sim(*files, defs=defs, top=top)
+    elif simulator == 'iverilog':
+        return iverilog_sim(*files, defs=defs, top=top)
     else:
         raise Exception(f'Invalid simulator: {simulator}.')
 
@@ -176,6 +182,36 @@ def vcs_sim(*files, defs=None, top=None):
     res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
 
     print('*** RUNNING VCS SIMULATION ***')
+    print_res(res)
+
+    return res
+
+def iverilog_sim(*files, defs=None, top=None):
+    if defs is None:
+        defs = []
+
+    ############################
+    # compile
+    ############################
+    cmd = ['iverilog']
+    cmd += ['-g2012']
+    cmd += ['-I..']
+    cmd += [f'-D{def_}' for def_ in defs]
+    if top is not None:
+        cmd += [f'-s{top}']
+    cmd += [f'{file_}' for file_ in files]
+    res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
+
+    print('*** COMPILING IVERILOG SIMULATION ***')
+    print_res(res)
+
+    ############################
+    # run
+    ############################
+    cmd = ['vvp', get_file('tests/a.out')]
+    res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
+
+    print('*** RUNNING IVERILOG SIMULATION ***')
     print_res(res)
 
     return res

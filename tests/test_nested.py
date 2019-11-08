@@ -5,7 +5,7 @@ PROJECT = 'test_nested'
 FILES = ['test_nested.sv']
 
 def pytest_generate_tests(metafunc):
-    pytest_sim_params(metafunc)
+    pytest_sim_params(metafunc, simulators=['xrun', 'vcs', 'vivado'])
     metafunc.parametrize('defs', [None, ['SVREAL_DEBUG']])
 
 def test_nested(simulator, defs):
