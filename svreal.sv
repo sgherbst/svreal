@@ -120,9 +120,9 @@
 
 `define SVREAL_ALIAS_FORMAT(port_name, local_name) \
     `ifndef SVREAL_DEBUG \
-        `MAKE_SVREAL(local_name, $size(`SVREAL_SIGNIFICAND(``port_name``)), `SVREAL_EXPONENT(``port_name``)); \
+        `MAKE_SVREAL(local_name, $size(`SVREAL_SIGNIFICAND(``port_name``)), `SVREAL_EXPONENT(``port_name``)) \
     `else \
-        `MAKE_SVREAL(local_name, -1, `SVREAL_EXPONENT(``port_name``)); \
+        `MAKE_SVREAL(local_name, -1, `SVREAL_EXPONENT(``port_name``)) \
     `endif
 
 `define SVREAL_ALIAS_INPUT(port_name, local_name) \
