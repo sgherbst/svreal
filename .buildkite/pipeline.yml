@@ -1,0 +1,26 @@
+steps:
+  - command: |
+      export PATH=$$PATH:/usr/local/miniconda/bin:/usr/local/bin
+      echo $$PATH
+      export LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:/usr/local/lib
+      echo $$LD_LIBRARY_PATH
+      source /cad/modules/tcl/init/bash
+      module load base xcelium vcs
+      conda create -p ./conda_env -m -y pip python=3.7.4
+      export PATH=$$PWD/conda_env/bin:$$PATH
+      pip install -e .
+    label: "test"
+    timeout_in_minutes: 60
+    agents:
+      butterphy: "true"
+  - command: |
+      source /etc/environment
+      echo $$PATH
+      python3.7 -m venv venv
+      source venv/bin/activate
+      pip install -e .
+      deactivate
+    label: "test_emu"
+    timeout_in_minutes: 60
+    agents:
+        fpga_verif: "true"
