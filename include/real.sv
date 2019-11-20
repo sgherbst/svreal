@@ -12,11 +12,11 @@
     // fixed-point representation defaults
     
     `ifndef SHORT_WIDTH_REAL
-        `define SHORT_WIDTH_REAL 18
+        `define SHORT_WIDTH_REAL 32
     `endif
     
     `ifndef LONG_WIDTH_REAL
-        `define LONG_WIDTH_REAL 25
+        `define LONG_WIDTH_REAL 32
     `endif
 
     // real number parameters
