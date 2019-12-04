@@ -245,19 +245,28 @@
         .c(``c_name``) \
     )
         
-`define MUL_REAL(a_name, b_name, c_name) \
-    `MAKE_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``)*`RANGE_PARAM_REAL(``b_name``)); \
+`define MUL_REAL_GENERIC(a_name, b_name, c_name, c_width) \
+    `MAKE_GENERIC_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``)*`RANGE_PARAM_REAL(``b_name``), ``c_width``); \
     `MUL_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+
+`define MUL_REAL(a_name, b_name, c_name) \
+    `MUL_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
 
 // multiplication of a constant and variable
 
-`define MUL_CONST_INTO_REAL(const_expr, in_name, out_name) \
-    `MAKE_SHORT_CONST_REAL(``const_expr``, zzz_tmp_``out_name``); \
+`define MUL_CONST_INTO_REAL_GENERIC(const_expr, in_name, out_name, const_width) \
+    `MAKE_GENERIC_CONST_REAL(``const_expr``, zzz_tmp_``out_name``, ``const_width``); \
     `MUL_INTO_REAL(zzz_tmp_``out_name``, ``in_name``, ``out_name``)
 
+`define MUL_CONST_INTO_REAL(const_expr, in_name, out_name) \
+    `MUL_CONST_INTO_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, `SHORT_WIDTH_REAL)
+
+`define MUL_CONST_REAL_GENERIC(const_expr, in_name, out_name, const_width, out_width) \
+    `MAKE_GENERIC_REAL(``out_name``, `CONST_RANGE_REAL(``const_expr``)*`RANGE_PARAM_REAL(``in_name``), ``out_width``); \
+    `MUL_CONST_INTO_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, ``const_width``)
+
 `define MUL_CONST_REAL(const_expr, in_name, out_name) \
-    `MAKE_REAL(``out_name``, `CONST_RANGE_REAL(``const_expr``)*`RANGE_PARAM_REAL(``in_name``)); \
-    `MUL_CONST_INTO_REAL(``const_expr``, ``in_name``, ``out_name``)
+    `MUL_CONST_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, `SHORT_WIDTH_REAL, `LONG_WIDTH_REAL)
 
 // generic addition or subtraction
 
@@ -280,29 +289,44 @@
 `define ADD_INTO_REAL(a_name, b_name, c_name) \
     `ADD_SUB_INTO_REAL(`ADD_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
 
-`define ADD_REAL(a_name, b_name, c_name) \
-    `MAKE_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``)); \
+`define ADD_REAL_GENERIC(a_name, b_name, c_name, c_width) \
+    `MAKE_GENERIC_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``), ``c_width``); \
     `ADD_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+
+`define ADD_REAL(a_name, b_name, c_name) \
+    `ADD_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
     
 // addition of a constant and a variable
 
-`define ADD_CONST_INTO_REAL(const_expr, in_name, out_name) \
-    `MAKE_CONST_REAL(``const_expr``, zzz_tmp_``out_name``); \
+`define ADD_CONST_INTO_REAL_GENERIC(const_expr, in_name, out_name, const_width) \
+    `MAKE_GENERIC_CONST_REAL(``const_expr``, zzz_tmp_``out_name``, ``const_width``); \
     `ADD_INTO_REAL(zzz_tmp_``out_name``), ``in_name``, ``out_name``)
 
+`define ADD_CONST_INTO_REAL(const_expr, in_name, out_name) \
+    `ADD_CONST_INTO_REAL_GENERIC(``const_expr```, ``in_name``, ``out_name``, `LONG_WIDTH_REAL)
+
+`define ADD_CONST_REAL_GENERIC(const_expr, in_name, out_name, const_width, out_width) \
+    `MAKE_GENERIC_REAL(``out_name``, `CONST_RANGE_REAL(``const_expr``) + `RANGE_PARAM_REAL(``in_name``), ``out_width``); \
+    `ADD_CONST_INTO_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, ``const_width``)
+
 `define ADD_CONST_REAL(const_expr, in_name, out_name) \
-    `MAKE_REAL(``out_name``, `CONST_RANGE_REAL(``const_expr``) + `RANGE_PARAM_REAL(``in_name``)); \
-    `ADD_CONST_INTO_REAL(``const_expr``, ``in_name``, ``out_name``)
+    `ADD_CONST_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, `LONG_WIDTH_REAL, `LONG_WIDTH_REAL)
 
 // addition of three variables
 
-`define ADD3_INTO_REAL(a_name, b_name, c_name, d_name) \
-    `ADD_REAL(``a_name``, ``b_name``, zzz_tmp_``d_name``); \
+`define ADD3_INTO_REAL_GENERIC(a_name, b_name, c_name, d_name, tmp_width) \
+    `ADD_REAL_GENERIC(``a_name``, ``b_name``, zzz_tmp_``d_name``, ``tmp_width``); \
     `ADD_INTO_REAL(zzz_tmp_``d_name``, ``c_name``, ``d_name``)
 
+`define ADD3_INTO_REAL(a_name, b_name, c_name, d_name) \
+    `ADD3_INTO_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, ``d_name``, `LONG_WIDTH_REAL)
+
+`define ADD3_REAL_GENERIC(a_name, b_name, c_name, d_name, tmp_width, d_width) \
+    `MAKE_GENERIC_REAL(``d_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``) + `RANGE_PARAM_REAL(``c_name``), ``d_width``); \
+    `ADD3_INTO_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, ``d_name``, ``tmp_width``)
+
 `define ADD3_REAL(a_name, b_name, c_name, d_name) \
-    `MAKE_REAL(``d_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``) + `RANGE_PARAM_REAL(``c_name``)); \
-    `ADD3_INTO_REAL(``a_name``, ``b_name``, ``c_name``, ``d_name``)
+    `ADD3_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, ``d_name``, `LONG_WIDTH_REAL, `LONG_WIDTH_REAL)
 
 // subtraction of two variables
 
@@ -311,9 +335,12 @@
 `define SUB_INTO_REAL(a_name, b_name, c_name) \
     `ADD_SUB_INTO_REAL(`SUB_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
 
-`define SUB_REAL(a_name, b_name, c_name) \
-    `MAKE_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``)); \
+`define SUB_REAL_GENERIC(a_name, b_name, c_name, c_width) \
+    `MAKE_GENERIC_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``), ``c_width``); \
     `SUB_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+
+`define SUB_REAL(a_name, b_name, c_name) \
+    `SUB_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
 
 // conditional assignment
 
@@ -329,9 +356,12 @@
         .out(``out_name``) \
     )
 
-`define ITE_REAL(cond_name, true_name, false_name, out_name) \
-    `MAKE_REAL(``out_name``, `MAX_MATH(`RANGE_PARAM_REAL(``true_name``), `RANGE_PARAM_REAL(``false_name``))); \
+`define ITE_REAL_GENERIC(cond_name, true_name, false_name, out_name, out_width) \
+    `MAKE_GENERIC_REAL(``out_name``, `MAX_MATH(`RANGE_PARAM_REAL(``true_name``), `RANGE_PARAM_REAL(``false_name``)), ``out_width``); \
     `ITE_INTO_REAL(``cond_name``, ``true_name``, ``false_name``, ``out_name``)
+
+`define ITE_REAL(cond_name, true_name, false_name, out_name) \
+    `ITE_REAL_GENERIC(``cond_name``, ``true_name``, ``false_name``, ``out_name``, `LONG_WIDTH_REAL) \
 
 // generic comparison
 
@@ -418,9 +448,12 @@
     `GT_REAL(``a_name``, ``b_name``, zzz_tmp_``c_name``); \
     `ITE_INTO_REAL(zzz_tmp_``c_name``, ``a_name``, ``b_name``, ``c_name``)
 
-`define MAX_REAL(a_name, b_name, c_name) \
-    `MAKE_REAL(``c_name``, `MAX_MATH(`RANGE_PARAM_REAL(``a_name``), `RANGE_PARAM_REAL(``b_name``))); \
+`define MAX_REAL_GENERIC(a_name, b_name, c_name, c_width) \
+    `MAKE_GENERIC_REAL(``c_name``, `MAX_MATH(`RANGE_PARAM_REAL(``a_name``), `RANGE_PARAM_REAL(``b_name``)), ``c_width``); \
     `MAX_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+
+`define MAX_REAL(a_name, b_name, c_name) \
+    `MAX_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
 
 // min of two variables
 
@@ -428,9 +461,12 @@
     `LT_INTO_REAL(``a_name``, ``b_name``, zzz_tmp_``c_name``); \
     `ITE_INTO_REAL(zzz_tmp_``c_name``, ``a_name``, ``b_name``, ``c_name``)
 
-`define MIN_REAL(a_name, b_name, c_name) \
-    `MAKE_REAL(``c_name``, `MAX_MATH(`RANGE_PARAM_REAL(``a_name``), `RANGE_PARAM_REAL(``b_name``))); \
+`define MIN_REAL_GENERIC(a_name, b_name, c_name, c_width) \
+    `MAKE_GENERIC_REAL(``c_name``, `MAX_MATH(`RANGE_PARAM_REAL(``a_name``), `RANGE_PARAM_REAL(``b_name``)), ``c_width``); \
     `MIN_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+
+`define MIN_REAL(a_name, b_name, c_name) \
+    `MIN_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
 
 // conversion from real number to integer
 
@@ -616,13 +652,12 @@ module comp_real #(
     `INPUT_REAL(b),
     output wire logic c
 );
-    `DECL_CLOG2_MATH
+	// compute the maximum of the two exponents and align both inputs to it
 
-	// compute the maximum range of the two arguments
-    localparam real max_range = `MAX_MATH(`RANGE_PARAM_REAL(a), `RANGE_PARAM_REAL(b));
+    localparam real max_exponent = `MAX_MATH(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
 
-    `MAKE_REAL(a_aligned, max_range);
-    `MAKE_REAL(b_aligned, max_range);
+    `REAL_FROM_WIDTH_EXP(a_aligned, `WIDTH_PARAM_REAL(a), max_exponent);
+    `REAL_FROM_WIDTH_EXP(b_aligned, `WIDTH_PARAM_REAL(b), max_exponent);
 
     `ASSIGN_REAL(a, a_aligned);
     `ASSIGN_REAL(b, b_aligned);
