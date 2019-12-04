@@ -23,86 +23,90 @@ If you get a permissions error when running the **pip** command, you can try add
 Here's a simple **svreal** example to get started.  Note that we only have to include a single file, "svreal.sv":
 ```verilog
 `include "svreal.sv"
-`MAKE_SVREAL(a, 16, -8);
-`MAKE_SVREAL(b, 17, -9);
-`MAKE_SVREAL(c, 18, -10);
-`SVREAL_ADD(a, b, c);
+`MAKE_REAL(a,  5.0);
+`MAKE_GENERIC_REAL(b, 10.0, 42);
+`ADD_REAL(a, b, c);
 initial begin
-    `SVREAL_SET(a, 1.23);
-    `SVREAL_SET(b, 4.56);
-    #(0ns);
-    `SVREAL_PRINT(c);
+    `FORCE_REAL(1.23, a);
+    `FORCE_REAL(4.56, b);
+    #(1ns);
+    `PRINT_REAL(c);
 end
 ```
 This creates fixed-point signals **a**, **b**, and **c** and instantiates an adder that sums **a** and **b** into **c**.  In the **initial** block, the values of **a** and **b** are set to "1.23" and "4.56" and then the value of "c" is printed.  Hence, we'd expect that the value of **c** is around "5.79".
 
 ## Fixed-point formatting
 
-The formats of these three fixed-point signals are all different; **a** has width 16 and exponent -8, **b** has width 17 and exponent -9, and **c** has width 18 and exponent -10.  In **svreal**, the "width" refers to the width of the signed integer used to represent a real number, while the "exponent" refers to the scale factor applied to that integer to produce a real number.  For example, "a" is represented by a 16-bit signed integer and has a scale factor of 2^(-8).  As a result, the range of integers stored in "a" is -32,768 to +32,767, and the scale factor applied to the integer value is about 0.004.  Therefore the real number represented by "a" can range from -128.000 to +127.996 with resolution 0.004.
+In **svreal**, fixed-point formats are generally determined automatically from the range of the signals they represent.  In this case, the range of **a** is set to +/- 5.0, and the range of **b** is set to +/- 10.0.  The width of **a** is not specified, so it defaults to **\`LONG_WIDTH_REAL** (which is 25 unless overridden by the user).  For **b**, the user has explicitly specified a width of 42.  In both cases, the exponent used in the representation is automatically determined from the the width and range, using the formula:
 
-With this formatting scheme, range is increased by increasing the "width" of an **svreal** value while resolution is increased by making the "exponent" smaller.  Note that changing the "exponent" changes the range unless the "width" is changed to compensate.
+```code
+exponent = int(ceil(log2(range/(2^(width-1)-1))))
+```
 
-Note that the user doesn't have to provide any information about alignment to perform fixed-point addition; that is taken care of by **svreal** under the hood.  In addition, note that it is easy to write fixed-point tests using the \`SVREAL_SET and \`SVREAL_PRINT macros.  Even if the formatting of the fixed-point numbers changes, the test doesn't have to be modified at all.
+This method of selecting the exponent guarantees that the user-specified range can be represented given the width of the fixed-point value.
+
+Since the user has not provided any formatting information for **c**, its range is automatically determined from the ranges of **a** and **b**.  Since **a** is +/- 5.0 and **b** is +/- 10.0, the range of **c** is +/- 15.0.  The width of **c** defaults to **\`LONG_WIDTH_REAL**, and its exponent is calculated using the formula above.
 
 ## Debugging
 
-Suppose that the range of **c** is not sufficient to contain the sum of **a** and **b**.  Then **c** may contain an entirely wrong value due to overflow.  In order to debug this problem, define the **SVREAL_DEBUG** flag (for example, using **+define+SVREAL_DEBUG**).  This switches the real number representation from fixed-point to float-point, which helps the user to identify whether the fixed-point representation is the cause of the problem, or whether it is something else.
+Suppose that the range of **c** is not sufficient to contain the sum of **a** and **b**.  Then **c** may contain an entirely wrong value due to overflow.  In order to debug this problem, define the **FLOAT_REAL** flag (for example, using **+define+FLOAT_REAL**).  This switches the real number representation from fixed-point to float-point, which helps the user to identify whether the fixed-point representation is the cause of the problem, or whether it is something else.  In addition, this flag adds assertions to check if any real-number signal exceeds its specified range.
 
 ## Operations available
 
 Here is a partial list of operations that can be performed with **svreal**:
 
-### Assignment and negation
+### Assignment, negation, and absolute value
 
 ```verilog
-`SVREAL_ASSIGN(in, out);
-`SVREAL_NEGATE(in, out);
+`ASSIGN_REAL(in, out);
+`NEGATE_REAL(in, out);
+`ABS_REAL(in, out)
 ```
 
-These operations take one input (first argument) and produce one output (second argument).  Note that \`SVREAL_ASSIGN should *always* be used in place of a raw **assign** statement.  This is because \`SVREAL_ASSIGN performs alignment as necessary.
+These operations take one input (first argument) and produce one output (second argument).  Note that \`ASSIGN_REAL should *always* be used in place of a raw **assign** statement.  This is because \`ASSIGN_REAL performs alignment as necessary.
 
 ### Arithmetic operations
 
 ```verilog
-`SVREAL_MIN(a, b, out);
-`SVREAL_MAX(a, b, out);
-`SVREAL_ADD(a, b, out);
-`SVREAL_SUB(a, b, out);
-`SVREAL_MUL(a, b, out);
+`MIN_REAL(a, b, out);
+`MAX_REAL(a, b, out);
+`ADD_REAL(a, b, out);
+`SUB_REAL(a, b, out);
+`MUL_REAL(a, b, out);
 ```
 
-These operations take two inputs (first and second arguments) and produce one output (third argument).  Note the ordering of the subtraction operation: \`SVREAL_SUB(a, b, out) means "out := a - b".
+These operations take two inputs (first and second arguments) and produce one output (third argument).  Note the ordering of the subtraction operation: \`SUB_REAL(a, b, out) means "out := a - b".
 
 ### Mux operations
 
 ```verilog
-`SVREAL_MUX(sel, in0, in1, out);
+`ITE_REAL(cond, val_if_true, val_if_false, out);
 ```
 
-This is a handy operation when constructing conditional operations: if **sel** is "0", then **in0** is muxed to **out**, otherwise if **sel** is "1", then **in1** is muxed to **out**.  Note that this is not implemented as a literal mux, but instead performs alignment as necessary. Hence, the formats of all three fixed-point numbers can be different.
+This is a handy operation when constructing conditional operations: if **cond** is "1", then **val_if_true** is muxed to **out**, otherwise if **cond** is "0", then **val_if_false** is muxed to **out**.  Note that this is not implemented as a literal mux, but instead performs alignment as necessary. Hence, the formats of all three fixed-point numbers can be different.
 
 ### Real <-> integer conversion
 
 ```verilog
-`SVREAL_TO_INT(in, out, $size(out));
-`INT_TO_SVREAL(in, out, $size(in));
+`REAL_TO_INT(in, $size(out), out);
+`INT_TO_REAL(in, $size(in), out);
 ```
 
 Sometimes it is necessary to convert a signed integer into an **svreal** type or vice versa.
 
-The macro \`SVREAL_TO_INT takes as its first argument an **svreal** type and as its second argument a **logic signed** type.  The third argument is the width of the **logic signed** type (it's left up to the user whether this comes from **$size**, **$bits**, or from a parameter due to simulator quirks).
+The macro \`REAL_TO_INT takes as its first argument an **svreal** type and as its third argument a **logic signed** type.  The second argument is the width of the **logic signed** type (it's left up to the user whether this comes from **$size**, **$bits**, or from a parameter due to simulator quirks).
 
-The macro \`INT_TO_SVREAL takes as its first argument a **logic signed** type and as its second argument an **svreal** type.  The third argument is the width of the **logic signed** type (it's left up to the user whether this comes from **$size**, **$bits**, or from a parameter due to simulator quirks).
+The macro \`INT_TO_REAL takes as its first argument a **logic signed** type and as its third argument an **svreal** type.  The third argument is the width of the **logic signed** type (it's left up to the user whether this comes from **$size**, **$bits**, or from a parameter due to simulator quirks).
 
 ### Comparisons
 
 ```verilog
-`SVREAL_LT(lhs, rhs, out);
-`SVREAL_LE(lhs, rhs, out);
-`SVREAL_GT(lhs, rhs, out);
-`SVREAL_GE(lhs, rhs, out);
-`SVREAL_EQ(lhs, rhs, out);
-`SVREAL_NE(lhs, rhs, out);
+`LT_REAL(lhs, rhs, out);
+`LE_REAL(lhs, rhs, out);
+`GT_REAL(lhs, rhs, out);
+`GE_REAL(lhs, rhs, out);
+`EQ_REAL(lhs, rhs, out);
+`NE_REAL(lhs, rhs, out);
 ```
 
 Comparisons always take two fixed-point numbers as the first two arguments, ordered as the left-hand side followed by the right-hand side.  The third macro argument is the output, which is a single bit (type **logic**) with value "1" if the comparison is true and "0" if it is false.
@@ -110,12 +114,12 @@ Comparisons always take two fixed-point numbers as the first two arguments, orde
 ### Memory
 
 ```verilog
-`SVREAL_DFF(d, q, rst, clk, cke, init);
+`DFF_REAL(d, q, rst, clk, cke, init);
 ```
 
 Fixed-point memory is implemented as a generic D-type flip-flop (DFF).  The input to this flip-flop is **d**, and the output is **q**.  Both are fixed-point types, but they can have different formats.
 
-The **rst** signals is a single active-high bit (type **logic**).  It's a synchronous reset, and when active it causes **q** to take the value of **init**.  **init** is itself a fixed-point **svreal** type, and can have a different format than **d** and **q**.
+The **rst** signals is a single active-high bit (type **logic**).  It's a synchronous reset, and when active it causes **q** to take the value of **init**.  **init** is simply a real-number value like "1.23".
 
 Finally, **clk** and **cke** are single bit signals (type **logic**).  **clk** is the clock input of the DFF (active on the rising edge), and **cke** is the clock enable signal (active high). 
 
