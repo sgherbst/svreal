@@ -24,6 +24,7 @@ def test_ops(simulator, defs):
     assert is_close(sec['mul_o'], +5.6088)
     assert is_close(sec['mux_o'], +4.56)
     assert is_close(sec['neg_o'], -1.23)
+    assert is_close(sec['abs_o'], +1.23)
     assert bool_eq(sec['lt_o'], 1)
     assert bool_eq(sec['le_o'], 1)
     assert bool_eq(sec['gt_o'], 0)
@@ -38,3 +39,5 @@ def test_ops(simulator, defs):
     sec = res[4]
     assert is_close(sec['r2i_o'], 56)
     assert is_close(sec['i2r_o'], 78)
+    sec = res[5]
+    assert is_close(sec['abs_o'], +1.23)

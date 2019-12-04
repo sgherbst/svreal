@@ -32,6 +32,9 @@ module test_ops;
     // negate
     `NEGATE_REAL(a, neg_o);
 
+    // absolute value
+    `ABS_REAL(a, abs_o);
+
     // real to integer
     `REAL_TO_INT(a, 8, r2i_o);
 
@@ -55,6 +58,7 @@ module test_ops;
         `PRINT_REAL(mul_o);
         `PRINT_REAL(mux_o);
         `PRINT_REAL(neg_o);
+        `PRINT_REAL(abs_o);
         `PRINT_REAL(i2r_o);
         $display("r2i_o=%0d", r2i_o);
         $display("lt_o=%0b", lt_o);
@@ -100,6 +104,15 @@ module test_ops;
         $display("SVREAL TEST SET 4");
         `FORCE_REAL(56.0, a);
         `FORCE_REAL(1.23, b);
+        cond = 1'b0;
+        i2r_i = 78;
+        #(1ns);
+        print_signals();
+
+        // test set #5
+        $display("SVREAL TEST SET 5");
+        `FORCE_REAL(-1.23, a);
+        `FORCE_REAL(4.56, b);
         cond = 1'b0;
         i2r_i = 78;
         #(1ns);

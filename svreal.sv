@@ -166,6 +166,21 @@
     `COPY_FORMAT_REAL(``in_name``, ``out_name``); \
     `NEGATE_INTO_REAL(``in_name``, ``out_name``)
 
+// absolute value
+
+`define ABS_INTO_REAL(in_name, out_name) \
+    abs_real #( \
+        `PASS_REAL(in, ``in_name``), \
+        `PASS_REAL(out, ``out_name``) \
+    ) abs_real_``out_name``_i ( \
+        .in(``in_name``), \
+        .out(``out_name``) \
+    ) 
+
+`define ABS_REAL(in_name, out_name) \
+    `COPY_FORMAT_REAL(``in_name``, ``out_name``); \
+    `ABS_INTO_REAL(``in_name``, ``out_name``)
+
 // construct real number from range
 // the following four macros depend on clog2_math
 
@@ -551,6 +566,21 @@ module negate_real #(
     
     // assign the output
     assign out = -in_aligned;
+endmodule
+
+module abs_real #(
+    `DECL_REAL(in),
+    `DECL_REAL(out)
+) (
+    `INPUT_REAL(in),
+    `OUTPUT_REAL(out)
+);
+    // align the input to the output format
+    `COPY_FORMAT_REAL(out, in_aligned);
+    `ASSIGN_REAL(in, in_aligned);
+    
+    // assign the output
+    assign out = (in_aligned > 0) ? in_aligned : -in_aligned;
 endmodule
 
 module mul_real #(

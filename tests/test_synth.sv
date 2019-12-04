@@ -17,6 +17,7 @@ module test_synth (
     output wire logic signed [((`LONG_WIDTH_REAL)-1):0] mul_ext,
     output wire logic signed [((`LONG_WIDTH_REAL)-1):0] mux_ext,
     output wire logic signed [((`LONG_WIDTH_REAL)-1):0] neg_ext,
+    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] abs_ext,
     output wire logic signed [((`LONG_WIDTH_REAL)-1):0] i2r_o_ext,
     output wire logic signed [((`LONG_WIDTH_REAL)-1):0] dff_ext,
     output wire logic signed [7:0] r2i_o_ext,
@@ -61,6 +62,10 @@ module test_synth (
     // negation
     `NEGATE_REAL(a, neg_o);
     assign neg_ext = neg_o;
+
+    // absolute value
+    `ABS_REAL(a, abs_o);
+    assign abs_ext = abs_o;
 
     // integer to real
     `INT_TO_REAL(i2r_i_ext, $size(i2r_i_ext), i2r_o_int);
