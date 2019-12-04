@@ -111,6 +111,19 @@ The macro \`INT_TO_REAL takes as its first argument a **logic signed** type and 
 
 Comparisons always take two fixed-point numbers as the first two arguments, ordered as the left-hand side followed by the right-hand side.  The third macro argument is the output, which is a single bit (type **logic**) with value "1" if the comparison is true and "0" if it is false.
 
+### Working with constants
+
+```verilog
+`MAKE_CONST_REAL(const, name);
+`ASSIGN_CONST_REAL(const, name);
+`ADD_CONST_REAL(const, in, out);
+`MUL_CONST_REAL(const, in, out);
+```
+
+Several functions are available to work with numeric constants.  **\`MAKE_CONST_REAL** creates a new **svreal** type and assigns the given real-number constant to it.  Its width defaults to **\`LONG_WIDTH_REAL** and the exponent is selected automatically based on the constant value.  **\`ASSIGN_CONST_REAL** is similar but does not declare a new **svreal** type; it simply assigns the constant to an existing fixed-point signal (performing the floating-to-fixed conversion at compile time).
+
+**\`ADD_CONST_REAL** and **\`MUL_CONST_REAL** allow the user to add a constant to a number or multiply a constant by a number, respectively.  There is one special caveat for **\`MUL_CONST_REAL**, which is that it represents the constant with a fixed-point number of width **\`SHORT_WIDTH_REAL** (18 unless overridden by the user).  As a result, the user can cause **\`MUL_CONST_REAL** to consume exactly one DSP block by picking **\`LONG_WIDTH_REAL** and **\`SHORT_WIDTH_REAL** to be the operand widths of the target FPGA's DSP multipliers.
+
 ### Memory
 
 ```verilog
@@ -123,104 +136,13 @@ The **rst** signals is a single active-high bit (type **logic**).  It's a synchr
 
 Finally, **clk** and **cke** are single bit signals (type **logic**).  **clk** is the clock input of the DFF (active on the rising edge), and **cke** is the clock enable signal (active high). 
 
-# Using fixed-point numbers in interfaces
-
-One of the key features of **svreal** is the ability to use one or more fixed-point numbers in an interface.  This makes it much more convenient to pass around bundles of numbers with arbitrary formats.
-
-## Interface with one fixed-point number
-The simplest case would be an interface that contains just one fixed-point number and nothing else.  Since this is such a common case, it is built right into the **svreal** library itself.  The following code is an example demonstrating this capability:
-
-```verilog
-`include "svreal.sv"
-module mytop;
-    `MAKE_SVREAL_INTF(a, 16, -8);
-    `MAKE_SVREAL_INTF(b, 17, -9);
-    `MAKE_SVREAL_INTF(c, 18, -10);
-    mymod mymod_i (.a(a), .b(b), .c(c));
-endmodule
-module mymod (svreal.in a, svreal.in b, svreal.out c);
-    generate
-        `SVREAL_ALIAS_INPUT(a.value, a_value);
-        `SVREAL_ALIAS_INPUT(b.value, b_value);
-        `SVREAL_ALIAS_OUTPUT(c.value, c_value);
-        `SVREAL_MUL(a_value, b_value, c_value);
-    endgenerate
-endmodule
-```
-
-In **mytop**, we create three instances of the parameterized **svreal** interface with the same formatting as the "simple example" above.  These signals can then be passed directly into **mymod** using the standard verilog dot notation.
-
-Within the **mymod** implementation, note that the directions of **a**, **b**, and **c** are indicated as modports of the parameterized **svreal** interface.  There are two unusual details to be aware of:
-1. The body of the **mymod** implementation has to go in a **generate** block.  (This is due to a Vivado-specific bug)
-2. The **value** of each of the ports has to be aliased to a local signal name without dots.  (This has to do with how **svreal** generates module and parameter names)
-After the I/O aliasing has been done, the user can then perform all **svreal** operations on the aliased signals.
-
-The effect is that passing arbitrary **svreal** types through the hierarchy is straightforward, although performing operations on ports of the **svreal** interface type requires a bit of boilerplate code.
-
-## Custom interface with multiple fixed-point numbers
-
-Suppose you want to create your own interface containing two **svreal** fixed-point numbers, "a" and "b".  That interface might look like this:
-```verilog
-interface two_number #(
-    `DECL_SVREAL_PARAMS(a),
-    `DECL_SVREAL_PARAMS(b)
-);
-    `DECL_SVREAL_TYPE(a, `SVREAL_SIGNIFICAND_WIDTH(a));
-    `DECL_SVREAL_TYPE(b, `SVREAL_SIGNIFICAND_WIDTH(b));
-    modport in (
-        `SVREAL_MODPORT_IN(a),
-        `SVREAL_MODPORT_IN(b)
-    );
-    modport out (
-        `SVREAL_MODPORT_OUT(a),
-        `SVREAL_MODPORT_OUT(b)
-    );
-endinterface
-```
-First we declare the parameters needed to vary the format of "a" and "b".  Then in the body of the interface, we declare signals representing "a" and "b" (namely, the significand and the exponent, although the exponent is constant).  Note that \`MAKE_SVREAL should **not** be used here.  Finally we declare a modport "in" that has "a" and "b" as inputs, and a modport "out" that has "a" and "b" as outputs.  It is not necessary to have all fixed-point signals going in the same direction.
-
-This interface should be thought of as a template for creating your own custom interfaces.  It's a bit complicated, but adding new fixed-point numbers only requires a bit of boilerplate code.  Plus, you're free to add other non fixed-point signals as needed.
-
-To make it convenient to create instances of this interface, you might create a macro like this:
-```verilog
-`define MAKE_TWO_NUMBER(name, a_width_expr, a_exponent_expr, b_width_expr, b_exponent_expr) \
-    two_number #( \
-        .`SVREAL_SIGNIFICAND_WIDTH(a)(``a_width_expr``), \
-        .`SVREAL_SIGNIFICAND_WIDTH(b)(``b_width_expr``) \
-    ) ``name`` (); \
-    assign `SVREAL_EXPONENT(``name``.a) = ``a_exponent_expr``; \
-    assign `SVREAL_EXPONENT(``name``.b) = ``b_exponent_expr``
-```
-The key things to observe are that:
-1. The width has to be defined as a parameter for each signal.
-2. The exponent has to be assigned for each of the fixed-point signals.  Even though the exponent is constant, it is represented as a signal, which is later optimized away by the synthesis tool.
-
-Finally, you can use the interface like this:
-```verilog
-module mytop;
-    `MAKE_TWO_NUMBER(ti, 16, -8, 17, -9);
-    `MAKE_TWO_NUMBER(to, 18, -10, 19, -11);
-    mymod mymod_i (.ti(ti), .to(to));
-endmodule
-module mymod (two_number.in ti, two_number.out to);
-    generate
-        `SVREAL_ALIAS_INPUT(ti.a, ti_a);
-        `SVREAL_ALIAS_INPUT(ti.b, ti_b);
-        `SVREAL_ALIAS_OUTPUT(to.a, to_a);
-        `SVREAL_ALIAS_OUTPUT(to.b, to_b);
-        `SVREAL_ADD(ti_a, ti_b, to_a);
-        `SVREAL_SUB(ti_a, ti_b, to_b);
-    endgenerate
-endmodule
-```
-Crucially, this custom interface can be passed around just as conveniently as the built-in **svreal** type.  Hence, it should be relatively straightforward to embed custom fixed-point types into a design, even if that design is using interfaces to pass around signals.
-
 # Running the Tests
 
 To test **svreal**, please make sure that at least one of the following simulators is in the system path: 
 1. vivado
 2. xrun
 3. vcs
+4. iverilog
 
 Then make sure that **pytest** is installed.  If it's not, run the following command:
 ```shell
