@@ -2,31 +2,41 @@
 
 `include "svreal.sv"
 
+`define A_WIDTH 16
+`define B_WIDTH 17
+`define I2R_WIDTH 8
+`define R2I_WIDTH 8
+
 module test_synth (
-    input wire logic signed [15:0] a_ext,
-    input wire logic signed [16:0] b_ext,
-    input wire logic signed [7:0] i2r_i_ext,
-    input wire logic sel_ext,
-    input wire logic rst_ext,
-    input wire logic clk_ext,
-    input wire logic ce_ext,
-    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] min_ext,
-    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] max_ext,
-    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] add_ext,
-    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] sub_ext,
-    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] mul_ext,
-    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] mux_ext,
-    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] neg_ext,
-    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] abs_ext,
-    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] i2r_o_ext,
-    output wire logic signed [((`LONG_WIDTH_REAL)-1):0] dff_ext,
-    output wire logic signed [7:0] r2i_o_ext,
+    // real-number inputs
+    input wire logic signed [`A_WIDTH-1:0] a_ext,
+    input wire logic signed [`B_WIDTH-1:0] b_ext,
+    // unary op I/O
+    output wire logic signed [`A_WIDTH-1:0] neg_ext,
+    output wire logic signed [`A_WIDTH-1:0] abs_ext,
+    output wire logic signed [`A_WIDTH-1:0] dff_ext,
+    // binary op I/O
+    output wire logic signed [19:0] min_ext,
+    output wire logic signed [20:0] max_ext,
+    output wire logic signed [21:0] add_ext,
+    output wire logic signed [22:0] sub_ext,
+    output wire logic signed [23:0] mul_ext,
+    output wire logic signed [24:0] mux_ext,
+    // conversion I/O
+    input wire logic signed [`I2R_WIDTH-1:0] i2r_i_ext,
+    output wire logic signed [`I2R_WIDTH-1:0] i2r_o_ext,
+    output wire logic signed [`R2I_WIDTH-1:0] r2i_o_ext,
+    // comparison I/O
     output wire logic lt_ext,
     output wire logic le_ext,
     output wire logic gt_ext,
-    output wire logic ge_ext
+    output wire logic ge_ext,
+    // control I/O
+    input wire logic sel_ext,
+    input wire logic rst_ext,
+    input wire logic clk_ext,
+    input wire logic ce_ext
 );
-
     `DECL_CLOG2_MATH
 
     // create signals
@@ -36,27 +46,27 @@ module test_synth (
     assign b = b_ext;
 
     // min
-    `MIN_REAL(a, b, min_o);
+    `MIN_REAL_GENERIC(a, b, min_o, $size(min_ext));
     assign min_ext = min_o;
 
     // max
-    `MAX_REAL(a, b, max_o);
+    `MAX_REAL_GENERIC(a, b, max_o, $size(max_ext));
     assign max_ext = max_o;
 
     // add
-    `ADD_REAL(a, b, add_o);
+    `ADD_REAL_GENERIC(a, b, add_o, $size(add_ext));
     assign add_ext = add_o;
 
     // sub
-    `SUB_REAL(a, b, sub_o);
+    `SUB_REAL_GENERIC(a, b, sub_o, $size(sub_ext));
     assign sub_ext = sub_o;
 
     // mul
-    `MUL_REAL(a, b, mul_o);
+    `MUL_REAL_GENERIC(a, b, mul_o, $size(mul_ext));
     assign mul_ext = mul_o;
 
     // mux
-    `ITE_REAL(sel_ext, a, b, mux_o);
+    `ITE_REAL_GENERIC(sel_ext, a, b, mux_o, $size(mux_ext));
     assign mux_ext = mux_o;
 
     // negation

@@ -11,23 +11,23 @@ module test_ops;
     `REAL_FROM_WIDTH_EXP(b, 17, -9);
 
     // min
-    `MIN_REAL(a, b, min_o);
+    `MIN_REAL_GENERIC(a, b, min_o, 20);
 
     // max
-    `MAX_REAL(a, b, max_o);
+    `MAX_REAL_GENERIC(a, b, max_o, 21);
 
     // add
-    `ADD_REAL(a, b, add_o);
+    `ADD_REAL_GENERIC(a, b, add_o, 22);
 
     // sub
-    `SUB_REAL(a, b, sub_o);
+    `SUB_REAL_GENERIC(a, b, sub_o, 23);
 
     // mul
-    `MUL_REAL(a, b, mul_o);
+    `MUL_REAL_GENERIC(a, b, mul_o, 24);
 
     // mux
     logic cond;
-    `ITE_REAL(cond, a, b, mux_o);
+    `ITE_REAL_GENERIC(cond, a, b, mux_o, 25);
 
     // negate
     `NEGATE_REAL(a, neg_o);
