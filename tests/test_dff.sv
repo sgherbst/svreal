@@ -4,17 +4,17 @@
 
 module test_dff;
 
+    `DECL_MATH_FUNCS
+
     // create signals
-    `MAKE_SVREAL(d, 16, -8);
-    `MAKE_SVREAL(q, 17, -9);
-    `MAKE_SVREAL(init, 18, -10);
+    `MAKE_REAL(d, 127.99);
+
     logic clk, rst, cke;
-    `SVREAL_DFF(d, q, rst, clk, cke, init);
+    `DFF_REAL(d, q, rst, clk, cke, 1.23);
 
     task print_signals();
-        `SVREAL_PRINT(d);
-        `SVREAL_PRINT(q);
-        `SVREAL_PRINT(init);
+        `PRINT_REAL(d);
+        `PRINT_REAL(q);
         $display("clk=%0b", clk);
         $display("rst=%0b", rst);
         $display("cke=%0b", cke);
@@ -27,8 +27,7 @@ module test_dff;
         #(1ns);
 
         // read out the reset value
-        `SVREAL_SET(init, 1.23);
-        `SVREAL_SET(d, 2.34);
+        `FORCE_REAL(2.34, d);
         clk = 1'b0;
         rst = 1'b1;
         cke = 1'b1;
@@ -39,7 +38,7 @@ module test_dff;
         print_signals();
 
         // clock in the first value
-        `SVREAL_SET(d, 2.34);
+        `FORCE_REAL(2.34, d);
         clk = 1'b0;
         rst = 1'b0;
         cke = 1'b1;
@@ -52,7 +51,7 @@ module test_dff;
         print_signals();
 
         // clock in the second value
-        `SVREAL_SET(d, 3.45);
+        `FORCE_REAL(3.45, d);
         clk = 1'b0;
         rst = 1'b0;
         cke = 1'b1;
@@ -65,7 +64,7 @@ module test_dff;
         print_signals();
 
         // disable clock
-        `SVREAL_SET(d, 4.56);
+        `FORCE_REAL(4.56, d);
         clk = 1'b0;
         rst = 1'b0;
         cke = 1'b0;

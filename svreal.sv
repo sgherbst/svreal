@@ -30,39 +30,39 @@
 		calc_exp = clog2_math(range / ((2.0**(width-1.0))-1.0)); \
 	endfunction
 
-`define DECL_MAX_REAL \
-    function real max_real(input real a, input real b); \
+`define DECL_MAX_MATH \
+    function real max_math(input real a, input real b); \
         if (a > b) begin \
-            max_real = a; \
+            max_math = a; \
         end else begin \
-            max_real = b; \
+            max_math = b; \
         end \
     endfunction
 
-`define DECL_ABS_REAL \
-    function real abs_real(input real x); \
+`define DECL_ABS_MATH \
+    function real abs_math(input real x); \
 		if (x < 0) begin \
-			abs_real = -x; \
+			abs_math = -x; \
 		end else begin \
-			abs_real = +x; \
+			abs_math = +x; \
 		end \
     endfunction 
 
 `define DECL_FIXED_TO_FLOAT \
-    function real fixed_to_float(input int significand, input int exponent); \
+    function real fixed_to_float(input longint significand, input int exponent); \
         fixed_to_float = (1.0*significand)*(2.0**exponent); \
     endfunction
 
 `define DECL_FLOAT_TO_FIXED \
-    function int float_to_fixed(input real value, input int exponent); \
+    function longint float_to_fixed(input real value, input int exponent); \
         float_to_fixed = value*(2.0**(-exponent)); \
     endfunction
 
 `define DECL_MATH_FUNCS \
 	`DECL_CLOG2_MATH \
 	`DECL_CALC_EXP \
-	`DECL_MAX_REAL \
-	`DECL_ABS_REAL \
+	`DECL_MAX_MATH \
+	`DECL_ABS_MATH \
 	`DECL_FIXED_TO_FLOAT \
 	`DECL_FLOAT_TO_FIXED
 
@@ -87,11 +87,6 @@
         logic signed [((width_expr)-1):0] \
     `endif
             
-// naming prefixes.  "zzz" is used at the beginning so that these
-// variables show up at the end of the waveform viewing list
-
-`define TMP_REAL(name) zzz_tmp_``name``
-
 // module ports
 
 `define DECL_REAL(port) \
@@ -119,6 +114,7 @@
 
 // Displaying real number signals
 
+// TO_REAL depends on "fixed_to_float"
 `define TO_REAL(name) \
     `ifdef FLOAT_REAL \
         (name) \
@@ -189,6 +185,7 @@
     `NEGATE_INTO_REAL(in_name, out_name)
 
 // construct real number from range
+// the following four macros depend on calc_exp and clog2_math
 
 `define MAKE_GENERIC_REAL(name, range_expr, width_expr) \
     `MAKE_FORMAT_REAL(name, range_expr, width_expr, calc_exp(range_expr, width_expr))
@@ -223,7 +220,7 @@
     assign name = `FROM_REAL(const_expr, name)
 
 `define CONST_RANGE_REAL(const_expr) \
-    (1.01*abs_real(const_expr))
+    (1.01*abs_math(const_expr))
 
 `define MAKE_GENERIC_CONST_REAL(const_expr, name, width_expr) \
     `MAKE_GENERIC_REAL(name, `CONST_RANGE_REAL(const_expr), width_expr); \
@@ -258,8 +255,8 @@
 // multiplication of a constant and variable
 
 `define MUL_CONST_INTO_REAL(const_expr, in_name, out_name) \
-    `MAKE_SHORT_CONST_REAL(const_expr, `TMP_REAL(out_name)); \
-    `MUL_INTO_REAL(`TMP_REAL(out_name), in_name, out_name)
+    `MAKE_SHORT_CONST_REAL(const_expr, zzz_tmp_``out_name``); \
+    `MUL_INTO_REAL(zzz_tmp_``out_name``, in_name, out_name)
 
 `define MUL_CONST_REAL(const_expr, in_name, out_name) \
     `MAKE_REAL(out_name, `CONST_RANGE_REAL(const_expr)*`RANGE_PARAM_REAL(in_name)); \
@@ -288,8 +285,8 @@
 // addition of a constant and a variable
 
 `define ADD_CONST_INTO_REAL(const_expr, in_name, out_name) \
-    `MAKE_CONST_REAL(const_expr, `TMP_REAL(out_name)); \
-    `ADD_INTO_REAL(`TMP_REAL(out_name), in_name, out_name)
+    `MAKE_CONST_REAL(const_expr, zzz_tmp_``out_name``); \
+    `ADD_INTO_REAL(zzz_tmp_``out_name``), in_name, out_name)
 
 `define ADD_CONST_REAL(const_expr, in_name, out_name) \
     `MAKE_REAL(out_name, `CONST_RANGE_REAL(const_expr) + `RANGE_PARAM_REAL(in_name)); \
@@ -298,8 +295,8 @@
 // addition of three variables
 
 `define ADD3_INTO_REAL(a_name, b_name, c_name, d_name) \
-    `ADD_REAL(a_name, b_name, `TMP_REAL(d_name)); \
-    `ADD_INTO_REAL(`TMP_REAL(d_name), c_name, d_name)
+    `ADD_REAL(a_name, b_name, zzz_tmp_``d_name``); \
+    `ADD_INTO_REAL(zzz_tmp_``d_name``, c_name, d_name)
 
 `define ADD3_REAL(a_name, b_name, c_name, d_name) \
     `MAKE_REAL(d_name, `RANGE_PARAM_REAL(a_name) + `RANGE_PARAM_REAL(b_name) + `RANGE_PARAM_REAL(c_name)); \
@@ -340,7 +337,7 @@
     )
 
 `define ITE_REAL(cond_name, true_name, false_name, out_name) \
-    `MAKE_REAL(out_name, max_real(`RANGE_PARAM_REAL(true_name), `RANGE_PARAM_REAL(false_name))); \
+    `MAKE_REAL(out_name, max_math(`RANGE_PARAM_REAL(true_name), `RANGE_PARAM_REAL(false_name))); \
     `ITE_INTO_REAL(cond_name, true_name, false_name, out_name)
 
 // generic comparison
@@ -429,21 +426,21 @@
 // max of two variables
 
 `define MAX_INTO_REAL(a_name, b_name, c_name) \
-    `GT_REAL(a_name, b_name, `TMP_REAL(c_name)); \
-    `ITE_INTO_REAL(`TMP_REAL(c_name), a_name, b_name, c_name)
+    `GT_REAL(a_name, b_name, zzz_tmp_``c_name``); \
+    `ITE_INTO_REAL(zzz_tmp_``c_name``, a_name, b_name, c_name)
 
 `define MAX_REAL(a_name, b_name, c_name) \
-    `MAKE_REAL(c_name, max_real(`RANGE_PARAM_REAL(a_name), `RANGE_PARAM_REAL(b_name))); \
+    `MAKE_REAL(c_name, max_math(`RANGE_PARAM_REAL(a_name), `RANGE_PARAM_REAL(b_name))); \
     `MAX_INTO_REAL(a_name, b_name, c_name)
 
 // min of two variables
 
 `define MIN_INTO_REAL(a_name, b_name, c_name) \
-    `LT_REAL(a_name, b_name, `TMP_REAL(c_name)); \
-    `ITE_INTO_REAL(`TMP_REAL(c_name), a_name, b_name, c_name)
+    `LT_INTO_REAL(a_name, b_name, zzz_tmp_``c_name``); \
+    `ITE_INTO_REAL(zzz_tmp_``c_name``, a_name, b_name, c_name)
 
 `define MIN_REAL(a_name, b_name, c_name) \
-    `MAKE_REAL(c_name, max_real(`RANGE_PARAM_REAL(a_name), `RANGE_PARAM_REAL(b_name))); \
+    `MAKE_REAL(c_name, max_math(`RANGE_PARAM_REAL(a_name), `RANGE_PARAM_REAL(b_name))); \
     `MIN_INTO_REAL(a_name, b_name, c_name)
 
 // conversion from real number to integer
@@ -458,8 +455,8 @@
     `endif
 
 `define REAL_INTO_INT(in_name, int_width_expr, out_name) \
-    `REAL_TO_INT(in_name, int_width_expr, `TMP_REAL(out_name)); \
-    assign out_name = `TMP_REAL(out_name)
+    `REAL_TO_INT(in_name, int_width_expr, zzz_tmp_``out_name``); \
+    assign out_name = zzz_tmp_``out_name``
     
 // conversion from integer to real number
 
@@ -472,8 +469,27 @@
     `endif
     
 `define INT_INTO_REAL(in_name, int_width_expr, out_name) \
-    `INT_TO_REAL(in_name, int_width_expr, `TMP_REAL(out_name)); \
-    `ASSIGN_REAL(`TMP_REAL(out_name), out_name)
+    `INT_TO_REAL(in_name, int_width_expr, zzz_tmp_``out_name``); \
+    `ASSIGN_REAL(zzz_tmp_``out_name``, out_name)
+
+// memory
+
+`define DFF_INTO_REAL(d_name, q_name, rst_name, clk_name, cke_name, init_expr) \
+    dff_real #( \
+        `PASS_REAL(d, ``d_name``), \
+        `PASS_REAL(q, ``q_name``), \
+        .init(``init_expr``) \
+    ) dff_real_``q_name``_i ( \
+        .d(``d_name``), \
+        .q(``q_name``), \
+        .rst(``rst_name``), \
+        .clk(``clk_name``), \
+        .cke(``cke_name``) \
+    )
+
+`define DFF_REAL(d_name, q_name, rst_name, clk_name, cke_name, init_expr) \
+    `COPY_FORMAT_REAL(``d_name``, ``q_name``); \
+    `DFF_INTO_REAL(``d_name``, ``q_name``, ``rst_name``, ``clk_name``, ``cke_name``, ``init_expr``)
 
 // module definitions
 
@@ -484,6 +500,8 @@ module assertion_real #(
     `INPUT_REAL(in)
 );
 
+    `DECL_FIXED_TO_FLOAT
+    
     localparam real min = -(`RANGE_PARAM_REAL(in));
     localparam real max = +(`RANGE_PARAM_REAL(in));
 
@@ -597,10 +615,12 @@ module comp_real #(
     output wire logic c
 );
 	// declare functions needed to implement this module
-	`DECL_MAX_REAL
+    `DECL_MAX_MATH
+    `DECL_CLOG2_MATH
+    `DECL_CALC_EXP
 
 	// compute the maximum range of the two arguments
-    localparam real max_range = max_real(`RANGE_PARAM_REAL(a), `RANGE_PARAM_REAL(b));
+    localparam real max_range = max_math(`RANGE_PARAM_REAL(a), `RANGE_PARAM_REAL(b));
 
     `MAKE_REAL(a_aligned, max_range);
     `MAKE_REAL(b_aligned, max_range);
@@ -647,6 +667,42 @@ module ite_real #(
     `ASSIGN_REAL(false, false_aligned);
 
     assign out = (cond == 1'b1) ? true_aligned : false_aligned;
+endmodule
+
+module dff_real #(
+    `DECL_REAL(d),
+    `DECL_REAL(q),
+	parameter real init=0
+) (
+    `INPUT_REAL(d),
+    `OUTPUT_REAL(q),
+    input wire logic rst,
+    input wire logic clk,
+    input wire logic cke
+);
+    // "var" for memory is kept internal
+    // so that all ports are "wire" type nets
+    `COPY_FORMAT_REAL(q, q_mem);
+    `ASSIGN_REAL(q_mem, q);
+
+    // align input to output
+    `COPY_FORMAT_REAL(q, d_aligned);
+    `ASSIGN_REAL(d, d_aligned);
+    
+    // align initial value to output format
+    `COPY_FORMAT_REAL(q, init_aligned);
+	`ASSIGN_CONST_REAL(init, init_aligned); 
+   
+    // main DFF logic
+    always @(posedge clk) begin
+        if (rst == 1'b1) begin
+            q_mem <= init_aligned;
+        end else if (cke == 1'b1) begin
+            q_mem <= d_aligned;
+        end else begin
+            q_mem <= q;
+        end
+    end       
 endmodule
 
 `endif // `ifndef __SVREAL_SV__
