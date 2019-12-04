@@ -2,33 +2,79 @@
 
 `include "svreal.sv"
 
-module level3 (svreal.in a, svreal.in b, svreal.out c);
-    generate
-        `SVREAL_ALIAS_INPUT(a.value, a_value);
-        `SVREAL_ALIAS_INPUT(b.value, b_value);
-        `SVREAL_ALIAS_OUTPUT(c.value, c_value);
-        `SVREAL_MUL(a_value, b_value, c_value);
-    endgenerate
+module level3 #(
+    `DECL_REAL(a),
+    `DECL_REAL(b),
+    `DECL_REAL(c)
+) (
+    `INPUT_REAL(a),
+    `INPUT_REAL(b),
+    `OUTPUT_REAL(c)
+);
+    `MUL_INTO_REAL(a, b, c);
 endmodule
 
-module level2 (svreal.in a, svreal.in b, svreal.out c);
-    level3 inner(.a(a), .b(b), .c(c));
+module level2 #(
+    `DECL_REAL(a),
+    `DECL_REAL(b),
+    `DECL_REAL(c)
+) (
+    `INPUT_REAL(a),
+    `INPUT_REAL(b),
+    `OUTPUT_REAL(c)
+);
+    level3 #(
+        `PASS_REAL(a, a),
+        `PASS_REAL(b, b),
+        `PASS_REAL(c, c)
+    ) inner (
+        .a(a),
+        .b(b),
+        .c(c)
+    );
 endmodule
 
-module level1 (svreal.in a, svreal.in b, svreal.out c);
-    level2 inner(.a(a), .b(b), .c(c));
+module level1 #(
+    `DECL_REAL(a),
+    `DECL_REAL(b),
+    `DECL_REAL(c)
+) (
+    `INPUT_REAL(a),
+    `INPUT_REAL(b),
+    `OUTPUT_REAL(c)
+);
+    level2 #(
+        `PASS_REAL(a, a),
+        `PASS_REAL(b, b),
+        `PASS_REAL(c, c)
+    ) inner (
+        .a(a),
+        .b(b),
+        .c(c)
+    );
 endmodule
 
 module test_hier;
-    `MAKE_SVREAL_INTF(a, 16, -8);
-    `MAKE_SVREAL_INTF(b, 17, -9);
-    `MAKE_SVREAL_INTF(c, 18, -10);
-    level1 inner(.a(a), .b(b), .c(c));
+    `DECL_MATH_FUNCS
+
+    `MAKE_REAL(a, 127.99);
+    `MAKE_REAL(b, 127.99);
+    `MAKE_REAL(c, 127.99);
+
+    level1 #(
+        `PASS_REAL(a, a),
+        `PASS_REAL(b, b),
+        `PASS_REAL(c, c)
+    ) inner (
+        .a(a),
+        .b(b),
+        .c(c)
+    );
 
     task print_signals();
-        `SVREAL_PRINT(a.value);
-        `SVREAL_PRINT(b.value);
-        `SVREAL_PRINT(c.value);
+        `PRINT_REAL(a);
+        `PRINT_REAL(b);
+        `PRINT_REAL(c);
     endtask
 
     // create testbench
@@ -39,8 +85,8 @@ module test_hier;
 
         // test set #1
         $display("SVREAL TEST SET 1");
-        `SVREAL_SET(a.value, 1.23);
-        `SVREAL_SET(b.value, 4.56);
+        `FORCE_REAL(1.23, a);
+        `FORCE_REAL(4.56, b);
         #(1ns);
         print_signals();
 
