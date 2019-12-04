@@ -1,9 +1,9 @@
 from .common import *
 from math import log2, ceil
 
-TOP = 'test_math'
-PROJECT = 'test_math'
-FILES = ['test_math.sv']
+TOP = 'test_clog2'
+PROJECT = 'test_clog2'
+FILES = ['test_clog2.sv']
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)

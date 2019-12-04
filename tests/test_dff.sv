@@ -4,13 +4,14 @@
 
 module test_dff;
 
-    `DECL_MATH_FUNCS
+    `DECL_CLOG2_MATH
 
     // create signals
-    `MAKE_REAL(d, 127.99);
+    `REAL_FROM_WIDTH_EXP(d, 16, -8);
+    `REAL_FROM_WIDTH_EXP(q, 17, -9);
 
     logic clk, rst, cke;
-    `DFF_REAL(d, q, rst, clk, cke, 1.23);
+    `DFF_INTO_REAL(d, q, rst, clk, cke, 1.23);
 
     task print_signals();
         `PRINT_REAL(d);

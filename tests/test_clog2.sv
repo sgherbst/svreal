@@ -2,9 +2,9 @@
 
 `include "svreal.sv"
 
-module test_math;
+module test_clog2;
 
-    `DECL_MATH_FUNCS
+    `DECL_CLOG2_MATH
 
     task test_set(input real x, input integer n);
         $display("SVREAL TEST SET %0d", n);

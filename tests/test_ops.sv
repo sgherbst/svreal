@@ -4,11 +4,11 @@
 
 module test_ops;
 
-    `DECL_MATH_FUNCS
+    `DECL_CLOG2_MATH
 
     // create signals
-    `MAKE_REAL(a, 127.99);
-    `MAKE_REAL(b, 127.99);
+    `REAL_FROM_WIDTH_EXP(a, 16, -8);
+    `REAL_FROM_WIDTH_EXP(b, 17, -9);
 
     // min
     `MIN_REAL(a, b, min_o);

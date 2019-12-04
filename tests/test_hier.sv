@@ -55,11 +55,9 @@ module level1 #(
 endmodule
 
 module test_hier;
-    `DECL_MATH_FUNCS
-
-    `MAKE_REAL(a, 127.99);
-    `MAKE_REAL(b, 127.99);
-    `MAKE_REAL(c, 127.99);
+    `REAL_FROM_WIDTH_EXP(a, 16, -8);
+    `REAL_FROM_WIDTH_EXP(b, 17, -9);
+    `REAL_FROM_WIDTH_EXP(c, 18, -10);
 
     level1 #(
         `PASS_REAL(a, a),
