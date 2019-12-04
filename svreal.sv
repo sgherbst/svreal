@@ -243,22 +243,27 @@
 `define MUL_CONST_REAL(const_expr, in_name, out_name) \
     `MAKE_REAL(``out_name``, `CONST_RANGE_REAL(``const_expr``)*`RANGE_PARAM_REAL(``in_name``)); \
     `MUL_CONST_INTO_REAL(``const_expr``, ``in_name``, ``out_name``)
-    
-// addition of two variables
 
-`define ADD_OPCODE_REAL 0
+// generic addition or subtraction
 
-`define ADD_INTO_REAL(a_name, b_name, c_name) \
+`define ADD_SUB_INTO_REAL(opcode_value, a_name, b_name, c_name) \
     add_sub_real #( \
         `PASS_REAL(a, ``a_name``), \
         `PASS_REAL(b, ``b_name``), \
         `PASS_REAL(c, ``c_name``), \
-		.opcode(`ADD_OPCODE_REAL) \
+		.opcode(``opcode_value``) \
     ) add_sub_real_``c_name``_i ( \
         .a(``a_name``), \
         .b(``b_name``), \
         .c(``c_name``) \
     )
+
+// addition of two variables
+
+`define ADD_OPCODE_REAL 0
+
+`define ADD_INTO_REAL(a_name, b_name, c_name) \
+    `ADD_SUB_INTO_REAL(`ADD_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
 
 `define ADD_REAL(a_name, b_name, c_name) \
     `MAKE_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``)); \
@@ -289,16 +294,7 @@
 `define SUB_OPCODE_REAL 1
 
 `define SUB_INTO_REAL(a_name, b_name, c_name) \
-    add_sub_real #( \
-        `PASS_REAL(a, ``a_name``), \
-        `PASS_REAL(b, ``b_name``), \
-        `PASS_REAL(c, ``c_name``), \
-		.opcode(`SUB_OPCODE_REAL) \
-    ) add_sub_real_``c_name``_i ( \
-        .a(``a_name``), \
-        .b(``b_name``), \
-        .c(``c_name``) \
-    )
+    `ADD_SUB_INTO_REAL(`SUB_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
 
 `define SUB_REAL(a_name, b_name, c_name) \
     `MAKE_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``)); \
@@ -334,10 +330,6 @@
         .b(``b_name``), \
         .c(``c_name``) \
     )
-
-`define COMP_REAL(opcode, a_name, b_name, c_name) \
-    logic ``c_name``; \
-    `COMP_INTO_REAL(``opcode``, ``a_name``, ``b_name``, ``c_name``)
 
 // greater than
 
