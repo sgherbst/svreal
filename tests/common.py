@@ -46,6 +46,11 @@ def check_for_vivado_errors(res):
     check_for_errors(res.stdout, lis)
     check_for_errors(res.stderr, lis)
 
+def check_for_iverilog_errors(res):
+    lis = ['error']
+    check_for_errors(res.stdout, lis)
+    check_for_errors(res.stderr, lis)
+
 def print_section(name, text):
     text = text.rstrip()
     if text != '':
@@ -139,7 +144,7 @@ def vivado_sim(*files, project, top, part='xc7z020clg484-1', defs=None):
     # run the command
     return run_vivado_tcl(tcl)
 
-def xrun_sim(*files, defs=None, top=None):
+def xrun_sim(*files, defs=None, top=None, parseinfo=False):
     if defs is None:
         defs = []
 
@@ -149,6 +154,8 @@ def xrun_sim(*files, defs=None, top=None):
     cmd += [f'+define+{def_}' for def_ in defs]
     if top is not None:
         cmd += ['-top', f'{top}']
+    if parseinfo:
+        cmd += ['-parseinfo', 'macro']
     res = subprocess.run(cmd, cwd=get_dir('tests'), capture_output=True, text=True)
 
     print('*** RUNNING XRUN SIMULATION ***')
@@ -204,6 +211,7 @@ def iverilog_sim(*files, defs=None, top=None):
 
     print('*** COMPILING IVERILOG SIMULATION ***')
     print_res(res)
+    check_for_iverilog_errors(res)
 
     ############################
     # run
@@ -213,5 +221,6 @@ def iverilog_sim(*files, defs=None, top=None):
 
     print('*** RUNNING IVERILOG SIMULATION ***')
     print_res(res)
+    check_for_iverilog_errors(res)
 
     return res

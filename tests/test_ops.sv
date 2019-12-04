@@ -4,66 +4,58 @@
 
 module test_ops;
 
+    `DECL_MATH_FUNCS
+
     // create signals
-    `MAKE_SVREAL(a, 16, -8);
-    `MAKE_SVREAL(b, 17, -9);
+    `MAKE_REAL(a, 127.99);
+    `MAKE_REAL(b, 127.99);
 
     // min
-    `MAKE_SVREAL(min_o, 18, -10);
-    `SVREAL_MIN(a, b, min_o);
+    `MIN_REAL(a, b, min_o);
 
     // max
-    `MAKE_SVREAL(max_o, 18, -10);
-    `SVREAL_MAX(a, b, max_o);
+    `MAX_REAL(a, b, max_o);
 
     // add
-    `MAKE_SVREAL(add_o, 18, -10);
-    `SVREAL_ADD(a, b, add_o);
+    `ADD_REAL(a, b, add_o);
 
     // sub
-    `MAKE_SVREAL(sub_o, 18, -10);
-    `SVREAL_SUB(a, b, sub_o);
+    `SUB_REAL(a, b, sub_o);
 
     // mul
-    `MAKE_SVREAL(mul_o, 18, -10);
-    `SVREAL_MUL(a, b, mul_o);
+    `MUL_REAL(a, b, mul_o);
 
     // mux
-    `MAKE_SVREAL(mux_o, 18, -10);
-    logic sel;
-    `SVREAL_MUX(sel, a, b, mux_o);
+    logic cond;
+    `ITE_REAL(cond, a, b, mux_o);
 
     // negate
-    `MAKE_SVREAL(neg_o, 18, -10);
-    `SVREAL_NEGATE(a, neg_o);
+    `NEGATE_REAL(a, neg_o);
 
     // real to integer
-    logic signed [7:0] r2i_o;
-    `SVREAL_TO_INT(a, r2i_o, 8);
+    `REAL_TO_INT(a, 8, r2i_o);
 
     // integer to real
     logic signed [7:0] i2r_i;
-    `MAKE_SVREAL(i2r_o, 16, -8);
-    `INT_TO_SVREAL(i2r_i, i2r_o, 8);
+    `INT_TO_REAL(i2r_i, 8, i2r_o);
 
     // comparisons
-    logic lt_o, le_o, gt_o, ge_o;
-    `SVREAL_LT(a, b, lt_o);
-    `SVREAL_LE(a, b, le_o);
-    `SVREAL_GT(a, b, gt_o);
-    `SVREAL_GE(a, b, ge_o);
+    `LT_REAL(a, b, lt_o);
+    `LE_REAL(a, b, le_o);
+    `GT_REAL(a, b, gt_o);
+    `GE_REAL(a, b, ge_o);
 
     task print_signals();
-        `SVREAL_PRINT(a);
-        `SVREAL_PRINT(b);
-        `SVREAL_PRINT(min_o);
-        `SVREAL_PRINT(max_o);
-        `SVREAL_PRINT(add_o);
-        `SVREAL_PRINT(sub_o);
-        `SVREAL_PRINT(mul_o);
-        `SVREAL_PRINT(mux_o);
-        `SVREAL_PRINT(neg_o);
-        `SVREAL_PRINT(i2r_o);
+        `PRINT_REAL(a);
+        `PRINT_REAL(b);
+        `PRINT_REAL(min_o);
+        `PRINT_REAL(max_o);
+        `PRINT_REAL(add_o);
+        `PRINT_REAL(sub_o);
+        `PRINT_REAL(mul_o);
+        `PRINT_REAL(mux_o);
+        `PRINT_REAL(neg_o);
+        `PRINT_REAL(i2r_o);
         $display("r2i_o=%0d", r2i_o);
         $display("lt_o=%0b", lt_o);
         $display("le_o=%0b", le_o);
@@ -79,36 +71,36 @@ module test_ops;
 
         // test set #1
         $display("SVREAL TEST SET 1");
-        `SVREAL_SET(a, 1.23);
-        `SVREAL_SET(b, 4.56);
-        sel = 1'b0;
+        `FORCE_REAL(1.23, a);
+        `FORCE_REAL(4.56, b);
+        cond = 1'b0;
         i2r_i = 78;
         #(1ns);
         print_signals();
 
         // test set #2
         $display("SVREAL TEST SET 2");
-        `SVREAL_SET(a, 1.23);
-        `SVREAL_SET(b, 4.56);
-        sel = 1'b1;
+        `FORCE_REAL(1.23, a);
+        `FORCE_REAL(4.56, b);
+        cond = 1'b1;
         i2r_i = 78;
         #(1ns);
         print_signals();
 
         // test set #3
         $display("SVREAL TEST SET 3");
-        `SVREAL_SET(a, 4.56);
-        `SVREAL_SET(b, 1.23);
-        sel = 1'b0;
+        `FORCE_REAL(4.56, a);
+        `FORCE_REAL(1.23, b);
+        cond = 1'b0;
         i2r_i = 78;
         #(1ns);
         print_signals();
 
         // test set #4
         $display("SVREAL TEST SET 4");
-        `SVREAL_SET(a, 56.0);
-        `SVREAL_SET(b, 1.23);
-        sel = 1'b0;
+        `FORCE_REAL(56.0, a);
+        `FORCE_REAL(1.23, b);
+        cond = 1'b0;
         i2r_i = 78;
         #(1ns);
         print_signals();

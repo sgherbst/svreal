@@ -1,635 +1,652 @@
 `ifndef __SVREAL_SV__
 `define __SVREAL_SV__
 
-// math functions used to compute parameters
+// fixed-point representation defaults
+// (can override by defining them externally)
 
-`define SVREAL_EXPR_MIN(a, b) \
-    (((a) <= (b)) ? (a) : (b))
+`ifndef SHORT_WIDTH_REAL
+    `define SHORT_WIDTH_REAL 18
+`endif
 
-`define SVREAL_EXPR_MAX(a, b) \
-    (((a) >= (b)) ? (a) : (b))
+`ifndef LONG_WIDTH_REAL
+    `define LONG_WIDTH_REAL 25
+`endif
 
-`define SVREAL_EXPR_RSHIFT(a, rshift) \
-    (((``rshift``) >= 0) ? ((``a``) >>> (``rshift``)) : ((``a``) <<< (-(``rshift``))))
+`define DECL_CLOG2_MATH \
+    function int clog2_math(input real x); \
+        clog2_math = 0; \
+        if (x > 0) begin \
+            while (x < (2.0**(clog2_math))) begin \
+                clog2_math = clog2_math - 1; \
+            end \
+            while (x > (2.0**(clog2_math))) begin \
+                clog2_math = clog2_math + 1; \
+            end \
+        end \
+    endfunction
 
-`define SVREAL_EXPR_LSHIFT(a, lshift) \
-    (((``lshift``) >= 0) ? ((``a``) <<< (``lshift``)) : ((``a``) >>> (-(``lshift``))))
+`define DECL_CALC_EXP \
+	function int calc_exp(input real range, input int width); \
+		calc_exp = clog2_math(range / ((2.0**(width-1.0))-1.0)); \
+	endfunction
 
-// method to generate an error (only works during simulation at the moment)
+`define DECL_MAX_REAL \
+    function real max_real(input real a, input real b); \
+        if (a > b) begin \
+            max_real = a; \
+        end else begin \
+            max_real = b; \
+        end \
+    endfunction
 
-`define SVREAL_ERROR \
-    initial begin \
-        $display("SVREAL ERROR"); \
-        $fatal; \
-    end
+`define DECL_ABS_REAL \
+    function real abs_real(input real x); \
+		if (x < 0) begin \
+			abs_real = -x; \
+		end else begin \
+			abs_real = +x; \
+		end \
+    endfunction 
 
-// exponent format
+`define DECL_FIXED_TO_FLOAT \
+    function real fixed_to_float(input int significand, input int exponent); \
+        fixed_to_float = (1.0*significand)*(2.0**exponent); \
+    endfunction
 
-`define SVREAL_EXPONENT(name) ``name``_exponent
+`define DECL_FLOAT_TO_FIXED \
+    function int float_to_fixed(input real value, input int exponent); \
+        float_to_fixed = value*(2.0**(-exponent)); \
+    endfunction
 
-`define SVREAL_EXPONENT_WIDTH 16
+`define DECL_MATH_FUNCS \
+	`DECL_CLOG2_MATH \
+	`DECL_CALC_EXP \
+	`DECL_MAX_REAL \
+	`DECL_ABS_REAL \
+	`DECL_FIXED_TO_FLOAT \
+	`DECL_FLOAT_TO_FIXED
 
-`define SVREAL_EXPONENT_TYPE \
-    logic signed [((`SVREAL_EXPONENT_WIDTH)-1):0]
+// real number parameters
+// width and exponent are only used for the fixed-point
+// representation
 
-`define SVREAL_MIN_EXPONENT(a, b) \
-    `SVREAL_EXPR_MIN(`SVREAL_EXPONENT(``a``), `SVREAL_EXPONENT(``b``))
+`define RANGE_PARAM_REAL(name) ``name``_range_val
 
-`define SVREAL_MAX_EXPONENT(a, b) \
-    `SVREAL_EXPR_MAX(`SVREAL_EXPONENT(``a``), `SVREAL_EXPONENT(``b``))
+`define WIDTH_PARAM_REAL(name) ``name``_width_val
 
-// significand format
+`define EXPONENT_PARAM_REAL(name) ``name``_exponent_val
 
-`define SVREAL_SIGNIFICAND(name) ``name``_significand
+`define PRINT_FORMAT_REAL(name) $display(`"name: {width=%0d, exponent=%0d}`", `WIDTH_PARAM_REAL(name), `EXPONENT_PARAM_REAL(name))
 
-`define SVREAL_SIGNIFICAND_TYPE(width) \
-    `ifndef SVREAL_DEBUG \
-        logic signed [((``width``)-1):0] \
-    `else \
+// real number representation type
+
+`define DATA_TYPE_REAL(width_expr) \
+    `ifdef FLOAT_REAL \
         real \
-    `endif
-
-`define SVREAL_SIGNIFICAND_WIDTH(name) ``name``_significand_width
-
-`define FLOAT_TO_FIXED(float_val, exponent) \
-     ((1.0*(``float_val``))*((2.0)**(-(``exponent``))))
-
-`define FIXED_TO_FLOAT(fixed_val, exponent) \
-     ((1.0*(``fixed_val``))*((2.0)**(+(``exponent``))))
-
-`define SVREAL_TO_FLOAT(name) \
-    `ifndef SVREAL_DEBUG \
-        `FIXED_TO_FLOAT(`SVREAL_SIGNIFICAND(``name``), `SVREAL_EXPONENT(``name``)) \
     `else \
-        `SVREAL_SIGNIFICAND(``name``) \
+        logic signed [((width_expr)-1):0] \
     `endif
+            
+// naming prefixes.  "zzz" is used at the beginning so that these
+// variables show up at the end of the waveform viewing list
 
-`define FLOAT_TO_SVREAL(value, name) \
-    `ifndef SVREAL_DEBUG \
-        `FLOAT_TO_FIXED(``value``, `SVREAL_EXPONENT(``name``)) \
+`define TMP_REAL(name) zzz_tmp_``name``
+
+// module ports
+
+`define DECL_REAL(port) \
+    parameter real `RANGE_PARAM_REAL(port) = 0, \
+    parameter integer `WIDTH_PARAM_REAL(port) = 0, \
+    parameter integer `EXPONENT_PARAM_REAL(port) = 0
+
+`define PASS_REAL(port, name) \
+    .`RANGE_PARAM_REAL(port)(`RANGE_PARAM_REAL(name)), \
+    .`WIDTH_PARAM_REAL(port)(`WIDTH_PARAM_REAL(name)), \
+    .`EXPONENT_PARAM_REAL(port)(`EXPONENT_PARAM_REAL(name))
+
+`define PORT_REAL(port) \
+    `ifdef FLOAT_REAL \
+        `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(port)) port \
     `else \
-        ``value`` \
+        wire `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(port)) port \
     `endif
 
-// macro to print svreal numbers
+`define INPUT_REAL(port) \
+    input `PORT_REAL(port)
 
-`define SVREAL_PRINT(name) \
-    $display(`"``name``=%0f`", `SVREAL_TO_FLOAT(``name``))
+`define OUTPUT_REAL(port) \
+    output `PORT_REAL(port)
 
-// macro to create svreal numbers conveniently
+// Displaying real number signals
 
-`define DECL_SVREAL_TYPE(name, width) \
-    `SVREAL_SIGNIFICAND_TYPE(``width``) `SVREAL_SIGNIFICAND(``name``); \
-    `SVREAL_EXPONENT_TYPE `SVREAL_EXPONENT(``name``)
-
-`define MAKE_SVREAL(name, width, exponent) \
-    `DECL_SVREAL_TYPE(``name``, ``width``); \
-    localparam integer `SVREAL_SIGNIFICAND_WIDTH(``name``) = ``width``; \
-    assign `SVREAL_EXPONENT(``name``) = ``exponent``
-
-`define SVREAL_COPY_FORMAT(in, out) \
-    `MAKE_SVREAL(``out``, `SVREAL_SIGNIFICAND_WIDTH(``in``), `SVREAL_EXPONENT(``in``))
-
-`define PASS_SVREAL_PARAMS(internal_name, external_name) \
-    .`SVREAL_SIGNIFICAND_WIDTH(``internal_name``)(`SVREAL_SIGNIFICAND_WIDTH(``external_name``))
-
-`define DECL_SVREAL_PARAMS(name) \
-    parameter integer `SVREAL_SIGNIFICAND_WIDTH(``name``) = -1
-
-`define DECL_SVREAL_INPUT(name) \
-    input `SVREAL_SIGNIFICAND_TYPE(`SVREAL_SIGNIFICAND_WIDTH(``name``)) `SVREAL_SIGNIFICAND(``name``), \
-    input `SVREAL_EXPONENT_TYPE `SVREAL_EXPONENT(``name``)
-
-`define DECL_SVREAL_OUTPUT(name) \
-    output `SVREAL_SIGNIFICAND_TYPE(`SVREAL_SIGNIFICAND_WIDTH(``name``)) `SVREAL_SIGNIFICAND(``name``), \
-    input `SVREAL_EXPONENT_TYPE `SVREAL_EXPONENT(``name``)
-
-`define PASS_SVREAL_SIGNALS(internal_name, external_name) \
-    .`SVREAL_SIGNIFICAND(``internal_name``)(`SVREAL_SIGNIFICAND(``external_name``)), \
-    .`SVREAL_EXPONENT(``internal_name``)(`SVREAL_EXPONENT(``external_name``)) \
-
-// macros for working with svreal types in interfaces
-
-`define SVREAL_MODPORT_IN(name) \
-    input `SVREAL_SIGNIFICAND(``name``), \
-    input `SVREAL_EXPONENT(``name``)
-
-`define SVREAL_MODPORT_OUT(name) \
-    output `SVREAL_SIGNIFICAND(``name``), \
-    input `SVREAL_EXPONENT(``name``)
-
-`define SVREAL_ALIAS_FORMAT(port_name, local_name) \
-    `ifndef SVREAL_DEBUG \
-        `MAKE_SVREAL(local_name, $size(`SVREAL_SIGNIFICAND(``port_name``)), `SVREAL_EXPONENT(``port_name``)) \
+`define TO_REAL(name) \
+    `ifdef FLOAT_REAL \
+        (name) \
     `else \
-        `MAKE_SVREAL(local_name, -1, `SVREAL_EXPONENT(``port_name``)) \
+		fixed_to_float((name), (`EXPONENT_PARAM_REAL(name))) \
     `endif
 
-`define SVREAL_ALIAS_INPUT(port_name, local_name) \
-    `SVREAL_ALIAS_FORMAT(``port_name``, ``local_name``); \
-    assign `SVREAL_SIGNIFICAND(``local_name``) = `SVREAL_SIGNIFICAND(``port_name``)
+`define PRINT_REAL(name) $display(`"name=%0f`", `TO_REAL(name))
 
-`define SVREAL_ALIAS_OUTPUT(port_name, local_name) \
-    `SVREAL_ALIAS_FORMAT(``port_name``, ``local_name``); \
-    assign `SVREAL_SIGNIFICAND(``port_name``) = `SVREAL_SIGNIFICAND(``local_name``)
+// force a real number
 
-// as a convenience, an implementation of an interface with one svreal value is provided
-// this could also serve as a reference for more complex interfaces including multiple
-// svreals and other signals
+`define FROM_REAL(expr, name) \
+    `ifdef FLOAT_REAL \
+        (expr) \
+    `else \
+		float_to_fixed((expr), (`EXPONENT_PARAM_REAL(name))) \
+    `endif
 
-interface svreal #(
-    `DECL_SVREAL_PARAMS(value)
-);
-    `DECL_SVREAL_TYPE(value, `SVREAL_SIGNIFICAND_WIDTH(value));
-    modport in (
-        `SVREAL_MODPORT_IN(value)
-    );
-    modport out (
-        `SVREAL_MODPORT_OUT(value)
-    );
-endinterface
+`define FORCE_REAL(expr, name) \
+    name = `FROM_REAL(expr, name)
 
-`define MAKE_SVREAL_INTF(name, value_width_expr, value_exponent_expr) \
-    svreal #( \
-        .`SVREAL_SIGNIFICAND_WIDTH(value)(``value_width_expr``) \
-    ) ``name`` (); \
-    assign `SVREAL_EXPONENT(``name``.value) = ``value_exponent_expr`` \
+// assert that real number is within specified range
 
-// assign one svreal to another
-
-`define SVREAL_NAMED_ASSIGN(in_name, out_name, inst_name) \
-    svreal_assign_mod #( \
-        `PASS_SVREAL_PARAMS(in, ``in_name``), \
-        `PASS_SVREAL_PARAMS(out, ``out_name``) \
-    ) ``inst_name`` ( \
-        `PASS_SVREAL_SIGNALS(in, ``in_name``), \
-        `PASS_SVREAL_SIGNALS(out, ``out_name``) \
+`define ASSERTION_REAL(in_name) \
+    assertion_real #( \
+        `PASS_REAL(in, in_name), \
+        .name(`"in_name`") \
+    ) assertion_real_``in_name``_i ( \
+        .in(in_name) \
     )
 
-`define SVREAL_ASSIGN(in_name, out_name) \
-    `SVREAL_NAMED_ASSIGN(in_name, out_name, ``out_name``_assign_i)
+// creating real numbers
+// the data type declaration comes first so that directives like mark_debug
+// and dont_touch can be used
 
-// negate an svreal
+`define MAKE_FORMAT_REAL(name, range_expr, width_expr, exponent_expr) \
+    `DATA_TYPE_REAL(width_expr) name; \
+    localparam real `RANGE_PARAM_REAL(name) = range_expr; \
+    localparam integer `WIDTH_PARAM_REAL(name) = width_expr; \
+    localparam integer `EXPONENT_PARAM_REAL(name) = exponent_expr \
+    `ifdef FLOAT_REAL \
+        ; `ASSERTION_REAL(name) \
+    `endif
 
-`define SVREAL_NAMED_NEGATE(in_name, out_name, inst_name) \
-    svreal_negate_mod #( \
-        `PASS_SVREAL_PARAMS(in, ``in_name``), \
-        `PASS_SVREAL_PARAMS(out, ``out_name``) \
-    ) ``inst_name`` ( \
-        `PASS_SVREAL_SIGNALS(in, ``in_name``), \
-        `PASS_SVREAL_SIGNALS(out, ``out_name``) \
-    )
+// copying real number format
 
-`define SVREAL_NEGATE(in_name, out_name) \
-    `SVREAL_NAMED_NEGATE(in_name, out_name, ``out_name``_negate_i)
+`define GET_FORMAT_REAL(in_name) \
+    `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(in_name))
 
-// assign a constant to an svreal (either as a continuous assignment or within a testbench context)
+`define COPY_FORMAT_REAL(in_name, out_name) \
+    `MAKE_FORMAT_REAL(out_name, `RANGE_PARAM_REAL(in_name), `WIDTH_PARAM_REAL(in_name), `EXPONENT_PARAM_REAL(in_name))
 
-`define SVREAL_SET(name, expr) \
-    `SVREAL_SIGNIFICAND(``name``) = `FLOAT_TO_SVREAL(``expr``, ``name``)
+// negation
+// note that since the range of a fixed-point number is defined as +/- |range|, the negation of 
+// the fixed point numbers can always be represented in the original format.
 
-// add/sub
+`define NEGATE_INTO_REAL(in_name, out_name) \
+    negate_real #( \
+        `PASS_REAL(in, in_name), \
+        `PASS_REAL(out, out_name) \
+    ) negate_real_``out_name``_i ( \
+        .in(in_name), \
+        .out(out_name) \
+    ) 
 
-`define SVREAL_OPCODE_ADD 0
-`define SVREAL_OPCODE_SUB 1
+`define NEGATE_REAL(in_name, out_name) \
+    `COPY_FORMAT_REAL(in_name, out_name); \
+    `NEGATE_INTO_REAL(in_name, out_name)
 
-`define SVREAL_NAMED_ADDSUB(opcode_expr, a_name, b_name, c_name, inst_name) \
-    svreal_addsub_mod #( \
-        .opcode(``opcode_expr``), \
-        `PASS_SVREAL_PARAMS(a, ``a_name``), \
-        `PASS_SVREAL_PARAMS(b, ``b_name``), \
-        `PASS_SVREAL_PARAMS(c, ``c_name``) \
-    ) ``inst_name`` ( \
-        `PASS_SVREAL_SIGNALS(a, ``a_name``), \
-        `PASS_SVREAL_SIGNALS(b, ``b_name``), \
-        `PASS_SVREAL_SIGNALS(c, ``c_name``) \
-    )
+// construct real number from range
 
-`define SVREAL_NAMED_ADD(a, b, c, inst_name) \
-    `SVREAL_NAMED_ADDSUB(`SVREAL_OPCODE_ADD, a, b, c, inst_name)
+`define MAKE_GENERIC_REAL(name, range_expr, width_expr) \
+    `MAKE_FORMAT_REAL(name, range_expr, width_expr, calc_exp(range_expr, width_expr))
 
-`define SVREAL_ADD(a, b, c) \
-    `SVREAL_NAMED_ADD(a, b, c, ``c``_add_i)
+`define MAKE_SHORT_REAL(name, range_expr) \
+    `MAKE_GENERIC_REAL(name, range_expr, `SHORT_WIDTH_REAL)
 
-`define SVREAL_NAMED_SUB(a, b, c, inst_name) \
-    `SVREAL_NAMED_ADDSUB(`SVREAL_OPCODE_SUB, a, b, c, inst_name)
+`define MAKE_LONG_REAL(name, range_expr) \
+    `MAKE_GENERIC_REAL(name, range_expr, `LONG_WIDTH_REAL)
 
-`define SVREAL_SUB(a, b, c) \
-    `SVREAL_NAMED_SUB(a, b, c, ``c``_sub_i)
-
-// mul
-
-`define SVREAL_NAMED_MUL(a_name, b_name, c_name, inst_name) \
-    svreal_mul_mod #( \
-        `PASS_SVREAL_PARAMS(a, ``a_name``), \
-        `PASS_SVREAL_PARAMS(b, ``b_name``), \
-        `PASS_SVREAL_PARAMS(c, ``c_name``) \
-    ) ``inst_name`` ( \
-        `PASS_SVREAL_SIGNALS(a, ``a_name``), \
-        `PASS_SVREAL_SIGNALS(b, ``b_name``), \
-        `PASS_SVREAL_SIGNALS(c, ``c_name``) \
-    )
-
-`define SVREAL_MUL(a, b, c) \
-    `SVREAL_NAMED_MUL(a, b, c, ``c``_mul_i)
-
-// min/max
-
-`define SVREAL_OPCODE_MIN 0
-`define SVREAL_OPCODE_MAX 1
-
-`define SVREAL_NAMED_MINMAX(opcode_expr, a_name, b_name, c_name, inst_name) \
-    svreal_minmax_mod #( \
-        .opcode(``opcode_expr``), \
-        `PASS_SVREAL_PARAMS(a, ``a_name``), \
-        `PASS_SVREAL_PARAMS(b, ``b_name``), \
-        `PASS_SVREAL_PARAMS(c, ``c_name``) \
-    ) ``inst_name`` ( \
-        `PASS_SVREAL_SIGNALS(a, ``a_name``), \
-        `PASS_SVREAL_SIGNALS(b, ``b_name``), \
-        `PASS_SVREAL_SIGNALS(c, ``c_name``) \
-    )
-
-`define SVREAL_NAMED_MIN(a, b, c, inst_name) \
-    `SVREAL_NAMED_MINMAX(`SVREAL_OPCODE_MIN, a, b, c, inst_name)
-
-`define SVREAL_MIN(a, b, c) \
-    `SVREAL_NAMED_MIN(a, b, c, ``c``_min_i)
-
-`define SVREAL_NAMED_MAX(a, b, c, inst_name) \
-    `SVREAL_NAMED_MINMAX(`SVREAL_OPCODE_MAX, a, b, c, inst_name)
-
-`define SVREAL_MAX(a, b, c) \
-    `SVREAL_NAMED_MAX(a, b, c, ``c``_max_i)
-
-// comparisons
-
-`define SVREAL_NAMED_COMP(opcode_expr, a_name, b_name, c_name, inst_name) \
-    svreal_comp_mod #( \
-        .opcode(``opcode_expr``), \
-        `PASS_SVREAL_PARAMS(a, ``a_name``), \
-        `PASS_SVREAL_PARAMS(b, ``b_name``) \
-    ) ``inst_name`` ( \
-        `PASS_SVREAL_SIGNALS(a, ``a_name``), \
-        `PASS_SVREAL_SIGNALS(b, ``b_name``), \
-        .c(``c_name``) \
-    )
+`define MAKE_REAL(name, range_expr) \
+    `MAKE_LONG_REAL(name, range_expr)
     
-`define SVREAL_OPCODE_GT 0
-`define SVREAL_OPCODE_GE 1
-`define SVREAL_OPCODE_LT 2
-`define SVREAL_OPCODE_LE 3
-`define SVREAL_OPCODE_EQ 4
-`define SVREAL_OPCODE_NE 5
+// assigning real numbers
+// note that the negative version of each number will already have be assigned when
+// out_name was defined
 
-`define SVREAL_NAMED_GT(a, b, c, inst_name) \
-    `SVREAL_NAMED_COMP(`SVREAL_OPCODE_GT, a, b, c, inst_name)
+`define ASSIGN_REAL(in_name, out_name) \
+    assign_real #( \
+        `PASS_REAL(in, in_name), \
+        `PASS_REAL(out, out_name) \
+    ) assign_real_``out_name``_i ( \
+        .in(in_name), \
+        .out(out_name) \
+    ) 
 
-`define SVREAL_GT(a, b, c) \
-    `SVREAL_NAMED_GT(a, b, c, ``c``_gt_i)
+// real constants
+// range is skewed just a bit higher to make sure that the 
+// fixed-point representation falls within the range
 
-`define SVREAL_NAMED_GE(a, b, c, inst_name) \
-    `SVREAL_NAMED_COMP(`SVREAL_OPCODE_GE, a, b, c, inst_name)
+`define ASSIGN_CONST_REAL(const_expr, name) \
+    assign name = `FROM_REAL(const_expr, name)
 
-`define SVREAL_GE(a, b, c) \
-    `SVREAL_NAMED_GE(a, b, c, ``c``_ge_i)
+`define CONST_RANGE_REAL(const_expr) \
+    (1.01*abs_real(const_expr))
 
-`define SVREAL_NAMED_LT(a, b, c, inst_name) \
-    `SVREAL_NAMED_COMP(`SVREAL_OPCODE_LT, a, b, c, inst_name)
+`define MAKE_GENERIC_CONST_REAL(const_expr, name, width_expr) \
+    `MAKE_GENERIC_REAL(name, `CONST_RANGE_REAL(const_expr), width_expr); \
+    `ASSIGN_CONST_REAL(const_expr, name)
 
-`define SVREAL_LT(a, b, c) \
-    `SVREAL_NAMED_LT(a, b, c, ``c``_lt_i)
+`define MAKE_SHORT_CONST_REAL(const_expr, name) \
+    `MAKE_GENERIC_CONST_REAL(const_expr, name, `SHORT_WIDTH_REAL)
 
-`define SVREAL_NAMED_LE(a, b, c, inst_name) \
-    `SVREAL_NAMED_COMP(`SVREAL_OPCODE_LE, a, b, c, inst_name)
+`define MAKE_LONG_CONST_REAL(const_expr, name) \
+    `MAKE_GENERIC_CONST_REAL(const_expr, name, `LONG_WIDTH_REAL)
 
-`define SVREAL_LE(a, b, c) \
-    `SVREAL_NAMED_LE(a, b, c, ``c``_le_i)
+`define MAKE_CONST_REAL(const_expr, name) \
+    `MAKE_LONG_CONST_REAL(const_expr, name)
 
-`define SVREAL_NAMED_EQ(a, b, c, inst_name) \
-    `SVREAL_NAMED_COMP(`SVREAL_OPCODE_EQ, a, b, c, inst_name)
+// multiplication of two variables
 
-`define SVREAL_EQ(a, b, c) \
-    `SVREAL_NAMED_EQ(a, b, c, ``c``_eq_i)
+`define MUL_INTO_REAL(a_name, b_name, c_name) \
+    mul_real #( \
+        `PASS_REAL(a, a_name), \
+        `PASS_REAL(b, b_name), \
+        `PASS_REAL(c, c_name) \
+    ) mul_real_``c_name``_i ( \
+        .a(a_name), \
+        .b(b_name), \
+        .c(c_name) \
+    )
+        
+`define MUL_REAL(a_name, b_name, c_name) \
+    `MAKE_REAL(c_name, `RANGE_PARAM_REAL(a_name)*`RANGE_PARAM_REAL(b_name)); \
+    `MUL_INTO_REAL(a_name, b_name, c_name)
 
-`define SVREAL_NAMED_NE(a, b, c, inst_name) \
-    `SVREAL_NAMED_COMP(`SVREAL_OPCODE_NE, a, b, c, inst_name)
+// multiplication of a constant and variable
 
-`define SVREAL_NE(a, b, c) \
-    `SVREAL_NAMED_NE(a, b, c, ``c``_ne_i)
+`define MUL_CONST_INTO_REAL(const_expr, in_name, out_name) \
+    `MAKE_SHORT_CONST_REAL(const_expr, `TMP_REAL(out_name)); \
+    `MUL_INTO_REAL(`TMP_REAL(out_name), in_name, out_name)
 
-// multiplex between two values
+`define MUL_CONST_REAL(const_expr, in_name, out_name) \
+    `MAKE_REAL(out_name, `CONST_RANGE_REAL(const_expr)*`RANGE_PARAM_REAL(in_name)); \
+    `MUL_CONST_INTO_REAL(const_expr, in_name, out_name)
+    
+// addition of two variables
 
-`define SVREAL_NAMED_MUX(sel_name, in0_name, in1_name, out_name, inst_name) \
-    svreal_mux_mod #( \
-        `PASS_SVREAL_PARAMS(in0, ``in0_name``), \
-        `PASS_SVREAL_PARAMS(in1, ``in1_name``), \
-        `PASS_SVREAL_PARAMS(out, ``out_name``) \
-    ) ``inst_name`` ( \
-        .sel(``sel_name``), \
-        `PASS_SVREAL_SIGNALS(in0, ``in0_name``), \
-        `PASS_SVREAL_SIGNALS(in1, ``in1_name``), \
-        `PASS_SVREAL_SIGNALS(out, ``out_name``) \
+`define ADD_OPCODE_REAL 0
+
+`define ADD_INTO_REAL(a_name, b_name, c_name) \
+    add_sub_real #( \
+        `PASS_REAL(a, a_name), \
+        `PASS_REAL(b, b_name), \
+        `PASS_REAL(c, c_name), \
+		.opcode(`ADD_OPCODE_REAL) \
+    ) add_sub_real_``c_name``_i ( \
+        .a(a_name), \
+        .b(b_name), \
+        .c(c_name) \
     )
 
-`define SVREAL_MUX(sel_name, in0_name, in1_name, out_name) \
-    `SVREAL_NAMED_MUX(sel_name, in0_name, in1_name, out_name, ``out_name``_mux_i)
+`define ADD_REAL(a_name, b_name, c_name) \
+    `MAKE_REAL(c_name, `RANGE_PARAM_REAL(a_name) + `RANGE_PARAM_REAL(b_name)); \
+    `ADD_INTO_REAL(a_name, b_name, c_name)
+    
+// addition of a constant and a variable
 
-// conversion between integer and svreal
+`define ADD_CONST_INTO_REAL(const_expr, in_name, out_name) \
+    `MAKE_CONST_REAL(const_expr, `TMP_REAL(out_name)); \
+    `ADD_INTO_REAL(`TMP_REAL(out_name), in_name, out_name)
 
-`define SVREAL_TO_INT_NAMED(in_name, out_name, out_width_expr, inst_name) \
-    svreal_to_int_mod #( \
-        `PASS_SVREAL_PARAMS(in, ``in_name``), \
-        .out_width(``out_width_expr``) \
-    ) ``inst_name`` ( \
-        `PASS_SVREAL_SIGNALS(in, ``in_name``), \
-        .out(``out_name``) \
+`define ADD_CONST_REAL(const_expr, in_name, out_name) \
+    `MAKE_REAL(out_name, `CONST_RANGE_REAL(const_expr) + `RANGE_PARAM_REAL(in_name)); \
+    `ADD_CONST_INTO_REAL(const_expr, in_name, out_name)
+
+// addition of three variables
+
+`define ADD3_INTO_REAL(a_name, b_name, c_name, d_name) \
+    `ADD_REAL(a_name, b_name, `TMP_REAL(d_name)); \
+    `ADD_INTO_REAL(`TMP_REAL(d_name), c_name, d_name)
+
+`define ADD3_REAL(a_name, b_name, c_name, d_name) \
+    `MAKE_REAL(d_name, `RANGE_PARAM_REAL(a_name) + `RANGE_PARAM_REAL(b_name) + `RANGE_PARAM_REAL(c_name)); \
+    `ADD3_INTO_REAL(a_name, b_name, c_name, d_name)
+
+// subtraction of two variables
+
+`define SUB_OPCODE_REAL 1
+
+`define SUB_INTO_REAL(a_name, b_name, c_name) \
+    add_sub_real #( \
+        `PASS_REAL(a, a_name), \
+        `PASS_REAL(b, b_name), \
+        `PASS_REAL(c, c_name), \
+		.opcode(`SUB_OPCODE_REAL) \
+    ) add_sub_real_``c_name``_i ( \
+        .a(a_name), \
+        .b(b_name), \
+        .c(c_name) \
     )
 
-`define SVREAL_TO_INT(in_name, out_name, out_width_expr) \
-    `SVREAL_TO_INT_NAMED(``in_name``, ``out_name``, ``out_width_expr``, ``out_name``_r2i_i)
+`define SUB_REAL(a_name, b_name, c_name) \
+    `MAKE_REAL(c_name, `RANGE_PARAM_REAL(a_name) + `RANGE_PARAM_REAL(b_name)); \
+    `SUB_INTO_REAL(a_name, b_name, c_name)
 
-`define INT_TO_SVREAL_NAMED(in_name, out_name, in_width_expr, inst_name) \
-    int_to_svreal_mod #( \
-        .in_width(``in_width_expr``), \
-        `PASS_SVREAL_PARAMS(out, ``out_name``) \
-    ) ``inst_name`` ( \
-        .in(``in_name``), \
-        `PASS_SVREAL_SIGNALS(out, ``out_name``) \
+// conditional assignment
+
+`define ITE_INTO_REAL(cond_name, true_name, false_name, out_name) \
+    ite_real #( \
+        `PASS_REAL(true, true_name), \
+        `PASS_REAL(false, false_name), \
+        `PASS_REAL(out, out_name) \
+    ) ite_real_``out_name``_i ( \
+        .cond(cond_name), \
+        .true(true_name), \
+        .false(false_name), \
+        .out(out_name) \
     )
 
-`define INT_TO_SVREAL(in_name, out_name, in_width_expr) \
-    `INT_TO_SVREAL_NAMED(``in_name``, ``out_name``, ``in_width_expr``, ``out_name``_i2r_i)
+`define ITE_REAL(cond_name, true_name, false_name, out_name) \
+    `MAKE_REAL(out_name, max_real(`RANGE_PARAM_REAL(true_name), `RANGE_PARAM_REAL(false_name))); \
+    `ITE_INTO_REAL(cond_name, true_name, false_name, out_name)
 
-// memory
+// generic comparison
 
-`define SVREAL_NAMED_DFF(d_name, q_name, rst_name, clk_name, cke_name, init_name, inst_name) \
-    svreal_dff_mod #( \
-        `PASS_SVREAL_PARAMS(d, ``d_name``), \
-        `PASS_SVREAL_PARAMS(q, ``q_name``), \
-        `PASS_SVREAL_PARAMS(init, ``init_name``) \
-    ) ``inst_name`` ( \
-        `PASS_SVREAL_SIGNALS(d, ``d_name``), \
-        `PASS_SVREAL_SIGNALS(q, ``q_name``), \
-        `PASS_SVREAL_SIGNALS(init, ``init_name``), \
-        .rst(``rst_name``), \
-        .clk(``clk_name``), \
-        .cke(``cke_name``) \
+`define COMP_INTO_REAL(opcode_value, a_name, b_name, c_name) \
+    comp_real #( \
+        `PASS_REAL(a, a_name), \
+        `PASS_REAL(b, b_name), \
+        .opcode(opcode_value) \
+    ) comp_real_``c_name``_i ( \
+        .a(a_name), \
+        .b(b_name), \
+        .c(c_name) \
     )
 
-`define SVREAL_DFF(d_name, q_name, rst_name, clk_name, cke_name, init_name) \
-    `SVREAL_NAMED_DFF(d_name, q_name, rst_name, clk_name, cke_name, init_name, ``q_name``_dff_i)
+`define COMP_REAL(opcode, a_name, b_name, c_name) \
+    logic c_name; \
+    `COMP_INTO_REAL(opcode, a_name, b_name, c_name)
 
-// assign one svreal number to another
+// greater than
 
-module svreal_assign_mod #(
-    `DECL_SVREAL_PARAMS(in),
-    `DECL_SVREAL_PARAMS(out)
+`define GT_OPCODE_REAL 0
+
+`define GT_INTO_REAL(a_name, b_name, c_name) \
+    `COMP_INTO_REAL(`GT_OPCODE_REAL, a_name, b_name, c_name)
+
+`define GT_REAL(a_name, b_name, c_name) \
+    logic c_name; \
+    `GT_INTO_REAL(a_name, b_name, c_name)
+
+// greater than or equal to
+
+`define GE_OPCODE_REAL 1
+
+`define GE_INTO_REAL(a_name, b_name, c_name) \
+    `COMP_INTO_REAL(`GE_OPCODE_REAL, a_name, b_name, c_name)
+
+`define GE_REAL(a_name, b_name, c_name) \
+    logic c_name; \
+    `GE_INTO_REAL(a_name, b_name, c_name)
+
+// less than
+
+`define LT_OPCODE_REAL 2
+
+`define LT_INTO_REAL(a_name, b_name, c_name) \
+    `COMP_INTO_REAL(`LT_OPCODE_REAL, a_name, b_name, c_name)
+
+`define LT_REAL(a_name, b_name, c_name) \
+    logic c_name; \
+    `LT_INTO_REAL(a_name, b_name, c_name)
+
+// less than or equal to
+
+`define LE_OPCODE_REAL 3
+
+`define LE_INTO_REAL(a_name, b_name, c_name) \
+    `COMP_INTO_REAL(`LE_OPCODE_REAL, a_name, b_name, c_name)
+
+`define LE_REAL(a_name, b_name, c_name) \
+    logic c_name; \
+    `LE_INTO_REAL(a_name, b_name, c_name)
+
+// equal to
+
+`define EQ_OPCODE_REAL 4
+
+`define EQ_INTO_REAL(a_name, b_name, c_name) \
+    `COMP_INTO_REAL(`EQ_OPCODE_REAL, a_name, b_name, c_name)
+
+`define EQ_REAL(a_name, b_name, c_name) \
+    logic c_name; \
+    `EQ_INTO_REAL(a_name, b_name, c_name)
+
+// not equal to
+
+`define NE_OPCODE_REAL 5
+
+`define NE_INTO_REAL(a_name, b_name, c_name) \
+    `COMP_INTO_REAL(`NE_OPCODE_REAL, a_name, b_name, c_name)
+
+`define NE_REAL(a_name, b_name, c_name) \
+    logic c_name; \
+    `NE_INTO_REAL(a_name, b_name, c_name)
+
+// max of two variables
+
+`define MAX_INTO_REAL(a_name, b_name, c_name) \
+    `GT_REAL(a_name, b_name, `TMP_REAL(c_name)); \
+    `ITE_INTO_REAL(`TMP_REAL(c_name), a_name, b_name, c_name)
+
+`define MAX_REAL(a_name, b_name, c_name) \
+    `MAKE_REAL(c_name, max_real(`RANGE_PARAM_REAL(a_name), `RANGE_PARAM_REAL(b_name))); \
+    `MAX_INTO_REAL(a_name, b_name, c_name)
+
+// min of two variables
+
+`define MIN_INTO_REAL(a_name, b_name, c_name) \
+    `LT_REAL(a_name, b_name, `TMP_REAL(c_name)); \
+    `ITE_INTO_REAL(`TMP_REAL(c_name), a_name, b_name, c_name)
+
+`define MIN_REAL(a_name, b_name, c_name) \
+    `MAKE_REAL(c_name, max_real(`RANGE_PARAM_REAL(a_name), `RANGE_PARAM_REAL(b_name))); \
+    `MIN_INTO_REAL(a_name, b_name, c_name)
+
+// conversion from real number to integer
+
+`define REAL_TO_INT(in_name, int_width_expr, out_name) \
+    `ifdef FLOAT_REAL \
+        logic signed[((int_width_expr)-1):0] out_name; \
+        assign out_name = integer'(in_name) \
+    `else \
+        `MAKE_FORMAT_REAL(out_name, 2.0**(int_width_expr-1.0), int_width_expr, 0); \
+        `ASSIGN_REAL(in_name, out_name) \
+    `endif
+
+`define REAL_INTO_INT(in_name, int_width_expr, out_name) \
+    `REAL_TO_INT(in_name, int_width_expr, `TMP_REAL(out_name)); \
+    assign out_name = `TMP_REAL(out_name)
+    
+// conversion from integer to real number
+
+`define INT_TO_REAL(in_name, int_width_expr, out_name) \
+    `MAKE_FORMAT_REAL(out_name, 2.0**(int_width_expr-1.0), int_width_expr, 0); \
+    `ifdef FLOAT_REAL \
+        assign out_name = 1.0*in_name \
+    `else \
+        assign out_name = in_name \
+    `endif
+    
+`define INT_INTO_REAL(in_name, int_width_expr, out_name) \
+    `INT_TO_REAL(in_name, int_width_expr, `TMP_REAL(out_name)); \
+    `ASSIGN_REAL(`TMP_REAL(out_name), out_name)
+
+// module definitions
+
+module assertion_real #(
+    `DECL_REAL(in),
+    parameter name = "name"
 ) (
-    `DECL_SVREAL_INPUT(in),
-    `DECL_SVREAL_OUTPUT(out)
+    `INPUT_REAL(in)
 );
-    `ifndef SVREAL_DEBUG
-        `SVREAL_EXPONENT_TYPE lshift;
-        assign lshift = `SVREAL_EXPONENT(in) - `SVREAL_EXPONENT(out);
-        assign `SVREAL_SIGNIFICAND(out) = `SVREAL_EXPR_LSHIFT(`SVREAL_SIGNIFICAND(in), lshift);
+
+    localparam real min = -(`RANGE_PARAM_REAL(in));
+    localparam real max = +(`RANGE_PARAM_REAL(in));
+
+    always @(in) begin
+        if (!((min <= `TO_REAL(in)) && (`TO_REAL(in) <= max))) begin
+            $display("Real number %s with value %f out of range (%f to %f).", name, `TO_REAL(in), min, max);
+            $fatal;
+        end
+    end
+                        
+endmodule
+
+module assign_real #(
+    `DECL_REAL(in),
+    `DECL_REAL(out)
+) (
+    `INPUT_REAL(in),
+    `OUTPUT_REAL(out)
+);
+    `ifdef FLOAT_REAL
+        assign out = in;
     `else
-        assign `SVREAL_SIGNIFICAND(out) = `SVREAL_SIGNIFICAND(in);
+        localparam integer lshift = `EXPONENT_PARAM_REAL(in) - `EXPONENT_PARAM_REAL(out);
+    
+        generate
+            if (lshift >= 0) begin
+                assign out = in <<< (+lshift);
+            end else begin
+                assign out = in >>> (-lshift);
+            end
+        endgenerate
     `endif
 endmodule
 
-// negate an svreal value
-
-module svreal_negate_mod #(
-    `DECL_SVREAL_PARAMS(in),
-    `DECL_SVREAL_PARAMS(out)
+module add_sub_real #(
+    `DECL_REAL(a),
+    `DECL_REAL(b),
+    `DECL_REAL(c),
+	parameter integer opcode=0
 ) (
-    `DECL_SVREAL_INPUT(in),
-    `DECL_SVREAL_OUTPUT(out)
+    `INPUT_REAL(a),
+    `INPUT_REAL(b),
+    `OUTPUT_REAL(c)
 );
-    // assign "in" directly into "out_neg", which has the same representation as "out"
-    `SVREAL_COPY_FORMAT(out, out_neg);
-    `SVREAL_ASSIGN(in, out_neg);
+    `COPY_FORMAT_REAL(c, a_aligned);
+    `COPY_FORMAT_REAL(c, b_aligned);
     
-    // assign the negated "out_neg" signal into out
-    assign `SVREAL_SIGNIFICAND(out) = -`SVREAL_SIGNIFICAND(out_neg);
-endmodule
-
-// add/sub two svreal numbers
-
-module svreal_addsub_mod #(
-    `DECL_SVREAL_PARAMS(a),
-    `DECL_SVREAL_PARAMS(b),
-    `DECL_SVREAL_PARAMS(c),
-    parameter integer opcode=0
-) (
-    `DECL_SVREAL_INPUT(a),
-    `DECL_SVREAL_INPUT(b),
-    `DECL_SVREAL_OUTPUT(c)
-);
-    `SVREAL_COPY_FORMAT(c, a_aligned);
-    `SVREAL_COPY_FORMAT(c, b_aligned);
+    `ASSIGN_REAL(a, a_aligned);
+    `ASSIGN_REAL(b, b_aligned);
     
-    `SVREAL_ASSIGN(a, a_aligned);
-    `SVREAL_ASSIGN(b, b_aligned);
-    
-    // add or subtract "a" and "b"
     generate
-        if (opcode == `SVREAL_OPCODE_ADD) begin
-            assign `SVREAL_SIGNIFICAND(c) = `SVREAL_SIGNIFICAND(a_aligned) + `SVREAL_SIGNIFICAND(b_aligned);
-        end else if (opcode == `SVREAL_OPCODE_SUB) begin
-            assign `SVREAL_SIGNIFICAND(c) = `SVREAL_SIGNIFICAND(a_aligned) - `SVREAL_SIGNIFICAND(b_aligned);
+        if          (opcode == `ADD_OPCODE_REAL) begin
+    		assign c = a_aligned + b_aligned;
+        end else if (opcode == `SUB_OPCODE_REAL) begin
+    		assign c = a_aligned - b_aligned;
         end else begin
-            `SVREAL_ERROR
+            initial begin
+                $display("ERROR: Invalid opcode.");
+                $finish;
+            end
         end
     endgenerate
 endmodule
 
-// multiply two svreal numbers
-
-module svreal_mul_mod #(
-    `DECL_SVREAL_PARAMS(a),
-    `DECL_SVREAL_PARAMS(b),
-    `DECL_SVREAL_PARAMS(c)
+module negate_real #(
+    `DECL_REAL(in),
+    `DECL_REAL(out)
 ) (
-    `DECL_SVREAL_INPUT(a),
-    `DECL_SVREAL_INPUT(b),
-    `DECL_SVREAL_OUTPUT(c)
+    `INPUT_REAL(in),
+    `OUTPUT_REAL(out)
 );
-    // determine the exponent of the intermediate result
-    `SVREAL_EXPONENT_TYPE prod_exponent_value;
-    assign prod_exponent_value = `SVREAL_EXPONENT(a) + `SVREAL_EXPONENT(b);
+    // align the input to the output format
+    `COPY_FORMAT_REAL(out, in_aligned);
+    `ASSIGN_REAL(in, in_aligned);
     
-    // compute intermediate result
-    `MAKE_SVREAL(prod, (`SVREAL_SIGNIFICAND_WIDTH(a) + `SVREAL_SIGNIFICAND_WIDTH(b)), prod_exponent_value);
-    assign `SVREAL_SIGNIFICAND(prod) = `SVREAL_SIGNIFICAND(a) * `SVREAL_SIGNIFICAND(b);
-    
-    // assign intermediate result to output (with appropriate shifting)
-    `SVREAL_ASSIGN(prod, c);
+    // assign the output
+    assign out = -in_aligned;
 endmodule
 
-// min/max of two numbers
-
-module svreal_minmax_mod #(
-    `DECL_SVREAL_PARAMS(a),
-    `DECL_SVREAL_PARAMS(b),
-    `DECL_SVREAL_PARAMS(c),
-    parameter integer opcode=0
+module mul_real #(
+    `DECL_REAL(a),
+    `DECL_REAL(b),
+    `DECL_REAL(c)
 ) (
-    `DECL_SVREAL_INPUT(a),
-    `DECL_SVREAL_INPUT(b),
-    `DECL_SVREAL_OUTPUT(c)
+    `INPUT_REAL(a),
+    `INPUT_REAL(b),
+    `OUTPUT_REAL(c)
 );
-    // mux between a and b
-    logic sel;
-    `SVREAL_MUX(sel, a, b, c);
-    
-    // pick either the larger or smaller of "a" and "b"
-    generate
-        if          (opcode == `SVREAL_OPCODE_MIN) begin
-            `SVREAL_LT(b, a, sel);
-        end else if (opcode == `SVREAL_OPCODE_MAX) begin
-            `SVREAL_GT(b, a, sel);
-        end else begin
-            `SVREAL_ERROR
-        end
-    endgenerate
+    // create wire to hold product result
+    `MAKE_FORMAT_REAL(
+        prod, 
+        `RANGE_PARAM_REAL(a) * `RANGE_PARAM_REAL(b),
+        `WIDTH_PARAM_REAL(a) + `WIDTH_PARAM_REAL(b),
+        `EXPONENT_PARAM_REAL(a) + `EXPONENT_PARAM_REAL(b)
+    );
+
+    // compute product
+    assign prod = a * b;
+  
+    // assign result to output (which will left/right shift if necessary)
+    `ASSIGN_REAL(prod, c);
 endmodule
 
-// compare two svreal numbers
-
-module svreal_comp_mod #(
-    `DECL_SVREAL_PARAMS(a),
-    `DECL_SVREAL_PARAMS(b),
+module comp_real #(
+    `DECL_REAL(a),
+    `DECL_REAL(b),
     parameter integer opcode=0
 ) (
-    `DECL_SVREAL_INPUT(a),
-    `DECL_SVREAL_INPUT(b),
+    `INPUT_REAL(a),
+    `INPUT_REAL(b),
     output wire logic c
 );
-    // compute the maximum exponent of "a" and "b"
-    `SVREAL_EXPONENT_TYPE max_exponent;
-    assign max_exponent = `SVREAL_MAX_EXPONENT(a, b);
-    
-    // make a versions of "a" and "b" that are aligned to each other
-    `MAKE_SVREAL(a_aligned, `SVREAL_SIGNIFICAND_WIDTH(a), max_exponent);
-    `MAKE_SVREAL(b_aligned, `SVREAL_SIGNIFICAND_WIDTH(b), max_exponent);
-    `SVREAL_ASSIGN(a, a_aligned);
-    `SVREAL_ASSIGN(b, b_aligned);
+	// declare functions needed to implement this module
+	`DECL_MAX_REAL
 
-    // perform the desired comparison
-    generate   
-        if          (opcode == `SVREAL_OPCODE_GT) begin
-            assign c = (`SVREAL_SIGNIFICAND(a_aligned) >  `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-        end else if (opcode == `SVREAL_OPCODE_GE) begin
-            assign c = (`SVREAL_SIGNIFICAND(a_aligned) >= `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-        end else if (opcode == `SVREAL_OPCODE_LT) begin
-            assign c = (`SVREAL_SIGNIFICAND(a_aligned) <  `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-        end else if (opcode == `SVREAL_OPCODE_LE) begin
-            assign c = (`SVREAL_SIGNIFICAND(a_aligned) <= `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-        end else if (opcode == `SVREAL_OPCODE_EQ) begin
-            assign c = (`SVREAL_SIGNIFICAND(a_aligned) == `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
-        end else if (opcode == `SVREAL_OPCODE_NE) begin
-            assign c = (`SVREAL_SIGNIFICAND(a_aligned) != `SVREAL_SIGNIFICAND(b_aligned)) ? 1'b1 : 1'b0;
+	// compute the maximum range of the two arguments
+    localparam real max_range = max_real(`RANGE_PARAM_REAL(a), `RANGE_PARAM_REAL(b));
+
+    `MAKE_REAL(a_aligned, max_range);
+    `MAKE_REAL(b_aligned, max_range);
+
+    `ASSIGN_REAL(a, a_aligned);
+    `ASSIGN_REAL(b, b_aligned);
+
+    generate
+        if          (opcode == `GT_OPCODE_REAL) begin
+            assign c = (a_aligned >  b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `GE_OPCODE_REAL) begin
+            assign c = (a_aligned >= b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `LT_OPCODE_REAL) begin
+            assign c = (a_aligned <  b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `LE_OPCODE_REAL) begin
+            assign c = (a_aligned <= b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `EQ_OPCODE_REAL) begin
+            assign c = (a_aligned == b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `NE_OPCODE_REAL) begin
+            assign c = (a_aligned != b_aligned) ? 1'b1 : 1'b0;
         end else begin
-            `SVREAL_ERROR
+            initial begin
+                $display("ERROR: Invalid opcode.");
+                $finish;
+            end
         end
     endgenerate
 endmodule
 
-// multiplex between two values
-
-module svreal_mux_mod #(
-    `DECL_SVREAL_PARAMS(in0),
-    `DECL_SVREAL_PARAMS(in1),
-    `DECL_SVREAL_PARAMS(out)
+module ite_real #(
+    `DECL_REAL(true),
+    `DECL_REAL(false),
+    `DECL_REAL(out)
 ) (
-    input wire logic sel,
-    `DECL_SVREAL_INPUT(in0),
-    `DECL_SVREAL_INPUT(in1),
-    `DECL_SVREAL_OUTPUT(out)
+    input wire logic cond,
+    `INPUT_REAL(true),
+    `INPUT_REAL(false),
+    `OUTPUT_REAL(out)
 );
-    `SVREAL_COPY_FORMAT(out, in0_aligned);
-    `SVREAL_COPY_FORMAT(out, in1_aligned);
-    
-    `SVREAL_ASSIGN(in0, in0_aligned);
-    `SVREAL_ASSIGN(in1, in1_aligned);
-    
-    assign `SVREAL_SIGNIFICAND(out) = (sel == 1'b0) ? `SVREAL_SIGNIFICAND(in0_aligned) : `SVREAL_SIGNIFICAND(in1_aligned);
-endmodule
+    `COPY_FORMAT_REAL(out,  true_aligned);
+    `COPY_FORMAT_REAL(out, false_aligned);
 
-// convert svreal to int
+    `ASSIGN_REAL(true,   true_aligned);
+    `ASSIGN_REAL(false, false_aligned);
 
-module svreal_to_int_mod #(
-    `DECL_SVREAL_PARAMS(in),
-    parameter integer out_width=1
-) (
-    `DECL_SVREAL_INPUT(in),
-    output wire logic signed [(out_width-1):0] out
-);
-    `MAKE_SVREAL(in_aligned, out_width, 0);
-    `SVREAL_ASSIGN(in, in_aligned);
-    `ifndef SVREAL_DEBUG
-        // normal operation
-        assign out = `SVREAL_SIGNIFICAND(in_aligned);
-    `else
-        // debug operation
-        assign out = integer'(`SVREAL_SIGNIFICAND(in_aligned));
-    `endif
-endmodule
-
-// convert int to svreal
-
-module int_to_svreal_mod #(
-    parameter integer in_width=1,
-    `DECL_SVREAL_PARAMS(out)
-) (
-    input wire logic signed [(in_width-1):0] in,
-    `DECL_SVREAL_OUTPUT(out)
-);
-    `MAKE_SVREAL(in_aligned, in_width, 0);   
-    `ifndef SVREAL_DEBUG
-        // normal operation
-        assign `SVREAL_SIGNIFICAND(in_aligned) = in;
-    `else
-        // debug operation
-        assign `SVREAL_SIGNIFICAND(in_aligned) = 1.0*in;
-    `endif
-    `SVREAL_ASSIGN(in_aligned, out);
-endmodule
-
-// memory
-
-module svreal_dff_mod #(
-    `DECL_SVREAL_PARAMS(d),
-    `DECL_SVREAL_PARAMS(q),
-    `DECL_SVREAL_PARAMS(init)
-) (
-    `DECL_SVREAL_INPUT(d),
-    `DECL_SVREAL_OUTPUT(q),
-    `DECL_SVREAL_INPUT(init),
-    input wire logic rst,
-    input wire logic clk,
-    input wire logic cke
-);
-    // align input to output
-    `SVREAL_COPY_FORMAT(q, d_aligned);
-    `SVREAL_ASSIGN(d, d_aligned);
-    
-    // align initial value to output format
-    `SVREAL_COPY_FORMAT(q, init_aligned);
-    `SVREAL_ASSIGN(init, init_aligned);
-    
-    // main DFF logic
-    always @(posedge clk) begin
-        if (rst == 1'b1) begin
-            `SVREAL_SIGNIFICAND(q) <= `SVREAL_SIGNIFICAND(init_aligned);
-        end else if (cke == 1'b1) begin
-            `SVREAL_SIGNIFICAND(q) <= `SVREAL_SIGNIFICAND(d_aligned);
-        end else begin
-            `SVREAL_SIGNIFICAND(q) <= `SVREAL_SIGNIFICAND(q);
-        end
-    end       
+    assign out = (cond == 1'b1) ? true_aligned : false_aligned;
 endmodule
 
 `endif // `ifndef __SVREAL_SV__
