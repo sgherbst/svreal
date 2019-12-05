@@ -6,7 +6,7 @@ FILES = ['test_dff.sv']
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
-    metafunc.parametrize('defs', [None, ['SVREAL_DEBUG']])
+    metafunc.parametrize('defs', [None, ['FLOAT_REAL']])
 
 def test_ops(simulator, defs):
     # run sim

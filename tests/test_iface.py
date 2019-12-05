@@ -1,11 +1,11 @@
 from .common import *
 
-TOP = 'test_hier'
-PROJECT = 'test_hier'
-FILES = ['test_hier.sv']
+TOP = 'test_iface'
+PROJECT = 'test_iface'
+FILES = ['test_iface.sv']
 
 def pytest_generate_tests(metafunc):
-    pytest_sim_params(metafunc)
+    pytest_sim_params(metafunc, simulators=['xrun', 'vcs', 'vivado'])
     metafunc.parametrize('defs', [None, ['FLOAT_REAL']])
 
 def test_hier(simulator, defs):
