@@ -37,7 +37,7 @@ This creates fixed-point signals **a**, **b**, and **c** and instantiates an add
 
 ## Fixed-point formatting
 
-In **svreal**, fixed-point formats are generally determined automatically from the range of the signals they represent.  In this case, the range of **a** is set to +/- 5.0, and the range of **b** is set to +/- 10.0.  The width of **a** is not specified, so it defaults to **\`LONG_WIDTH_REAL** (which is 25 unless overridden by the user).  For **b**, the user has explicitly specified a width of 42.  In both cases, the exponent used in the representation is automatically determined from the the width and range, using the formula:
+In **svreal**, fixed-point formats are generally determined automatically from the range of the signals they represent.  In this case, the range of **a** is set to +/- 5.0, and the range of **b** is set to +/- 10.0.  The width of **a** is not specified, so it defaults to **\`LONG_WIDTH_REAL** (which is 25 unless overridden by the user).  For **b**, the user has explicitly specified a width of 42 bits.  In both cases, the exponent used in the representation is automatically determined from the the width and range, using the formula:
 
 ```code
 exponent = int(ceil(log2(range/(2^(width-1)-1))))
@@ -49,7 +49,9 @@ Since the user has not provided any formatting information for **c**, its range 
 
 ## Debugging
 
-Suppose that the range of **c** is not sufficient to contain the sum of **a** and **b**.  Then **c** may contain an entirely wrong value due to overflow.  In order to debug this problem, define the **FLOAT_REAL** flag (for example, using **+define+FLOAT_REAL**).  This switches the real number representation from fixed-point to float-point, which helps the user to identify whether the fixed-point representation is the cause of the problem, or whether it is something else.  In addition, this flag adds assertions to check if any real-number signal exceeds its specified range.
+Suppose that the range of **a** is not sufficient to contain the value being assigned to it.  Then **a** may contain an entirely wrong value due to overflow.  In order to debug this problem, define the **FLOAT_REAL** flag (for example, using **+define+FLOAT_REAL**).  This switches the real number representation from fixed-point to float-point, which helps the user to identify whether the fixed-point representation is the cause of the problem, or whether it is something else.  In addition, this flag adds assertions to check if any real-number signal exceeds its specified range.
+
+It is also possible to debug underflow issues using **svreal**.  First set the **FLOAT_REAL** flag to switch to a floating-point representation.  If the problem goes away, but there are no assertion errors indicating overflows, then the problem is likely due to inadequate resolution in one or more **svreal** signals.  This theory can be validated by increasing **\`LONG_WIDTH_REAL** and/or **\`SHORT_WIDTH_REAL**.  If increasing **\`SHORT_WIDTH_REAL** helps, then one or more multiplication constants need to have higher resolution.  Otherwise, one or more fixed-point signals or additive constants need more resolution.
 
 ## Operations available
 
@@ -135,6 +137,33 @@ Fixed-point memory is implemented as a generic D-type flip-flop (DFF).  The inpu
 The **rst** signals is a single active-high bit (type **logic**).  It's a synchronous reset, and when active it causes **q** to take the value of **init**.  **init** is simply a real-number value like "1.23".
 
 Finally, **clk** and **cke** are single bit signals (type **logic**).  **clk** is the clock input of the DFF (active on the rising edge), and **cke** is the clock enable signal (active high). 
+
+### Assigning results to existing signals
+
+Most operations have an alternate form that allows the user to assign the result of an operation to an existing fixed-point signal.  This is indicated by the word **INTO** in the macro name.  For example, suppose that we have defined three signals, **a**, **b**, and **c**, and want to assign the sum of **a** and **b** into **c**:
+
+```verilog
+`MAKE_REAL(a, 10.0); // i.e., +/- 10
+`MAKE_REAL(b, 21.0); // i.e., +/- 21
+`MAKE_REAL(c, 32.0); // i.e., +/- 32
+`ADD_INTO_REAL(a, b, c);
+```
+
+This special form of the "add" operation will not declare a new signal **c**, but instead will assign the result of the addition to the existing signal called **c** (performing alignment shifts as necessary, of course).
+
+In this case, there is a risk that **c** may have been declared with insufficient range to hold the result.  As mentioned before, this can be debugged using the **FLOAT_REAL** flag, which adds range assertions.  So why would a user ever want to use the **INTO** form of the **svreal** macros?  The most common case is that they are assigning to a signal that appears on the I/O list of the module.  Alternatively, they may want to manually specify the range or resolution of the output signal.  However, a better way to accomplish that is to use the **GENERIC** form of operations, as described in the next section.
+
+### Specifying output resolution
+
+Most operations have an alternate form ending with **GENERIC** that allows the user to specify the width of the result.  Since the range of the operation is determined automatically, this effectively controls the resolution of the operation.  As an example, suppose we want to multiply two signals, but represent the output with more precision than the default.  In that case we could write
+
+```verilog
+`MAKE_REAL(a, 10.0); // i.e., +/- 10
+`MAKE_REAL(b, 21.0); // i.e., +/- 21
+`MUL_REAL_GENERIC(a, b, c, 40);
+```
+
+This means: multiply **a** and **b** and store the result in **c** with the appropriate alignment.  The width of **c** is given the custom value "40", and the range of **c** is still determined automatically.  As a result, the user can control the precision of intermediate results, and this in turn is useful when debugging underflow issues.
 
 # Running the Tests
 
