@@ -1,6 +1,6 @@
 # Introduction
 
-**svreal** is a single-file SystemVerilog library that makes it easy to perform fixed-point operations in a synthesizable fashion in SystemVerilog.  The alignment details are handled automatically, so the user is free to customize the format of each fixed-point signal in the design without inconvenience.  For debugging range/resolution issues, the user can switch all signal types to a floating-point representation using a single **define** command-line option.  Supported fixed-point operations include addition, subtraction, negation, multiplication, comparison, and conditional assignment.
+**svreal** is a single-file SystemVerilog library that makes it easy to perform fixed-point operations in a synthesizable fashion in SystemVerilog.  The exponent and alignment details are handled automatically, so the user is free to customize the format of each fixed-point signal in the design without inconvenience.  For debugging range/resolution issues, the user can switch all signal types to a floating-point representation using a single **define** command-line option.  Supported fixed-point operations include addition, subtraction, negation, multiplication, comparison, and conditional assignment.
 
 # Installation
 
@@ -132,7 +132,7 @@ Several functions are available to work with numeric constants.  **\`MAKE_CONST_
 `DFF_REAL(d, q, rst, clk, cke, init);
 ```
 
-Fixed-point memory is implemented as a generic D-type flip-flop (DFF).  The input to this flip-flop is **d**, and the output is **q**.  Both are fixed-point types, but they can have different formats.
+Fixed-point memory is implemented as a generic D-type flip-flop (DFF).  The input to this flip-flop is **d**, and the output is **q**.  Both are fixed-point types, but it's fine if they can have different formats.
 
 The **rst** signals is a single active-high bit (type **logic**).  It's a synchronous reset, and when active it causes **q** to take the value of **init**.  **init** is simply a real-number value like "1.23".
 
@@ -164,6 +164,45 @@ Most operations have an alternate form ending with **GENERIC** that allows the u
 ```
 
 This means: multiply **a** and **b** and store the result in **c** with the appropriate alignment.  The width of **c** is given the custom value "40", and the range of **c** is still determined automatically.  As a result, the user can control the precision of intermediate results, and this in turn is useful when debugging underflow issues.
+
+## Passing fixed-point signals
+
+Since compile-time parameters are used to store some of the fixed-point formatting information, some care must be taken when passing **svreal** signals through a hierarchy to ensure that information is not lost.  Consider this example, in which an outer block instantiates a module that multiplies together two signals to produce an output:
+
+```verilog
+`include "svreal.sv"
+module inner #(
+    `DECL_REAL(in0),
+    `DECL_REAL(in1),
+    `DECL_REAL(out)
+) (
+    `INPUT_REAL(in0),
+    `INPUT_REAL(in1),
+    `OUTPUT_REAL(out)
+);
+    `MUL_INTO_REAL(in0, in1, out);
+endmodule
+module outer;
+    `MAKE_REAL(a, 10.0); // i.e., +/- 10
+    `MAKE_REAL(b, 21.0); // i.e., +/- 21
+    `MAKE_REAL(c, 32.0); // i.e., +/- 32
+
+    inner #(
+        `PASS_REAL(in0, a),
+        `PASS_REAL(in1, b),
+        `PASS_REAL(out, c)
+    ) inner_i (
+        .in0(a),
+        .in1(b),
+        .out(c)
+    );
+    ...
+endmodule
+```
+
+There are a few things to observe here.  First, the parameters and I/O list of the inner module, which has fixed-point I/O, has to be declared in a certain way.  Every fixed-point number in the I/O list (regardless of whether it is an input or an output) needs to have a corresponding **\`DECL_REAL** statement in the parameter list for the module.  This declares all of the parameters needed for that fixed-point signal.  Then, in the I/O list for the module, fixed-point inputs and outputs should be declared using **\`INPUT_REAL** and **\`OUTPUT_REAL**, respectively.
+
+Going up one level to the outer block, observe that a special macro **\`PASS_REAL** is needed to pass parameter information for the fixed-point signals **a**, **b**, and **c** into the inner module.  The syntax of **\`PASS_REAL** is meant to mimick using dot-notation to connect signals to a module instance; that is, the name of the port on the inner module comes first, followed by the name of the local signal.  Finally, note that fixed-point signals are wired up in the I/O list using standard dot notation.
 
 # Running the Tests
 
