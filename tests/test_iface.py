@@ -2,7 +2,7 @@ from .common import *
 
 TOP = 'test_iface'
 PROJECT = 'test_iface'
-FILES = ['test_iface.sv']
+FILES = ['test_iface_core.sv', 'test_iface.sv']
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc, simulators=['xrun', 'vcs', 'vivado'])
@@ -17,6 +17,6 @@ def test_hier(simulator, defs):
 
     # check results
     sec = res[1]
-    assert is_close(sec['a'], +1.23)
-    assert is_close(sec['b'], +4.56)
-    assert is_close(sec['c'], +5.6088)
+    assert is_close(sec['a.value'], +1.23)
+    assert is_close(sec['b.value'], +4.56)
+    assert is_close(sec['c.value'], +5.6088)

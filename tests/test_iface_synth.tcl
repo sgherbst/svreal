@@ -4,6 +4,7 @@
 create_project -force "proj_test_iface_synth" "tmp/proj_test_iface_synth" -part "xc7z020clg484-1"
 
 # Add source files
+add_files "test_iface_core.sv"
 add_files "test_iface_synth.sv"
 add_files "../svreal.sv"
 set_property file_type "Verilog Header" [get_files "../svreal.sv"]

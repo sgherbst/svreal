@@ -516,6 +516,61 @@
     `COPY_FORMAT_REAL(``d_name``, ``q_name``); \
     `DFF_INTO_REAL(``d_name``, ``q_name``, ``rst_name``, ``clk_name``, ``cke_name``, ``init_expr``)
 
+// interface functions
+
+// range is not included as a parameter since there is no
+// way to read it out of the interface; as a result the 
+// maximum range for the width and exponent must be used
+
+`define INTF_DECL_REAL(name) \
+    parameter integer `WIDTH_PARAM_REAL(``name``)=0, \
+    parameter integer `EXPONENT_PARAM_REAL(``name``)=0
+
+`define INTF_FORMAT_REAL(name) ``name``_format_signal
+
+ `define INTF_MAKE_REAL(name) \
+     `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(``name``)) ``name``; \
+     logic [((`WIDTH_PARAM_REAL(``name``))+(`EXPONENT_PARAM_REAL(``name``))-1):(`EXPONENT_PARAM_REAL(``name``))] `INTF_FORMAT_REAL(``name``)
+ 
+`define INTF_PASS_REAL(port, name) \
+    .`WIDTH_PARAM_REAL(``port``)($size(`INTF_FORMAT_REAL(``name``))), \
+    .`EXPONENT_PARAM_REAL(``port``)($low(`INTF_FORMAT_REAL(``name``))), \
+    .`RANGE_PARAM_REAL(``port``)(2.0**($high(`INTF_FORMAT_REAL(``name``))))
+
+// modport-related functions
+
+`define MODPORT_IN_REAL(name) \
+    input ``name``, \
+    input `INTF_FORMAT_REAL(``name``)
+
+`define MODPORT_OUT_REAL(name) \
+    output ``name``, \
+    input `INTF_FORMAT_REAL(``name``)
+
+// print a real number (interface version)
+
+`define INTF_TO_REAL(name) \
+    `ifdef FLOAT_REAL \
+        (``name``) \
+    `else \
+        `FIXED_TO_FLOAT((``name``), $low(`INTF_FORMAT_REAL(``name``))) \
+    `endif
+ 
+`define INTF_PRINT_REAL(name) \
+    $display(`"``name``=%0f`", `INTF_TO_REAL(``name``))
+
+// force a real number (interface version)
+
+`define INTF_FROM_REAL(expr, name) \
+    `ifdef FLOAT_REAL \
+        (``expr``) \
+    `else \
+		`FLOAT_TO_FIXED((``expr``), $low(`INTF_FORMAT_REAL(``name``))) \
+    `endif
+
+`define INTF_FORCE_REAL(expr, name) \
+    ``name`` = `INTF_FROM_REAL(``expr``, ``name``)
+
 // module definitions
 
 module assertion_real #(
