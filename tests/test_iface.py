@@ -6,7 +6,7 @@ FILES = ['test_iface_core.sv', 'test_iface.sv']
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc, simulators=['xrun', 'vcs', 'vivado'])
-    metafunc.parametrize('defs', [None, ['FLOAT_REAL']])
+    metafunc.parametrize('defs', [None, ['FLOAT_REAL'], ['INTF_USE_LOCAL'], ['INTF_USE_LOCAL', 'FLOAT_REAL']])
 
 def test_hier(simulator, defs):
     # run sim

@@ -3,9 +3,9 @@
 `include "svreal.sv"
 
 module test_iface;
-    svreal #(.`WIDTH_PARAM_REAL(value)(16), .`EXPONENT_PARAM_REAL(value)(-8)) a ();
-    svreal #(.`WIDTH_PARAM_REAL(value)(17), .`EXPONENT_PARAM_REAL(value)(-9)) b ();
-    svreal #(.`WIDTH_PARAM_REAL(value)(18), .`EXPONENT_PARAM_REAL(value)(-10)) c ();
+    svreal #(`REAL_INTF_PARAMS(value, 16, -8)) a ();
+    svreal #(`REAL_INTF_PARAMS(value, 17, -9)) b ();
+    svreal #(`REAL_INTF_PARAMS(value, 18, -10)) c ();
 
     level1 inner (
         .a(a),

@@ -526,16 +526,37 @@
     parameter integer `WIDTH_PARAM_REAL(``name``)=0, \
     parameter integer `EXPONENT_PARAM_REAL(``name``)=0
 
+`define REAL_INTF_PARAMS(name, width_expr, exponent_expr) \
+    .`WIDTH_PARAM_REAL(``name``)(``width_expr``), \
+    .`EXPONENT_PARAM_REAL(``name``)(``exponent_expr``)
+
 `define INTF_FORMAT_REAL(name) ``name``_format_signal
 
  `define INTF_MAKE_REAL(name) \
      `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(``name``)) ``name``; \
      logic [((`WIDTH_PARAM_REAL(``name``))+(`EXPONENT_PARAM_REAL(``name``))-1):(`EXPONENT_PARAM_REAL(``name``))] `INTF_FORMAT_REAL(``name``)
  
+`define INTF_WIDTH_REAL(name) ($size(`INTF_FORMAT_REAL(``name``)))
+
+`define INTF_EXPONENT_REAL(name) ($low(`INTF_FORMAT_REAL(``name``)))
+
+`define INTF_RANGE_REAL(name) (2.0**($high(`INTF_FORMAT_REAL(``name``))))
+
 `define INTF_PASS_REAL(port, name) \
-    .`WIDTH_PARAM_REAL(``port``)($size(`INTF_FORMAT_REAL(``name``))), \
-    .`EXPONENT_PARAM_REAL(``port``)($low(`INTF_FORMAT_REAL(``name``))), \
-    .`RANGE_PARAM_REAL(``port``)(2.0**($high(`INTF_FORMAT_REAL(``name``))))
+    .`WIDTH_PARAM_REAL(``port``)(`INTF_WIDTH_REAL(``name``)), \
+    .`EXPONENT_PARAM_REAL(``port``)(`INTF_EXPONENT_REAL(``name``)), \
+    .`RANGE_PARAM_REAL(``port``)(`INTF_RANGE_REAL(``name``))
+
+`define INTF_ALIAS_REAL(path, name) \
+    `MAKE_FORMAT_REAL(``name``, `INTF_RANGE_REAL(``path``), `INTF_WIDTH_REAL(``path``), `INTF_EXPONENT_REAL(``path``))
+
+`define INTF_INPUT_TO_REAL(path, name) \
+    `INTF_ALIAS_REAL(``path``, ``name``); \
+    assign ``name`` = ``path``
+
+`define INTF_OUTPUT_TO_REAL(path, name) \
+    `INTF_ALIAS_REAL(``path``, ``name``); \
+    assign ``path`` = ``name``
 
 // modport-related functions
 
@@ -553,7 +574,7 @@
     `ifdef FLOAT_REAL \
         (``name``) \
     `else \
-        `FIXED_TO_FLOAT((``name``), $low(`INTF_FORMAT_REAL(``name``))) \
+        `FIXED_TO_FLOAT((``name``), `INTF_EXPONENT_REAL(``name``)) \
     `endif
  
 `define INTF_PRINT_REAL(name) \
@@ -565,7 +586,7 @@
     `ifdef FLOAT_REAL \
         (``expr``) \
     `else \
-		`FLOAT_TO_FIXED((``expr``), $low(`INTF_FORMAT_REAL(``name``))) \
+		`FLOAT_TO_FIXED((``expr``), `INTF_EXPONENT_REAL(``name``)) \
     `endif
 
 `define INTF_FORCE_REAL(expr, name) \
