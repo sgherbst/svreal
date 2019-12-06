@@ -289,25 +289,6 @@ module outer (
 endmodule
 ```
 
-Suppose you want to create your own interface containing two **svreal** fixed-point numbers, "a" and "b".  That interface might look like this:
-```verilog
-interface two_number #(
-    `DECL_SVREAL_PARAMS(a),
-    `DECL_SVREAL_PARAMS(b)
-);
-    `DECL_SVREAL_TYPE(a, `SVREAL_SIGNIFICAND_WIDTH(a));
-    `DECL_SVREAL_TYPE(b, `SVREAL_SIGNIFICAND_WIDTH(b));
-    modport in (
-        `SVREAL_MODPORT_IN(a),
-        `SVREAL_MODPORT_IN(b)
-    );
-    modport out (
-        `SVREAL_MODPORT_OUT(a),
-        `SVREAL_MODPORT_OUT(b)
-    );
-endinterface
-```
-
 # Running the Tests
 
 To test **svreal**, please make sure that at least one of the following simulators is in the system path: 
