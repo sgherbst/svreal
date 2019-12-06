@@ -6,9 +6,11 @@ module test_clog2;
 
     `DECL_CLOG2_MATH
 
-    task test_set(input real x, input integer n);
-        $display("SVREAL TEST SET %0d", n);
-        $display("x=%0f", x);
+    integer count = 1;
+    task test_set(input real x);
+        $display("SVREAL TEST SET %0d", count);
+        count = count + 1;
+        $display("x=%0e", x);
         $display("y=%0d", clog2_math(x));
         #(1ns);
     endtask
@@ -19,15 +21,18 @@ module test_clog2;
         $display("SVREAL TEST START");
         #(1ns);
 
-        test_set(4.00, 1);
-        test_set(3.00, 2);
-        test_set(2.00, 3);
-        test_set(1.00, 4);
-        test_set(0.50, 5);
-        test_set(0.30, 6);
-        test_set(0.25, 7);
-        test_set(0.20, 8);
-        test_set(0.00, 9);
+        test_set(4.00);
+        test_set(3.00);
+        test_set(2.00);
+        test_set(1.00);
+        test_set(0.50);
+        test_set(0.30);
+        test_set(0.25);
+        test_set(0.20);
+        test_set(0.00);
+        for (int e=-1000; e<=+1000; e=e+1) begin
+            test_set(1.1**e);
+        end
 
         // print footer
         $display("SVREAL TEST END");

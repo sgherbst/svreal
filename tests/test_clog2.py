@@ -8,17 +8,18 @@ FILES = ['test_clog2.sv']
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
 
+def model_func(x):
+    if x <= 0.0:
+        return 0
+    else:
+        return int(ceil(log2(x)))
+
 def test_math(simulator):
     # run sim
     res=run_sim(*FILES, top=TOP, project=PROJECT, simulator=simulator)
 
     # parse results
-    res = parse_stdout(res.stdout)
-
-    # check normal results
-    inputs = [4, 3, 2, 1, 0.5, 0.3, 0.25, 0.2]
-    for k, inpt in enumerate(inputs):
-        assert int(res[k+1]['y']) == int(ceil(log2(inpt)))
-
-    # check exceptional result
-    assert int(res[9]['y']) == 0
+    for elem in parse_stdout(res.stdout).values():
+        x = float(elem['x'])
+        y = int(elem['y'])
+        assert y == model_func(x)
