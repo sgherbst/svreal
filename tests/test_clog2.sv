@@ -4,8 +4,6 @@
 
 module test_clog2;
 
-    `DECL_CLOG2_MATH
-
     integer count = 1;
     task test_set(input real x);
         $display("SVREAL TEST SET %0d", count);

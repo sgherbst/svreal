@@ -37,8 +37,6 @@ module test_synth (
     input wire logic clk_ext,
     input wire logic ce_ext
 );
-    `DECL_CLOG2_MATH
-
     // create signals
     `REAL_FROM_WIDTH_EXP(a, $size(a_ext), -8);
     `REAL_FROM_WIDTH_EXP(b, $size(b_ext), -9);

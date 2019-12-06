@@ -4,8 +4,6 @@
 
 module test_dff;
 
-    `DECL_CLOG2_MATH
-
     // create signals
     `REAL_FROM_WIDTH_EXP(d, 16, -8);
     `REAL_FROM_WIDTH_EXP(q, 17, -9);

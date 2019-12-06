@@ -16,18 +16,17 @@
 // real number inputs, which is needed to automatically
 // compute exponents.  the the value returned is
 // int(ceil(log2(x)))
-`define DECL_CLOG2_MATH \
-    function int clog2_math(input real x); \
-        clog2_math = 0; \
-        if (x > 0) begin \
-            while (x < (2.0**(clog2_math))) begin \
-                clog2_math = clog2_math - 1; \
-            end \
-            while (x > (2.0**(clog2_math))) begin \
-                clog2_math = clog2_math + 1; \
-            end \
-        end \
-    endfunction
+function int clog2_math(input real x);
+    clog2_math = 0;
+    if (x > 0) begin
+        while (x < (2.0**(clog2_math))) begin
+            clog2_math = clog2_math - 1;
+        end
+        while (x > (2.0**(clog2_math))) begin
+            clog2_math = clog2_math + 1;
+        end
+    end
+endfunction
 
 `define CALC_EXP(range, width) \
     (clog2_math((1.0*(``range``))/((2.0**((``width``)-1.0))-1.0)))
