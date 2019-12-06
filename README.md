@@ -23,7 +23,7 @@ If you get a permissions error when running the **pip** command, you can try add
 Here's a simple **svreal** example to get started.  Note that we only have to include a single file, "svreal.sv":
 ```verilog
 `include "svreal.sv"
-`MAKE_REAL(a,  5.0);
+`MAKE_REAL(a, 5.0);
 `MAKE_GENERIC_REAL(b, 10.0, 42);
 `ADD_REAL(a, b, c);
 initial begin
