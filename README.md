@@ -204,6 +204,110 @@ There are a few things to observe here.  First, the parameters and I/O list of t
 
 Going up one level to the outer block, observe that a special macro **\`PASS_REAL** is needed to pass parameter information for the fixed-point signals **a**, **b**, and **c** into the inner module.  The syntax of **\`PASS_REAL** is meant to mimick using dot-notation to connect signals to a module instance; that is, the name of the port on the inner module comes first, followed by the name of the local signal.  Finally, note that fixed-point signals are wired up in the I/O list using standard dot notation.
 
+## Using interfaces
+
+Suppose you want to bundle **svreal** signals into an interface.  This might make it easier to pass around groups of fixed-point numbers, or allow you to pass digital control signals along with the fixed point numbers.  This task can be achieved using a set of special **svreal** macros.
+
+Here's the simplest such interface, containing a single **svreal** signal and nothing else: 
+
+```verilog
+`include "svreal.sv"
+interface svreal #(
+    `INTF_DECL_REAL(value)
+);
+    `INTF_MAKE_REAL(value);
+    modport in(`MODPORT_IN_REAL(value));
+    modport out(`MODPORT_OUT_REAL(value));
+endinterface
+```
+
+It looks similar to a module declaration that includes **svreal** signals, but there are a few key differences:
+  1.  **INTF_DECL_REAL** is used instead of **DECL_REAL**.
+  2.  Each **svreal** signal that has been declared in the parameter list needs a corresponding **INTF_MAKE_REAL** statement in the body of the interface.
+  3.  When declaring modports for the interface, the **\`MODPORT_IN_REAL** and **\`MODPORT_OUT_REAL** macros must be used to specify that a given **svreal** signal should be treated as an input or an output. 
+
+To work with an **svreal** signal contained in an interface, there are two options: alias the signal to a local name, or pass the signal into a submodule.  Both methods are illustrated below.
+
+### Aliasing an svreal signal contained in an interface to a local name
+
+This is likely the simpler method to use for handwritten code.  As shown in the code sample below, the I/O list for **mymod** directly uses the modports of the **svreal** interface described in the previous section; the macros **DECL_REAL**, **INPUT_REAL**, and **OUTPUT_REAL** are not used.  Inside the module body, however, the "value" signals are aliased to local names using the macros **INTF_INPUT_TO_REAL** and **INTF_OUTPUT_TO_REAL**, at which point all normal **svreal** macros can be used on the local names.  
+
+Crucially, the body of **mymod** needs to be wrapped in a **generate** block.  This is required to avoid bugs in some simulator and synthesis tools related to reading properties out of interfaces.
+
+```verilog
+module mymod (
+    svreal.in a,
+    svreal.in b,
+    svreal.out c
+); 
+    generate
+        `INTF_INPUT_TO_REAL(a.value, a_value);
+        `INTF_INPUT_TO_REAL(b.value, b_value);
+        `INTF_OUTPUT_TO_REAL(c.value, c_value);
+        `MUL_INTO_REAL(a_value, b_value, c_value); 
+    endgenerate
+endmodule
+
+```
+
+### Passing an svreal signal contained in an interface to a submodule
+
+This method is more useful when automatically generating models that use **svreal**.  In the code example below, observe that the **outer** module is just a wrapper for the **inner** module; it breaks out the **svreal** signals contained in interfaces and passes them through to the **inner** module directly.  Hence, there is nothing special about the **inner** module; it contains no references to interfaces or interface macros.
+
+In the **outer** module, however, there are two special requirements.  First, as with the previous method, the body of the module must be wrapped in a **generate** block to ensure proper tool behavior.  Second, when passing signals contained in interfaces, the **INTF_PASS_REAL** macro must be used instead of **PASS_REAL**.
+
+Even though this method is more verbose, it can be handy for generated code, because it decouples implementation of the real-number module from the details of how the incoming signals are bundled.  This allows for two simpler generators (model generator + wrapper generator) rather than one complicated generator.
+
+```verilog
+module inner #(
+    `DECL_REAL(a),
+    `DECL_REAL(b),
+    `DECL_REAL(c)
+) (
+    `INPUT_REAL(a),
+    `INPUT_REAL(b),
+    `OUTPUT_REAL(c)
+);
+    `MUL_INTO_REAL(a, b, c); 
+endmodule
+module outer (
+    svreal.in a,
+    svreal.in b,
+    svreal.out c
+);
+    generate
+        inner #(
+            `INTF_PASS_REAL(a, a.value),
+            `INTF_PASS_REAL(b, b.value),
+            `INTF_PASS_REAL(c, c.value)
+        ) inner_i (
+            .a(a.value),
+            .b(b.value),
+            .c(c.value)
+        );
+    endgenerate
+endmodule
+```
+
+Suppose you want to create your own interface containing two **svreal** fixed-point numbers, "a" and "b".  That interface might look like this:
+```verilog
+interface two_number #(
+    `DECL_SVREAL_PARAMS(a),
+    `DECL_SVREAL_PARAMS(b)
+);
+    `DECL_SVREAL_TYPE(a, `SVREAL_SIGNIFICAND_WIDTH(a));
+    `DECL_SVREAL_TYPE(b, `SVREAL_SIGNIFICAND_WIDTH(b));
+    modport in (
+        `SVREAL_MODPORT_IN(a),
+        `SVREAL_MODPORT_IN(b)
+    );
+    modport out (
+        `SVREAL_MODPORT_OUT(a),
+        `SVREAL_MODPORT_OUT(b)
+    );
+endinterface
+```
+
 # Running the Tests
 
 To test **svreal**, please make sure that at least one of the following simulators is in the system path: 
