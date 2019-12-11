@@ -29,7 +29,7 @@ steps:
       pip install -e .
 
       # run tests
-      pytest -x tests
+      pytest -s tests
     label: "test"
     timeout_in_minutes: 60
     agents:
@@ -57,7 +57,7 @@ steps:
       pip install -e .
 
       # run tests
-      pytest -x tests
+      pytest -s tests
 
       # deactivate virtual environment
       deactivate
