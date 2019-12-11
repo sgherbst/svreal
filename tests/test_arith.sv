@@ -2,7 +2,7 @@
 
 `include "svreal.sv"
 
-module test_ops(
+module test_arith(
     // generic inputs
     input real a_i,
     input real b_i,
@@ -13,20 +13,7 @@ module test_ops(
     output real sub_o,
     output real mul_o,
     output real neg_o,
-    output real abs_o,
-    // mux
-    input cond_i,
-    output real mux_o,
-    // comparisons
-    output lt_o,
-    output le_o,
-    output gt_o,
-    output ge_o,
-    // real to integer
-    output signed [7:0] r2i_o,
-    // integer to real
-    input signed [7:0] i2r_i,
-    output real i2r_o
+    output real abs_o
 );
     // create a_i input
     `REAL_FROM_WIDTH_EXP(a_int, 16, -8);
@@ -56,10 +43,6 @@ module test_ops(
     `MUL_REAL_GENERIC(a_int, b_int, mul_int, 24);
     assign mul_o = `TO_REAL(mul_int);
 
-    // mux
-    `ITE_REAL_GENERIC(cond_i, a_int, b_int, mux_int, 25);
-    assign mux_o = `TO_REAL(mux_int);
-
     // negate
     `NEGATE_REAL(a_int, neg_int);
     assign neg_o = `TO_REAL(neg_int);
@@ -67,17 +50,4 @@ module test_ops(
     // absolute value
     `ABS_REAL(a_int, abs_int);
     assign abs_o = `TO_REAL(abs_int);
-
-    // real to integer
-    `REAL_INTO_INT(a_int, 8, r2i_o);
-
-    // integer to real
-    `INT_TO_REAL(i2r_i, 8, i2r_int);
-    assign i2r_o = `TO_REAL(i2r_int);
-
-    // comparisons
-    `LT_INTO_REAL(a_int, b_int, lt_o);
-    `LE_INTO_REAL(a_int, b_int, le_o);
-    `GT_INTO_REAL(a_int, b_int, gt_o);
-    `GE_INTO_REAL(a_int, b_int, ge_o);
 endmodule
