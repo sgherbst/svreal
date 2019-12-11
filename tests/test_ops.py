@@ -1,6 +1,5 @@
 # generic imports
 from math import floor
-from random import uniform, randint
 
 # AHA imports
 import magma as m
@@ -77,18 +76,9 @@ def test_ops(simulator, defines):
         # check results
         reals, ints = model_func(a_i=a_i, b_i=b_i, i2r_i=i2r_i, cond_i=cond_i)
         for key, val in reals.items():
-            # skip ambiguous case in which values are slightly different but not equal
-            if key in {'lt_o', 'le_o', 'gt_o', 'ge_o'} and (a_i != b_i) and abs((a_i-b_i) < 0.05):
-                continue
-            else:
-                tester.expect(getattr(dut, key), val, rel_tol=0.05, abs_tol=0.05)
+            tester.expect(getattr(dut, key), val, rel_tol=0.05, abs_tol=0.05)
         for key, val in ints.items():
-            # skip ambiguous case in which the real number is just slightly
-            # below a boundary
-            if key == 'r2i_o' and (a_i - floor(a_i)) > 0.98:
-                continue
-            else:
-                tester.expect(getattr(dut, key), val)
+            tester.expect(getattr(dut, key), val)
 
     # check results with hand-written vectors
     run_iteration(a_i=1.23, b_i=4.56, cond_i=0, i2r_i=78)
@@ -97,17 +87,6 @@ def test_ops(simulator, defines):
     run_iteration(a_i=9.0, b_i=1.23, cond_i=0, i2r_i=78)
     run_iteration(a_i=-1.23, b_i=4.56, cond_i=0, i2r_i=78)
     run_iteration(a_i=1.23, b_i=1.23, cond_i=0, i2r_i=78)
-
-    # check results with randomized inputs
-    def random_trial():
-        a_i = uniform(-100, 100)
-        b_i = uniform(-100, 100)
-        i2r_i = randint(-100, 100)
-        cond_i = randint(0, 1)
-        run_iteration(a_i=a_i, b_i=b_i, i2r_i=i2r_i, cond_i=cond_i)
-
-    for _ in range(100):
-        random_trial()
 
     # run the test
     tester.compile_and_run(
