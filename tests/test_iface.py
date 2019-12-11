@@ -7,7 +7,7 @@ from .common import pytest_sim_params
 from svreal.files import get_file, get_svreal_header
 
 def pytest_generate_tests(metafunc):
-    pytest_sim_params(metafunc, simulators=['xrun', 'vcs', 'vivado'])
+    pytest_sim_params(metafunc, simulators=['ncsim', 'vcs', 'vivado'])
     metafunc.parametrize('defines', [None,
                                {'FLOAT_REAL': None},
                                {'INTF_USE_LOCAL': None},

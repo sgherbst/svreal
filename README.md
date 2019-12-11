@@ -293,7 +293,7 @@ endmodule
 
 To test **svreal**, please make sure that at least one of the following simulators is in the system path: 
 1. vivado
-2. xrun
+2. ncsim
 3. vcs
 4. iverilog
 

@@ -7,7 +7,7 @@ from fault.subprocess_run import subprocess_run
 
 def pytest_sim_params(metafunc, simulators=None):
     if simulators is None:
-        simulators = ['vcs', 'vivado', 'xrun', 'iverilog']
+        simulators = ['vcs', 'vivado', 'ncsim', 'iverilog']
 
     # parameterize with the simulators available
     if 'simulator' in metafunc.fixturenames:

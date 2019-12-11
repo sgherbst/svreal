@@ -8,7 +8,7 @@ steps:
 
       # tool setup
       source /cad/modules/tcl/init/bash
-      module load base xcelium vcs
+      module load base incisive vcs
 
       # create conda env
       conda create -p ./conda_env -m -y pip python=3.7.4
