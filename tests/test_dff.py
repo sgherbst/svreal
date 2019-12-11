@@ -1,39 +1,83 @@
-from .common import *
+# AHA imports
+import magma as m
+import fault
 
-TOP = 'test_dff'
-PROJECT = 'test_dff'
-FILES = ['test_dff.sv']
+# svreal imports
+from .common import pytest_sim_params
+from svreal.files import get_file, get_svreal_header
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
-    metafunc.parametrize('defs', [None, ['FLOAT_REAL']])
+    metafunc.parametrize('defines', [None, {'FLOAT_REAL': None}])
 
-def test_ops(simulator, defs):
-    # run sim
-    res=run_sim(*FILES, top=TOP, project=PROJECT, simulator=simulator, defs=defs)
+def test_dff(simulator, defines):
+    # declare circuit
+    dut = m.DeclareCircuit(
+        'test_dff',
+        'd_i', fault.RealIn,
+        'q_o', fault.RealOut,
+        'rst_i', m.BitIn,
+        'clk_i', m.BitIn,
+        'cke_i', m.BitIn
+    )
 
-    # parse results
-    res = parse_stdout(res.stdout)
+    # define the test
+    tester = fault.Tester(dut, expect_strict_default=True)
 
-    # check results
-    sec = res[1]
-    assert is_close(sec['d'], +2.34)
-    assert is_close(sec['q'], +1.23)
-    sec = res[2]
-    assert is_close(sec['d'], +2.34)
-    assert is_close(sec['q'], +1.23)
-    sec = res[3]
-    assert is_close(sec['d'], +2.34)
-    assert is_close(sec['q'], +2.34)
-    sec = res[4]
-    assert is_close(sec['d'], +3.45)
-    assert is_close(sec['q'], +2.34)
-    sec = res[5]
-    assert is_close(sec['d'], +3.45)
-    assert is_close(sec['q'], +3.45)
-    sec = res[6]
-    assert is_close(sec['d'], +4.56)
-    assert is_close(sec['q'], +3.45)
-    sec = res[7]
-    assert is_close(sec['d'], +4.56)
-    assert is_close(sec['q'], +3.45)
+    # initialize
+    tester.poke(dut.clk_i, 0)
+    tester.poke(dut.rst_i, 1)
+    tester.poke(dut.cke_i, 1)
+    tester.poke(dut.d_i, 2.34)
+    tester.eval()
+
+    # check reset value
+    tester.poke(dut.clk_i, 1)
+    tester.eval()
+    tester.expect(dut.q_o, 1.23, abs_tol=0.01)
+
+    # clear reset
+    tester.poke(dut.rst_i, 0)
+    tester.poke(dut.clk_i, 0)
+    tester.eval()
+    tester.expect(dut.q_o, 1.23, abs_tol=0.01)
+
+    # clock in first value
+    tester.poke(dut.clk_i, 1)
+    tester.eval()
+    tester.expect(dut.q_o, 2.34, abs_tol=0.01)
+
+    # change input
+    tester.poke(dut.d_i, 3.45)
+    tester.poke(dut.clk_i, 0)
+    tester.eval()
+    tester.expect(dut.q_o, 2.34, abs_tol=0.01)
+
+    # clock in second value
+    tester.poke(dut.clk_i, 1)
+    tester.eval()
+    tester.expect(dut.q_o, 3.45, abs_tol=0.01)
+
+    # change input and disable clock enable
+    tester.poke(dut.d_i, 4.56)
+    tester.poke(dut.clk_i, 0)
+    tester.poke(dut.cke_i, 0)
+    tester.eval()
+    tester.expect(dut.q_o, 3.45, abs_tol=0.01)
+
+    # make sure output doesn't change when the clock is disabled
+    tester.poke(dut.clk_i, 1)
+    tester.eval()
+    tester.expect(dut.q_o, 3.45, abs_tol=0.01)
+
+    # run the test
+    tester.compile_and_run(
+        target='system-verilog',
+        simulator=simulator,
+        ext_srcs=[get_file('tests/test_dff.sv')],
+        inc_dirs=[get_svreal_header().parent],
+        defines=defines,
+        parameters={'init': 1.23},
+        ext_model_file=True,
+        tmp_dir=True
+    )

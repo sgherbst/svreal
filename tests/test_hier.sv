@@ -54,43 +54,30 @@ module level1 #(
     );
 endmodule
 
-module test_hier;
-    `REAL_FROM_WIDTH_EXP(a, 16, -8);
-    `REAL_FROM_WIDTH_EXP(b, 17, -9);
-    `REAL_FROM_WIDTH_EXP(c, 18, -10);
+module test_hier(
+    input real a_i,
+    input real b_i,
+    output real c_o
+);
+    // create a_int signal
+    `REAL_FROM_WIDTH_EXP(a_int, 16, -8);
+    assign `FORCE_REAL(a_i, a_int);
+
+    // create b_int signal
+    `REAL_FROM_WIDTH_EXP(b_int, 17, -9);
+    assign `FORCE_REAL(b_i, b_int);
+
+    // create c_int signal
+    `REAL_FROM_WIDTH_EXP(c_int, 18, -10);
+    assign c_o = `TO_REAL(c_int);
 
     level1 #(
-        `PASS_REAL(a, a),
-        `PASS_REAL(b, b),
-        `PASS_REAL(c, c)
+        `PASS_REAL(a, a_int),
+        `PASS_REAL(b, b_int),
+        `PASS_REAL(c, c_int)
     ) inner (
-        .a(a),
-        .b(b),
-        .c(c)
+        .a(a_int),
+        .b(b_int),
+        .c(c_int)
     );
-
-    task print_signals();
-        `PRINT_REAL(a);
-        `PRINT_REAL(b);
-        `PRINT_REAL(c);
-    endtask
-
-    // create testbench
-    initial begin
-        // print header
-        $display("SVREAL TEST START");
-        #(1ns);
-
-        // test set #1
-        $display("SVREAL TEST SET 1");
-        `FORCE_REAL(1.23, a);
-        `FORCE_REAL(4.56, b);
-        #(1ns);
-        print_signals();
-
-        // print footer
-        $display("SVREAL TEST END");
-        #(1ns);
-    end
-
 endmodule

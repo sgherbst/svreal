@@ -1,30 +1,67 @@
 steps:
   - command: |
-      export PATH=$$PATH:/usr/local/miniconda/bin:/usr/local/bin
+      # set up environment
+      export PATH=/usr/local/miniconda/bin:/usr/local/bin:$$PATH
       echo $$PATH
       export LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:/usr/local/lib
       echo $$LD_LIBRARY_PATH
+
+      # tool setup
       source /cad/modules/tcl/init/bash
       module load base xcelium vcs
+
+      # create conda env
       conda create -p ./conda_env -m -y pip python=3.7.4
       export PATH=$$PWD/conda_env/bin:$$PATH
+      echo $$PATH
+
+      # install various python dependencies
+      pip install pytest mantle
+
+      # install fault
+      git clone https://github.com/leonardt/fault.git
+      cd fault
+      git checkout bug_fixes
       pip install -e .
-      pip install pytest
-      pytest tests
+      cd ..
+
+      # install svreal
+      pip install -e .
+
+      # run tests
+      pytest -x tests
     label: "test"
     timeout_in_minutes: 60
     agents:
       butterphy: "true"
   - command: |
+      # set up environment
       source /etc/environment
       echo $$PATH
+
+      # create virtual environment
       python3.7 -m venv venv
       source venv/bin/activate
-      pip install pytest
+
+      # install various python dependencies
+      pip install pytest mantle
+
+      # install fault
+      git clone https://github.com/leonardt/fault.git
+      cd fault
+      git checkout bug_fixes
       pip install -e .
-      pytest tests
+      cd ..
+
+      # install svreal
+      pip install -e .
+
+      # run tests
+      pytest -x tests
+
+      # deactivate virtual environment
       deactivate
     label: "test_emu"
     timeout_in_minutes: 60
     agents:
-        fpga_verif: "true"
+      fpga_verif: "true"

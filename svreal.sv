@@ -481,7 +481,7 @@ endfunction
 `define REAL_TO_INT(in_name, int_width_expr, out_name) \
     `ifdef FLOAT_REAL \
         logic signed[((``int_width_expr``)-1):0] ``out_name``; \
-        assign ``out_name`` = longint'(``in_name``) \
+        assign ``out_name`` = $floor(``in_name``) \
     `else \
         `REAL_FROM_WIDTH_EXP(``out_name``, ``int_width_expr``, 0); \
         `ASSIGN_REAL(``in_name``, ``out_name``) \
