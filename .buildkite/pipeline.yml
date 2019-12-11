@@ -33,7 +33,7 @@ steps:
     label: "test"
     timeout_in_minutes: 60
     agents:
-      butterphy: "true"
+      fault: "true"
   - command: |
       # set up environment
       source /etc/environment
