@@ -32,17 +32,11 @@ function int calc_exp(input real range, input int width);
     calc_exp = clog2_math(range/((2.0**(width-1.0))-1.0));
 endfunction
 
-function real max_real(input real a, input real b);
-    max_real = (a > b) ? a : b;
-endfunction
+`define MAX_MATH(a, b) \
+    (((``a``) > (``b``)) ? (``a``) : (``b``))
 
-function int max_int(input int a, input int b);
-    max_int = (a > b) ? a : b;
-endfunction
-
-function real abs_real(input real x);
-    abs_real = (x > 0) ? (+x) : (-x);
-endfunction
+`define ABS_MATH(a) \
+    (((``a``) > 0) ? (``a``) ? (-(``a``)))
 
 function real fixed_to_float(input longint significand, input int exponent);
     fixed_to_float = (1.0*significand)*(2.0**exponent);
@@ -225,7 +219,7 @@ endfunction
     assign ``name`` = `FROM_REAL(``const_expr``, ``name``)
 
 `define CONST_RANGE_REAL(const_expr) \
-    (1.01*abs_real(``const_expr``))
+    (1.01*`ABS_MATH(``const_expr``))
 
 `define MAKE_GENERIC_CONST_REAL(const_expr, name, width_expr) \
     `MAKE_GENERIC_REAL(``name``, `CONST_RANGE_REAL(``const_expr``), ``width_expr``); \
@@ -365,7 +359,7 @@ endfunction
     )
 
 `define ITE_REAL_GENERIC(cond_name, true_name, false_name, out_name, out_width) \
-    `MAKE_GENERIC_REAL(``out_name``, max_real(`RANGE_PARAM_REAL(``true_name``), `RANGE_PARAM_REAL(``false_name``)), ``out_width``); \
+    `MAKE_GENERIC_REAL(``out_name``, `MAX_MATH(`RANGE_PARAM_REAL(``true_name``), `RANGE_PARAM_REAL(``false_name``)), ``out_width``); \
     `ITE_INTO_REAL(``cond_name``, ``true_name``, ``false_name``, ``out_name``)
 
 `define ITE_REAL(cond_name, true_name, false_name, out_name) \
@@ -457,7 +451,7 @@ endfunction
     `ITE_INTO_REAL(zzz_tmp_``c_name``, ``a_name``, ``b_name``, ``c_name``)
 
 `define MAX_REAL_GENERIC(a_name, b_name, c_name, c_width) \
-    `MAKE_GENERIC_REAL(``c_name``, max_real(`RANGE_PARAM_REAL(``a_name``), `RANGE_PARAM_REAL(``b_name``)), ``c_width``); \
+    `MAKE_GENERIC_REAL(``c_name``, `MAX_MATH(`RANGE_PARAM_REAL(``a_name``), `RANGE_PARAM_REAL(``b_name``)), ``c_width``); \
     `MAX_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
 
 `define MAX_REAL(a_name, b_name, c_name) \
@@ -470,7 +464,7 @@ endfunction
     `ITE_INTO_REAL(zzz_tmp_``c_name``, ``a_name``, ``b_name``, ``c_name``)
 
 `define MIN_REAL_GENERIC(a_name, b_name, c_name, c_width) \
-    `MAKE_GENERIC_REAL(``c_name``, max_real(`RANGE_PARAM_REAL(``a_name``), `RANGE_PARAM_REAL(``b_name``)), ``c_width``); \
+    `MAKE_GENERIC_REAL(``c_name``, `MAX_MATH(`RANGE_PARAM_REAL(``a_name``), `RANGE_PARAM_REAL(``b_name``)), ``c_width``); \
     `MIN_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
 
 `define MIN_REAL(a_name, b_name, c_name) \
@@ -738,7 +732,7 @@ module comp_real #(
 );
 	// compute the maximum of the two exponents and align both inputs to it
 
-    localparam integer max_exponent = max_int(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
+    localparam integer max_exponent = `MAX_MATH(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
 
     `REAL_FROM_WIDTH_EXP(a_aligned, `WIDTH_PARAM_REAL(a), max_exponent);
     `REAL_FROM_WIDTH_EXP(b_aligned, `WIDTH_PARAM_REAL(b), max_exponent);
