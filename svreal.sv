@@ -36,7 +36,7 @@ endfunction
     (((``a``) > (``b``)) ? (``a``) : (``b``))
 
 `define ABS_MATH(a) \
-    (((``a``) > 0) ? (``a``) ? (-(``a``)))
+    (((``a``) > 0) ? (``a``) : (-(``a``)))
 
 function real fixed_to_float(input longint significand, input int exponent);
     fixed_to_float = (1.0*significand)*(2.0**exponent);
@@ -302,7 +302,7 @@ endfunction
 
 `define ADD_CONST_INTO_REAL_GENERIC(const_expr, in_name, out_name, const_width) \
     `MAKE_GENERIC_CONST_REAL(``const_expr``, zzz_tmp_``out_name``, ``const_width``); \
-    `ADD_INTO_REAL(zzz_tmp_``out_name``), ``in_name``, ``out_name``)
+    `ADD_INTO_REAL(zzz_tmp_``out_name``, ``in_name``, ``out_name``)
 
 `define ADD_CONST_INTO_REAL(const_expr, in_name, out_name) \
     `ADD_CONST_INTO_REAL_GENERIC(``const_expr```, ``in_name``, ``out_name``, `LONG_WIDTH_REAL)
