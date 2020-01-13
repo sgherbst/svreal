@@ -460,7 +460,7 @@ endfunction
 // min of two variables
 
 `define MIN_INTO_REAL(a_name, b_name, c_name) \
-    `LT_INTO_REAL(``a_name``, ``b_name``, zzz_tmp_``c_name``); \
+    `LT_REAL(``a_name``, ``b_name``, zzz_tmp_``c_name``); \
     `ITE_INTO_REAL(zzz_tmp_``c_name``, ``a_name``, ``b_name``, ``c_name``)
 
 `define MIN_REAL_GENERIC(a_name, b_name, c_name, c_width) \
