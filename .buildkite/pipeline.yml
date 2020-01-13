@@ -21,7 +21,6 @@ steps:
       # install fault
       git clone https://github.com/leonardt/fault.git
       cd fault
-      git checkout bug_fixes
       pip install -e .
       cd ..
 
@@ -49,7 +48,6 @@ steps:
       # install fault
       git clone https://github.com/leonardt/fault.git
       cd fault
-      git checkout bug_fixes
       pip install -e .
       cd ..
 
