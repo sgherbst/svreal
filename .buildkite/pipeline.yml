@@ -16,13 +16,7 @@ steps:
       echo $$PATH
 
       # install various python dependencies
-      pip install pytest mantle
-
-      # install fault
-      git clone https://github.com/leonardt/fault.git
-      cd fault
-      pip install -e .
-      cd ..
+      pip install pytest mantle fault
 
       # install svreal
       pip install -e .
@@ -43,13 +37,7 @@ steps:
       source venv/bin/activate
 
       # install various python dependencies
-      pip install pytest mantle
-
-      # install fault
-      git clone https://github.com/leonardt/fault.git
-      cd fault
-      pip install -e .
-      cd ..
+      pip install pytest mantle fault
 
       # install svreal
       pip install -e .
