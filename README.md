@@ -1,4 +1,8 @@
-# Introduction
+# svreal
+[![Travis Status](https://travis-ci.com/sgherbst/svreal.svg?branch=master)](https://travis-ci.com/sgherbst/svreal)
+[![BuildKite Status](https://badge.buildkite.com/45ed712ae8720e9a3e7c040d2e3bc441a18b6ef269e4573723.svg)](https://buildkite.com/stanford-aha/svreal)
+[![Code Coverage](https://codecov.io/gh/sgherbst/svreal/branch/master/graph/badge.svg)](https://codecov.io/gh/sgherbst/svreal)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **svreal** is a single-file SystemVerilog library that makes it easy to perform fixed-point operations in a synthesizable fashion in SystemVerilog.  The exponent and alignment details are handled automatically, so the user is free to customize the format of each fixed-point signal in the design without inconvenience.  For debugging range/resolution issues, the user can switch all signal types to a floating-point representation using a single **define** command-line option.  Supported fixed-point operations include addition, subtraction, negation, multiplication, comparison, and conditional assignment.
 
