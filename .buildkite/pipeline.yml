@@ -16,13 +16,16 @@ steps:
       echo $$PATH
 
       # install various python dependencies
-      pip install pytest mantle fault
+      pip install pytest mantle fault pytest-cov
 
       # install svreal
       pip install -e .
 
       # run tests
-      pytest -s tests
+      pytest --cov-report=xml --cov=svreal tests/ -v -r s
+
+      # upload coverage results
+      bash <(curl -s https://codecov.io/bash)
     label: "test"
     timeout_in_minutes: 60
     agents:
@@ -37,13 +40,16 @@ steps:
       source venv/bin/activate
 
       # install various python dependencies
-      pip install pytest mantle fault
+      pip install pytest mantle fault pytest-cov
 
       # install svreal
       pip install -e .
 
       # run tests
-      pytest -s tests
+      pytest --cov-report=xml --cov=svreal tests/ -v -r s
+
+      # upload coverage results
+      bash <(curl -s https://codecov.io/bash)
 
       # deactivate virtual environment
       deactivate
