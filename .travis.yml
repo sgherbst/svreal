@@ -1,0 +1,49 @@
+matrix:
+  include:
+  - os: linux
+    dist: bionic
+    addons:
+      apt:
+        packages:
+        - verilator
+        - iverilog
+  - os: osx
+    osx_image: xcode10.2
+    addons:
+      homebrew:
+        packages:
+          - verilator
+          - icarus-verilog
+
+install:
+# install conda
+- |
+  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
+  else
+    wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  fi
+- chmod +x miniconda.sh
+- ./miniconda.sh -b -p $TRAVIS_BUILD_DIR/miniconda
+
+# set path to include conda bin/ directory
+- export PATH=$TRAVIS_BUILD_DIR/miniconda/bin:$PATH
+
+# set conda configuration
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+
+# create and activate conda environment
+- conda create -q -n test-env python=3.7.3
+- source activate test-env
+
+# install various python dependencies
+- conda install pip
+- pip install pytest mantle fault pytest-cov
+
+# install svreal
+- pip install -e .
+
+script:
+- pytest --cov-report=xml --cov=svreal tests/ -v -r s
+- bash <(curl -s https://codecov.io/bash)
