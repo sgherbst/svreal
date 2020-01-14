@@ -21,19 +21,17 @@ matrix:
           - icarus-verilog
 
 install:
-# install conda
-- |
-  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
+# Get conda installer
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
   else
-    wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   fi
-- chmod +x miniconda.sh
-- ./miniconda.sh -b -p "$HOME/miniconda"
+
+# Install conda (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/use-conda-with-travis-ci.html)
+- bash miniconda.sh -b -p $HOME/miniconda
 - source "$HOME/miniconda/etc/profile.d/conda.sh"
 - hash -r
-
-# set conda configuration
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
