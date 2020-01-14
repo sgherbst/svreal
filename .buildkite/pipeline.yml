@@ -1,20 +1,15 @@
 steps:
   - command: |
-      # set up environment
-      export PATH=/usr/local/miniconda/bin:/usr/local/bin:$$PATH
-      echo $$PATH
-
       # tool setup
       source /cad/modules/tcl/init/bash
       module load base xcelium vcs
 
-      # create conda env
-      conda create -p ./conda_env -m -y pip python=3.7.4
-      export PATH=$$PWD/conda_env/bin:$$PATH
-      echo $$PATH
+      # create virtual environment
+      python3.7 -m venv venv
+      source venv/bin/activate
 
       # install various python dependencies
-      pip install hwtypes coreir kratos magma-lang mantle fault pytest pytest-cov --upgrade
+      pip install pytest mantle fault pytest-cov
 
       # install svreal
       pip install -e .
@@ -24,10 +19,13 @@ steps:
 
       # upload coverage results
       bash <(curl -s https://codecov.io/bash)
+
+      # deactivate virtual environment
+      deactivate
     label: "test"
     timeout_in_minutes: 60
     agents:
-      fault: "true"
+      fault2: "true"
   - command: |
       # set up environment
       source /etc/environment
