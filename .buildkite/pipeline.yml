@@ -3,8 +3,6 @@ steps:
       # set up environment
       export PATH=/usr/local/miniconda/bin:/usr/local/bin:$$PATH
       echo $$PATH
-      export LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:/usr/local/lib
-      echo $$LD_LIBRARY_PATH
 
       # tool setup
       source /cad/modules/tcl/init/bash
@@ -16,7 +14,7 @@ steps:
       echo $$PATH
 
       # install various python dependencies
-      pip install pytest mantle fault pytest-cov
+      pip install hwtypes coreir kratos magma-lang mantle fault pytest pytest-cov --upgrade
 
       # install svreal
       pip install -e .
