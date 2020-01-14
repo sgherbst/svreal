@@ -1,11 +1,11 @@
 steps:
   - command: |
-      # tool setup
+      # set up environment
       source /cad/modules/tcl/init/bash
       module load base xcelium vcs
 
       # create virtual environment
-      python3.7 -m venv venv
+      /usr/local/miniconda/bin/python3.7 -m venv venv
       source venv/bin/activate
 
       # install various python dependencies
