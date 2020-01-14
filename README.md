@@ -1,3 +1,7 @@
+**NOTE**: Please check out the **v1** branch for the latest work.  These updates will be merged into the master branch soon, coinciding with a release on PyPI.
+
+---
+
 # Introduction
 
 **svreal** is a SystemVerilog library to facilitate real number computation on an FPGA.  The user can switch between a fixed-point implementation (for synthesis or simulation) and a floating point implementation (for simulation) by changing a single flag.  The details of the fixed-point implementation are mostly hidden from the user: it is usually only necessary to define the range of the real-valued state variables and module I/Os.  Common operations such as addition, multiplication, comparison, and conditional assignment are all supported.
