@@ -1,7 +1,7 @@
 from setuptools import setup
 
 name = 'svreal'
-version = '0.1.3'
+version = '0.1.4'
 
 DESCRIPTION = '''\
 Library for working with fixed-point numbers in SystemVerilog\
@@ -37,5 +37,6 @@ setup(
         'License :: OSI Approved :: MIT License',
         f'Programming Language :: Python :: 3.7'
     ],
+    include_package_data=True,
     zip_safe=False
 )
