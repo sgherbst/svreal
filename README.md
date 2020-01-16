@@ -18,7 +18,7 @@ If you get a permissions error when running the **pip** command, you can try add
 
 ## Simple example
 
-Here's a simple **svreal** example to get started.  Note that we only have to include a single file, "svreal.sv".  That file is stored in the **site-packages/svreal** directory; its location can be accessed programmatically using the function **svreal.get\_svreal\_header**
+Here's a simple **svreal** example to get started.  Note that we only have to include a single file, "svreal.sv".  That file is stored in the **site-packages/svreal** directory; its location can be accessed programmatically using the function **svreal.get\_svreal\_header()**.
 ```verilog
 `include "svreal.sv"
 `MAKE_REAL(a, 5.0);
