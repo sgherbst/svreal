@@ -23,7 +23,7 @@ setup(
     scripts=[
     ],
     install_requires=[
-    ]
+    ],
     license='MIT',
     url=f'https://github.com/sgherbst/{name}',
     author='Steven Herbst',
