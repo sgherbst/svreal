@@ -8,14 +8,8 @@
 
 # Installation
 
-1. Clone the repository:
 ```shell
-> git clone https://github.com/sgherbst/svreal.git
-```
-2. Install the corresponding Python3 package:
-```shell
-> cd svreal
-> pip install -e .
+> pip install svreal
 ```
 
 If you get a permissions error when running the **pip** command, you can try adding the **--user** flag.  This will cause **pip** to install packages in your user directory rather than to a system-wide location.
@@ -24,7 +18,7 @@ If you get a permissions error when running the **pip** command, you can try add
 
 ## Simple example
 
-Here's a simple **svreal** example to get started.  Note that we only have to include a single file, "svreal.sv":
+Here's a simple **svreal** example to get started.  Note that we only have to include a single file, "svreal.sv".  That file is stored in the **site-packages/svreal** directory; its location can be accessed programmatically using the function **svreal.get\_svreal\_header**
 ```verilog
 `include "svreal.sv"
 `MAKE_REAL(a, 5.0);
