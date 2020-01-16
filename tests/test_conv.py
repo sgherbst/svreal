@@ -44,7 +44,7 @@ def test_conv(simulator, defines):
         # check results
         r2i_o, i2r_o = model_func(r2i_i=r2i_i, i2r_i=i2r_i)
         tester.expect(dut.r2i_o, r2i_o)
-        tester.expect(dut.i2r_o, i2r_o)
+        tester.expect(dut.i2r_o, i2r_o, strict=False)
 
     # basic test with positive and negative values
     run_iteration(r2i_i=+1.0, i2r_i=+2)
