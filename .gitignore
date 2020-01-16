@@ -1,8 +1,14 @@
-a.out
 .idea
 *.log
-*.pb
 *.egg-info
+*.jou
+xcelium.d/
+xrun.history
 __pycache__
+csrc/
+simv
+simv.daidir/
+ucli.key
 obj_dir
-top.sv
+a.out
+build/
