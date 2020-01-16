@@ -3,8 +3,8 @@ import magma as m
 import fault
 
 # svreal imports
-from .common import pytest_sim_params
-from svreal.files import get_file, get_svreal_header
+from .common import pytest_sim_params, get_file
+from svreal import get_svreal_header
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
@@ -70,7 +70,7 @@ def test_arith(simulator, defines):
     tester.compile_and_run(
         target='system-verilog',
         simulator=simulator,
-        ext_srcs=[get_file('tests/test_arith.sv')],
+        ext_srcs=[get_file('test_arith.sv')],
         inc_dirs=[get_svreal_header().parent],
         defines=defines,
         ext_model_file=True,
