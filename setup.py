@@ -1,18 +1,15 @@
-from setuptools import setup, find_packages
+from distutils.core import setup
 
 setup(
     name='svreal',
-    version='0.1',
+    version='0.1.2',
     license='MIT',
     description='Library for working with fixed-point numbers in SystemVerilog',
     author='Steven Herbst',
     author_email='sgherbst@gmail.com',
     url='https://github.com/sgherbst/svreal',
-    download_url = 'https://github.com/sgherbst/svreal/archive/v0.1.1.tar.gz',
-    keywords = ['fixed-point', 'fixed point', 'verilog', 'system-verilog', 'system verilog', 'synthesizable', 'fpga']
-    packages=['svreal'],
-    install_requires=[
-    ],
+    download_url = 'https://github.com/sgherbst/svreal/archive/v0.1.2.tar.gz',
+    keywords = ['fixed-point', 'fixed point', 'verilog', 'system-verilog', 'system verilog', 'synthesizable', 'fpga'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
@@ -21,6 +18,5 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7'
     ],
-    include_package_data=True,
     zip_safe=False
 )

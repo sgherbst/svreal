@@ -13,3 +13,5 @@ ucli.key
 obj_dir
 a.out
 build/
+dist/
+MANIFEST
