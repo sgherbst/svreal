@@ -1,7 +1,7 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 name = 'svreal'
-version = '0.1.6'
+version = '0.1.7'
 
 DESCRIPTION = '''\
 Library for working with fixed-point numbers in SystemVerilog\
@@ -17,9 +17,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     keywords = ['fixed-point', 'fixed point', 'verilog', 'system-verilog', 'system verilog', 'synthesizable', 'fpga'],
-    packages=[
-        f'{name}'
-    ],
+    packages=find_packages(),
     scripts=[
     ],
     install_requires=[
