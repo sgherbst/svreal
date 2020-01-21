@@ -136,7 +136,7 @@ endfunction
     localparam real `RANGE_PARAM_REAL(``name``) = ``range_expr``; \
     localparam integer `WIDTH_PARAM_REAL(``name``) = ``width_expr``; \
     localparam integer `EXPONENT_PARAM_REAL(``name``) = ``exponent_expr`` \
-    `ifdef FLOAT_REAL \
+    `ifdef RANGE_ASSERTIONS \
         ; `ASSERTION_REAL(``name``) \
     `endif
 
