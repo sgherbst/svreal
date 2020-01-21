@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 name = 'svreal'
-version = '0.1.7'
+version = '0.1.8'
 
 DESCRIPTION = '''\
 Library for working with fixed-point numbers in SystemVerilog\
@@ -17,11 +17,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     keywords = ['fixed-point', 'fixed point', 'verilog', 'system-verilog', 'system verilog', 'synthesizable', 'fpga'],
-    packages=find_packages(),
-    scripts=[
-    ],
-    install_requires=[
-    ],
+    packages=find_packages(exclude=['tests']),
     license='MIT',
     url=f'https://github.com/sgherbst/{name}',
     author='Steven Herbst',
