@@ -28,9 +28,8 @@ function int clog2_math(input real x);
     end
 endfunction
 
-function int calc_exp(input real range, input int width);
-    calc_exp = clog2_math(range/((2.0**(width-1.0))-1.0));
-endfunction
+`define CALC_EXP(range, width) \
+    (clog2_math((real'(``range``))/((2.0**((``width``)-1))-1.0)))
 
 `define MAX_MATH(a, b) \
     (((``a``) > (``b``)) ? (``a``) : (``b``))
@@ -38,13 +37,11 @@ endfunction
 `define ABS_MATH(a) \
     (((``a``) > 0) ? (``a``) : (-(``a``)))
 
-function real fixed_to_float(input longint significand, input int exponent);
-    fixed_to_float = (1.0*significand)*(2.0**exponent);
-endfunction
+`define FIXED_TO_FLOAT(significand, exponent) \
+    ((``significand``)*(2.0**(``exponent``)))
 
-function longint float_to_fixed(input real value, input int exponent);
-    float_to_fixed = value*(2.0**(-exponent));
-endfunction
+`define FLOAT_TO_FIXED(value, exponent) \
+    ((real'(``value``))*(2.0**(-(``exponent``))))
 
 // real number parameters
 // width and exponent are only used for the fixed-point
@@ -99,7 +96,7 @@ endfunction
     `ifdef FLOAT_REAL \
         (``name``) \
     `else \
-		fixed_to_float((``name``), (`EXPONENT_PARAM_REAL(``name``))) \
+		(`FIXED_TO_FLOAT((``name``), (`EXPONENT_PARAM_REAL(``name``)))) \
     `endif
 
 `define PRINT_REAL(name) \
@@ -111,7 +108,7 @@ endfunction
     `ifdef FLOAT_REAL \
         (``expr``) \
     `else \
-		float_to_fixed((``expr``), (`EXPONENT_PARAM_REAL(``name``))) \
+		(`FLOAT_TO_FIXED((``expr``), (`EXPONENT_PARAM_REAL(``name``)))) \
     `endif
 
 `define FORCE_REAL(expr, name) \
@@ -141,7 +138,7 @@ endfunction
     `endif
 
 `define REAL_FROM_WIDTH_EXP(name, width_expr, exponent_expr) \
-    `MAKE_FORMAT_REAL(``name``, 2.0**((``width_expr``)+(``exponent_expr``)-1.0), ``width_expr``, ``exponent_expr``)
+    `MAKE_FORMAT_REAL(``name``, 2.0**((``width_expr``)+(``exponent_expr``)-1), ``width_expr``, ``exponent_expr``)
 
 // copying real number format
 
@@ -187,7 +184,7 @@ endfunction
 // the following four macros depend on clog2_math
 
 `define MAKE_GENERIC_REAL(name, range_expr, width_expr) \
-    `MAKE_FORMAT_REAL(``name``, ``range_expr``, ``width_expr``, calc_exp(``range_expr``, ``width_expr``))
+    `MAKE_FORMAT_REAL(``name``, ``range_expr``, ``width_expr``, `CALC_EXP(``range_expr``, ``width_expr``))
 
 `define MAKE_SHORT_REAL(name, range_expr) \
     `MAKE_GENERIC_REAL(``name``, ``range_expr``, `SHORT_WIDTH_REAL)
@@ -576,7 +573,7 @@ endfunction
     `ifdef FLOAT_REAL \
         (``name``) \
     `else \
-        fixed_to_float((``name``), `INTF_EXPONENT_REAL(``name``)) \
+        (`FIXED_TO_FLOAT((``name``), `INTF_EXPONENT_REAL(``name``))) \
     `endif
  
 `define INTF_PRINT_REAL(name) \
@@ -588,7 +585,7 @@ endfunction
     `ifdef FLOAT_REAL \
         (``expr``) \
     `else \
-		float_to_fixed((``expr``), `INTF_EXPONENT_REAL(``name``)) \
+		(`FLOAT_TO_FIXED((``expr``), `INTF_EXPONENT_REAL(``name``))) \
     `endif
 
 `define INTF_FORCE_REAL(expr, name) \
