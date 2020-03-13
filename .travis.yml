@@ -14,7 +14,7 @@ matrix:
     - CC=gcc-7
     - CXX=g++-7
   - os: osx
-    osx_image: xcode10.2
+    osx_image: xcode11.3
     addons:
       homebrew:
         packages:
@@ -50,8 +50,20 @@ install:
     pip install https://github.com/Z3Prover/z3/releases/download/Nightly/z3_solver-4.8.8.0-py2.py3-none-macosx_10_14_x86_64.whl
   fi
 
-# install various python dependencies
-- pip install pytest mantle fault pytest-cov
+# install kratos from source on macOS since the wheel is not compatible with macOS <= 10.14
+- |
+  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    pip install kratos --no-binary :all:
+  fi
+
+# install a specific version of pysmt to avoid a warning that clutters pytest output
+- pip install pysmt==0.8.1.dev93
+
+# install fault and mantle for testing
+- pip install fault mantle
+
+# install testing dependencies
+- pip install pytest pytest-cov 
 
 # install svreal
 - pip install -e .
