@@ -37,37 +37,11 @@ install:
 - conda info -a
 
 # create and activate conda environment
-- conda create -q -n test-env python=3.7.3
-- conda activate test-env
+- conda create -q -n venv python=3.7.3
+- conda activate venv
 
 # install pip so that we can install other packages
 - conda install pip
 
-# speed up the build process until it's fixed at z3
-# see https://github.com/Z3Prover/z3/issues/2800
-- |
-  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    pip install https://github.com/Z3Prover/z3/releases/download/Nightly/z3_solver-4.8.8.0-py2.py3-none-macosx_10_14_x86_64.whl
-  fi
-
-# install kratos from source on macOS since the wheel is not compatible with macOS <= 10.14
-- |
-  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    pip install kratos --no-binary :all:
-  fi
-
-# install a specific version of pysmt to avoid a warning that clutters pytest output
-- pip install pysmt==0.8.1.dev93
-
-# install fault and mantle for testing
-- pip install fault mantle
-
-# install testing dependencies
-- pip install pytest pytest-cov 
-
-# install svreal
-- pip install -e .
-
 script:
-- pytest --cov-report=xml --cov=svreal tests/ -v -r s
-- bash <(curl -s https://codecov.io/bash)
+- source regress.sh
