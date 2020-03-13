@@ -23,17 +23,18 @@ def model_func(a_i, b_i):
 
 def test_comp(simulator, defines):
     # declare circuit
-    dut = m.DeclareCircuit(
-        'test_comp',
-        'a_i', fault.RealIn,
-        'b_i', fault.RealIn,
-        'lt_o', m.BitOut,
-        'le_o', m.BitOut,
-        'gt_o', m.BitOut,
-        'ge_o', m.BitOut,
-        'eq_o', m.BitOut,
-        'ne_o', m.BitOut
-    )
+    class dut(m.Circuit):
+        name = 'test_comp'
+        io = m.IO(
+            a_i=fault.RealIn,
+            b_i=fault.RealIn,
+            lt_o=m.BitOut,
+            le_o=m.BitOut,
+            gt_o=m.BitOut,
+            ge_o=m.BitOut,
+            eq_o=m.BitOut,
+            ne_o=m.BitOut
+        )
 
     # define the test
     tester = fault.Tester(dut, expect_strict_default=True)

@@ -24,18 +24,19 @@ def model_func(a_i, b_i):
 
 def test_arith(simulator, defines):
     # declare circuit
-    dut = m.DeclareCircuit(
-        'test_arith',
-        'a_i', fault.RealIn,
-        'b_i', fault.RealIn,
-        'min_o', fault.RealOut,
-        'max_o', fault.RealOut,
-        'add_o', fault.RealOut,
-        'sub_o', fault.RealOut,
-        'mul_o', fault.RealOut,
-        'neg_o', fault.RealOut,
-        'abs_o', fault.RealOut
-    )
+    class dut(m.Circuit):
+        name = 'test_arith'
+        io = m.IO(
+            a_i=fault.RealIn,
+            b_i=fault.RealIn,
+            min_o=fault.RealOut,
+            max_o=fault.RealOut,
+            add_o=fault.RealOut,
+            sub_o=fault.RealOut,
+            mul_o=fault.RealOut,
+            neg_o=fault.RealOut,
+            abs_o=fault.RealOut
+        )
 
     # define the test
     tester = fault.Tester(dut, expect_strict_default=True)

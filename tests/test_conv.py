@@ -20,13 +20,14 @@ def model_func(r2i_i, i2r_i):
 
 def test_conv(simulator, defines):
     # declare circuit
-    dut = m.DeclareCircuit(
-        'test_conv',
-        'r2i_i', fault.RealIn,
-        'r2i_o', m.Out(m.SInt[8]),
-        'i2r_i', m.In(m.SInt[8]),
-        'i2r_o', fault.RealOut
-    )
+    class dut(m.Circuit):
+        name = 'test_conv'
+        io = m.IO(
+            r2i_i=fault.RealIn,
+            r2i_o=m.Out(m.SInt[8]),
+            i2r_i=m.In(m.SInt[8]),
+            i2r_o=fault.RealOut
+        )
 
     # define the test
     tester = fault.Tester(dut, expect_strict_default=True)

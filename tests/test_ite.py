@@ -15,13 +15,14 @@ def model_func(a_i, b_i, cond_i):
 
 def test_ite(simulator, defines):
     # declare circuit
-    dut = m.DeclareCircuit(
-        'test_ite',
-        'a_i', fault.RealIn,
-        'b_i', fault.RealIn,
-        'cond_i', m.BitIn,
-        'ite_o', fault.RealOut
-    )
+    class dut(m.Circuit):
+        name = 'test_ite'
+        io = m.IO(
+            a_i=fault.RealIn,
+            b_i=fault.RealIn,
+            cond_i=m.BitIn,
+            ite_o=fault.RealOut
+        )
 
     # define the test
     tester = fault.Tester(dut, expect_strict_default=True)
