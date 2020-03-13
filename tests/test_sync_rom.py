@@ -16,35 +16,41 @@ def test_sync_rom(simulator, defines):
         io = m.IO(
             addr=m.In(m.Bits[2]),
             out=fault.RealOut,
-            clk=m.BitIn,
+            clk=m.ClockIn,
             ce=m.BitIn
         )
         name='test_sync_rom'
 
     # define the test
-    tester = fault.Tester(dut, expect_strict_default=True)
+    t = fault.Tester(dut, dut.clk)
 
     # initialize
-    tester.poke(dut.clk, 0)
-    tester.poke(dut.ce, 1)
-    tester.poke(dut.addr, 0)
-    tester.eval()
+    t.poke(dut.clk, 0)
+    t.poke(dut.ce, 1)
+    t.poke(dut.addr, 0)
+    t.eval()
 
     # check output values
     expct = [1.23, -2.34, 3.45, -4.56]
     for k in range(4):
-        tester.poke(dut.addr, k)
-        tester.eval()
-        tester.poke(dut.clk, 1)
-        tester.eval()
-        tester.poke(dut.clk, 0)
-        tester.eval()
-        tester.expect(dut.out, expct[k], abs_tol=0.001)
+        t.poke(dut.addr, k)
+        t.eval()
+        t.step(2)
+        t.expect(dut.out, expct[k], abs_tol=0.001)
+
+    # disable clock enable and walk through addresses
+    t.poke(dut.ce, 0)
+    t.eval()
+    for k in range(4):
+        t.poke(dut.addr, k)
+        t.eval()
+        t.step(2)
+        t.expect(dut.out, expct[-1], abs_tol=0.001)
 
     # run the test
     defines = defines.copy()
-    defines['PATH_TO_MEM'] = get_file('test_sync_rom.mem')
-    tester.compile_and_run(
+    defines['PATH_TO_MEM'] = get_file('test_sync_rom.mem').resolve()
+    t.compile_and_run(
         target='system-verilog',
         simulator=simulator,
         ext_srcs=[get_file('test_sync_rom.sv')],
