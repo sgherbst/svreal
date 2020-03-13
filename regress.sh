@@ -1,6 +1,3 @@
-# upgrade pip
-python -m pip install --upgrade pip
-
 # install svreal
 pip install -e .
 

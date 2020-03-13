@@ -7,6 +7,9 @@ steps:
       source venv/bin/activate
       printenv
 
+      # upgrade pip
+      python -m pip install --upgrade pip
+
       # run regression script
       source regress.sh
     label: "test"
@@ -19,6 +22,9 @@ steps:
       python3.7 -m venv venv
       source venv/bin/activate
       printenv
+
+      # upgrade pip
+      python -m pip install --upgrade pip
 
       # run regression script
       source regress.sh
