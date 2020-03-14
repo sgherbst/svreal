@@ -47,9 +47,12 @@ def test_sync_rom(simulator, defines):
         t.step(2)
         t.expect(dut.out, expct[-1], abs_tol=0.001)
 
-    # run the test
+    # add path to ROM
     defines = defines.copy()
-    defines['PATH_TO_MEM'] = get_file('test_sync_rom.mem').resolve()
+    path_to_mem = get_file('test_sync_rom.mem').resolve()
+    defines['PATH_TO_MEM'] = f'"{path_to_mem}"'
+
+    # run the test
     t.compile_and_run(
         target='system-verilog',
         simulator=simulator,

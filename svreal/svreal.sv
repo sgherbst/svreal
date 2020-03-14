@@ -523,7 +523,7 @@ endfunction
         .addr_bits(addr_bits_expr), \
         .data_bits(data_bits_expr), \
         .data_expt(data_expt_expr), \
-        .file_path(`"file_path_expr`") \
+        .file_path(file_path_expr) \
     ) sync_rom_real_``out_name``_i ( \
         .addr(addr_name), \
         .out(out_name), \
