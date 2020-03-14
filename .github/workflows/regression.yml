@@ -43,7 +43,7 @@ jobs:
       run: python -m pip install --upgrade pip
     - name: Install dependencies
       run: |
-        brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/927a6b887ebc887cf4eb2fdc0bf21d0ace206774/Formula/icarus-verilog.rb
+        brew install icarus-verilog
         pip install https://github.com/Z3Prover/z3/releases/download/Nightly/z3_solver-4.8.8.0-py2.py3-none-macosx_10_14_x86_64.whl
     - name: Run regression test
       run: source regress.sh
