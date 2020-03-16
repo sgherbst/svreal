@@ -17,14 +17,15 @@ def test_const(simulator, defines):
     c_const = 7.89
 
     # declare circuit
-    dut = m.DeclareCircuit(
-        'test_const',
-        'a_o', fault.RealOut,
-        'b_i', fault.RealIn,
-        'b_o', fault.RealOut,
-        'c_i', fault.RealIn,
-        'c_o', fault.RealOut
-    )
+    class dut(m.Circuit):
+        name = 'test_const'
+        io = m.IO(
+            a_o=fault.RealOut,
+            b_i=fault.RealIn,
+            b_o=fault.RealOut,
+            c_i=fault.RealIn,
+            c_o=fault.RealOut
+        )
 
     # define the test
     tester = fault.Tester(dut, expect_strict_default=True)

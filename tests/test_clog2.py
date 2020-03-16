@@ -20,11 +20,12 @@ def model_func(x):
 
 def test_math(simulator):
     # declare circuit
-    dut = m.DeclareCircuit(
-        'test_clog2',
-        'in_', fault.RealIn,
-        'out', m.Out(m.SInt[32])
-    )
+    class dut(m.Circuit):
+        name = 'test_clog2'
+        io = m.IO(
+            in_=fault.RealIn,
+            out=m.Out(m.SInt[32])
+        )
 
     # define the test
     tester = fault.Tester(dut, expect_strict_default=True)

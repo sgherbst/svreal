@@ -12,12 +12,13 @@ def pytest_generate_tests(metafunc):
 
 def test_hier(simulator, defines):
     # declare circuit
-    dut = m.DeclareCircuit(
-        'test_hier',
-        'a_i', fault.RealIn,
-        'b_i', fault.RealIn,
-        'c_o', fault.RealOut
-    )
+    class dut(m.Circuit):
+        name = 'test_hier'
+        io = m.IO(
+            a_i=fault.RealIn,
+            b_i=fault.RealIn,
+            c_o=fault.RealOut
+        )
 
     # define the test
     tester = fault.Tester(dut, expect_strict_default=True)
