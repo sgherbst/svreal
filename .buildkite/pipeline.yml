@@ -1,0 +1,55 @@
+steps:
+  - command: |
+      # set up environment
+      source /cad/modules/tcl/init/bash
+      module load base xcelium vcs
+
+      # create virtual environment
+      /usr/local/miniconda/bin/python3.7 -m venv venv
+      source venv/bin/activate
+
+      # install various python dependencies
+      pip install pytest mantle fault pytest-cov
+
+      # install svreal
+      pip install -e .
+
+      # run tests
+      pytest --cov-report=xml --cov=svreal tests/ -v -r s
+
+      # upload coverage results
+      bash <(curl -s https://codecov.io/bash)
+
+      # deactivate virtual environment
+      deactivate
+    label: "test"
+    timeout_in_minutes: 60
+    agents:
+      fault2: "true"
+  - command: |
+      # set up environment
+      source /etc/environment
+      echo $$PATH
+
+      # create virtual environment
+      python3.7 -m venv venv
+      source venv/bin/activate
+
+      # install various python dependencies
+      pip install pytest mantle fault pytest-cov
+
+      # install svreal
+      pip install -e .
+
+      # run tests
+      pytest --cov-report=xml --cov=svreal tests/ -v -r s
+
+      # upload coverage results
+      bash <(curl -s https://codecov.io/bash)
+
+      # deactivate virtual environment
+      deactivate
+    label: "test_emu"
+    timeout_in_minutes: 60
+    agents:
+      fpga_verif: "true"
