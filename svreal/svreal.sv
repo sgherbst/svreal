@@ -34,6 +34,9 @@ endfunction
 `define MAX_MATH(a, b) \
     (((``a``) > (``b``)) ? (``a``) : (``b``))
 
+`define MIN_MATH(a, b) \
+    (((``a``) < (``b``)) ? (``a``) : (``b``))
+
 `define ABS_MATH(a) \
     (((``a``) > 0) ? (``a``) : (-(``a``)))
 
@@ -747,12 +750,12 @@ module comp_real #(
     `INPUT_REAL(b),
     output wire logic c
 );
-	// compute the maximum of the two exponents and align both inputs to it
+	// compute the minimum of the two exponents and align both inputs to it
 
-    localparam integer max_exponent = `MAX_MATH(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
+    localparam integer min_exponent = `MIN_MATH(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
 
-    `REAL_FROM_WIDTH_EXP(a_aligned, `WIDTH_PARAM_REAL(a), max_exponent);
-    `REAL_FROM_WIDTH_EXP(b_aligned, `WIDTH_PARAM_REAL(b), max_exponent);
+    `REAL_FROM_WIDTH_EXP(a_aligned, (`WIDTH_PARAM_REAL(a))+(`EXPONENT_PARAM_REAL(a))-min_exponent, min_exponent);
+    `REAL_FROM_WIDTH_EXP(b_aligned, (`WIDTH_PARAM_REAL(b))+(`EXPONENT_PARAM_REAL(b))-min_exponent, min_exponent);
 
     `ASSIGN_REAL(a, a_aligned);
     `ASSIGN_REAL(b, b_aligned);
