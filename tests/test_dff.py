@@ -12,14 +12,15 @@ def pytest_generate_tests(metafunc):
 
 def test_dff(simulator, defines):
     # declare circuit
-    dut = m.DeclareCircuit(
-        'test_dff',
-        'd_i', fault.RealIn,
-        'q_o', fault.RealOut,
-        'rst_i', m.BitIn,
-        'clk_i', m.BitIn,
-        'cke_i', m.BitIn
-    )
+    class dut(m.Circuit):
+        name = 'test_dff'
+        io = m.IO(
+            d_i=fault.RealIn,
+            q_o=fault.RealOut,
+            rst_i=m.BitIn,
+            clk_i=m.BitIn,
+            cke_i=m.BitIn
+        )
 
     # define the test
     tester = fault.Tester(dut, expect_strict_default=True)

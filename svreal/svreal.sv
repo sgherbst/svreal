@@ -34,6 +34,9 @@ endfunction
 `define MAX_MATH(a, b) \
     (((``a``) > (``b``)) ? (``a``) : (``b``))
 
+`define MIN_MATH(a, b) \
+    (((``a``) < (``b``)) ? (``a``) : (``b``))
+
 `define ABS_MATH(a) \
     (((``a``) > 0) ? (``a``) : (-(``a``)))
 
@@ -515,6 +518,26 @@ endfunction
     `COPY_FORMAT_REAL(``d_name``, ``q_name``); \
     `DFF_INTO_REAL(``d_name``, ``q_name``, ``rst_name``, ``clk_name``, ``cke_name``, ``init_expr``)
 
+// synchronous ROM
+
+`define SYNC_ROM_INTO_REAL(addr_name, out_name, clk_name, ce_name, addr_bits_expr, data_bits_expr, file_path_expr, data_expt_expr) \
+    sync_rom_real #( \
+        `PASS_REAL(out, out_name), \
+        .addr_bits(addr_bits_expr), \
+        .data_bits(data_bits_expr), \
+        .data_expt(data_expt_expr), \
+        .file_path(file_path_expr) \
+    ) sync_rom_real_``out_name``_i ( \
+        .addr(addr_name), \
+        .out(out_name), \
+        .clk(clk_name), \
+        .ce(ce_name) \
+    )
+
+`define SYNC_ROM_REAL(addr_name, out_name, clk_name, ce_name, addr_bits_expr, data_bits_expr, file_path_expr, data_expt_expr) \
+    `REAL_FROM_WIDTH_EXP(out_name, data_bits_expr, data_expt_expr); \
+    `SYNC_ROM_INTO_REAL(addr_name, out_name, clk_name, ce_name, addr_bits_expr, data_bits_expr, file_path_expr, data_expt_expr)
+
 // interface functions
 
 // range is not included as a parameter since there is no
@@ -727,12 +750,12 @@ module comp_real #(
     `INPUT_REAL(b),
     output wire logic c
 );
-	// compute the maximum of the two exponents and align both inputs to it
+	// compute the minimum of the two exponents and align both inputs to it
 
-    localparam integer max_exponent = `MAX_MATH(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
+    localparam integer min_exponent = `MIN_MATH(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
 
-    `REAL_FROM_WIDTH_EXP(a_aligned, `WIDTH_PARAM_REAL(a), max_exponent);
-    `REAL_FROM_WIDTH_EXP(b_aligned, `WIDTH_PARAM_REAL(b), max_exponent);
+    `REAL_FROM_WIDTH_EXP(a_aligned, (`WIDTH_PARAM_REAL(a))+(`EXPONENT_PARAM_REAL(a))-min_exponent, min_exponent);
+    `REAL_FROM_WIDTH_EXP(b_aligned, (`WIDTH_PARAM_REAL(b))+(`EXPONENT_PARAM_REAL(b))-min_exponent, min_exponent);
 
     `ASSIGN_REAL(a, a_aligned);
     `ASSIGN_REAL(b, b_aligned);
@@ -812,6 +835,45 @@ module dff_real #(
             q_mem <= q;
         end
     end       
+endmodule
+
+module sync_rom_real #(
+    `DECL_REAL(out),
+    parameter integer addr_bits=1,
+    parameter integer data_bits=1,
+    parameter integer data_expt=1,
+    parameter file_path=""
+) (
+    input wire logic [(addr_bits-1):0] addr,
+    `OUTPUT_REAL(out),
+    input wire logic clk,
+    input wire logic ce
+);
+    // load the ROM
+    logic signed [(data_bits-1):0] rom [0:((2**addr_bits)-1)];
+    initial begin
+        $readmemb(file_path, rom);
+    end
+
+    // read from the ROM
+    logic signed [(data_bits-1):0] data;
+    always @(posedge clk) begin
+        if (ce) begin
+            data <= rom[addr];
+        end
+    end
+
+    // Assign to output.  We have to explicitly handle FLOAT_REAL case
+    // because ROM data is always stored with fixed-point formatting,
+    // even when FLOAT_REAL is defined.
+    `ifdef FLOAT_REAL
+        assign out = `FIXED_TO_FLOAT(data, data_expt);
+    `else
+        localparam `RANGE_PARAM_REAL(data) = 2.0**(data_bits+data_expt-1);
+        localparam `WIDTH_PARAM_REAL(data) = data_bits;
+        localparam `EXPONENT_PARAM_REAL(data) = data_expt;
+        `ASSIGN_REAL(data, out);
+    `endif
 endmodule
 
 `endif // `ifndef __SVREAL_SV__
