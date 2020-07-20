@@ -936,7 +936,7 @@ module sync_ram_real #(
     // case because RAM data is always stored with fixed-point formatting,
     // even when FLOAT_REAL is defined.
     `ifdef FLOAT_REAL
-        assign din = `FLOAT_TO_FIXED(in, data_expt)
+        assign din = `FLOAT_TO_FIXED(in, data_expt);
         assign out = `FIXED_TO_FLOAT(dout, data_expt);
     `else
         localparam `RANGE_PARAM_REAL(din) = 2.0**(data_bits+data_expt-1);
