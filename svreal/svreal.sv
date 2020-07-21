@@ -540,25 +540,24 @@ endfunction
 
 // synchronous RAM
 
-`define SYNC_RAM_INTO_REAL(addr_name, in_name, out_name, clk_name, ce_name, we_name, addr_bits_expr, data_bits_expr, data_expt_expr) \
+`define SYNC_RAM_INTO_REAL(addr_name, din_name, out_name, clk_name, ce_name, we_name, addr_bits_expr, data_bits_expr, data_expt_expr) \
     sync_ram_real #( \
-        `PASS_REAL(in, in_name), \
         `PASS_REAL(out, out_name), \
         .addr_bits(addr_bits_expr), \
         .data_bits(data_bits_expr), \
         .data_expt(data_expt_expr) \
     ) sync_ram_real_``out_name``_i ( \
         .addr(addr_name), \
-        .in(in_name), \
+        .din(din_name), \
         .out(out_name), \
         .clk(clk_name), \
         .ce(ce_name), \
         .we(we_name) \
     )
 
-`define SYNC_RAM_REAL(addr_name, in_name, out_name, clk_name, ce_name, we_name, addr_bits_expr, data_bits_expr, data_expt_expr) \
+`define SYNC_RAM_REAL(addr_name, din_name, out_name, clk_name, ce_name, we_name, addr_bits_expr, data_bits_expr, data_expt_expr) \
     `REAL_FROM_WIDTH_EXP(out_name, data_bits_expr, data_expt_expr); \
-    `SYNC_RAM_INTO_REAL(addr_name, in_name, out_name, clk_name, ce_name, we_name, addr_bits_expr, data_bits_expr, data_expt_expr)
+    `SYNC_RAM_INTO_REAL(addr_name, din_name, out_name, clk_name, ce_name, we_name, addr_bits_expr, data_bits_expr, data_expt_expr)
 
 // synchronous RAM
 
@@ -904,49 +903,42 @@ endmodule
 // https://www.xilinx.com/support/documentation/sw_manuals/xilinx2019_2/ug901-vivado-synthesis.pdf
 
 module sync_ram_real #(
-    `DECL_REAL(in),
     `DECL_REAL(out),
     parameter integer addr_bits=1,
     parameter integer data_bits=1,
     parameter integer data_expt=1
 ) (
     input wire logic [(addr_bits-1):0] addr,
-    `INPUT_REAL(in),
+    input wire logic signed [(data_bits-1):0] din,
     `OUTPUT_REAL(out),
     input wire logic clk,
     input wire logic ce,
     input wire logic we
 );
     // memory contents
-    logic signed [(data_bits-1):0] ram [((2**addr_bits)-1):0];
-    logic signed [(data_bits-1):0] din;
-    logic signed [(data_bits-1):0] dout;
+    logic signed [(data_bits-1):0] ram [0:((2**addr_bits)-1)];
 
     // RAM I/O
+    logic signed [(data_bits-1):0] data;
     always @(posedge clk) begin
         if (ce) begin
             if (we) begin
                 ram[addr] <= din;
             end
-            dout <= ram[addr];
+            data <= ram[addr];
         end
     end
 
-    // Map in to din and dout to out.  We have to explicitly handle FLOAT_REAL
-    // case because RAM data is always stored with fixed-point formatting,
+    // Assign to output.  We have to explicitly handle FLOAT_REAL case
+    // because ROM data is always stored with fixed-point formatting,
     // even when FLOAT_REAL is defined.
     `ifdef FLOAT_REAL
-        assign din = `FLOAT_TO_FIXED(in, data_expt);
-        assign out = `FIXED_TO_FLOAT(dout, data_expt);
+        assign out = `FIXED_TO_FLOAT(data, data_expt);
     `else
-        localparam `RANGE_PARAM_REAL(din) = 2.0**(data_bits+data_expt-1);
-        localparam `WIDTH_PARAM_REAL(din) = data_bits;
-        localparam `EXPONENT_PARAM_REAL(din) = data_expt;
-        `ASSIGN_REAL(in, din);
-        localparam `RANGE_PARAM_REAL(dout) = 2.0**(data_bits+data_expt-1);
-        localparam `WIDTH_PARAM_REAL(dout) = data_bits;
-        localparam `EXPONENT_PARAM_REAL(dout) = data_expt;
-        `ASSIGN_REAL(dout, out);
+        localparam `RANGE_PARAM_REAL(data) = 2.0**(data_bits+data_expt-1);
+        localparam `WIDTH_PARAM_REAL(data) = data_bits;
+        localparam `EXPONENT_PARAM_REAL(data) = data_expt;
+        `ASSIGN_REAL(data, out);
     `endif
 endmodule
 

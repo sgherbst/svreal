@@ -10,13 +10,13 @@ def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
     metafunc.parametrize('defines', [{}, {'FLOAT_REAL': None}])
 
-def test_sync_ram(simulator, defines):
+def test_sync_ram(simulator, defines, width=18, exponent=-12):
     # declare circuit
     class dut(m.Circuit):
         name = 'test_sync_ram'
         io = m.IO(
             addr=m.In(m.Bits[2]),
-            in_=fault.RealIn,
+            din=m.In(m.Bits[width]),
             out=fault.RealOut,
             clk=m.ClockIn,
             ce=m.BitIn,
@@ -39,7 +39,7 @@ def test_sync_ram(simulator, defines):
     t.poke(dut.we, 1)
     for addr in write_order:
         t.poke(dut.addr, addr)
-        t.poke(dut.in_, write_data[addr])
+        t.poke(dut.din, int(round(write_data[addr]*(2**(-exponent)))))
         t.step(2)
 
     # read data
@@ -52,11 +52,15 @@ def test_sync_ram(simulator, defines):
         t.step(2)
         t.expect(dut.out, write_data[addr], abs_tol=0.001)
 
+    # update defines
+    defines.update(dict(WIDTH=width, EXPONENT=exponent))
+
     # run the test
     t.compile_and_run(
         target='system-verilog',
         simulator=simulator,
         ext_srcs=[get_file('test_sync_ram.sv')],
         inc_dirs=[get_svreal_header().parent],
+        defines=defines,
         ext_model_file=True
     )
