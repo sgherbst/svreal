@@ -538,6 +538,29 @@ endfunction
     `REAL_FROM_WIDTH_EXP(out_name, data_bits_expr, data_expt_expr); \
     `SYNC_ROM_INTO_REAL(addr_name, out_name, clk_name, ce_name, addr_bits_expr, data_bits_expr, file_path_expr, data_expt_expr)
 
+// synchronous RAM
+
+`define SYNC_RAM_INTO_REAL(addr_name, din_name, out_name, clk_name, ce_name, we_name, addr_bits_expr, data_bits_expr, data_expt_expr) \
+    sync_ram_real #( \
+        `PASS_REAL(out, out_name), \
+        .addr_bits(addr_bits_expr), \
+        .data_bits(data_bits_expr), \
+        .data_expt(data_expt_expr) \
+    ) sync_ram_real_``out_name``_i ( \
+        .addr(addr_name), \
+        .din(din_name), \
+        .out(out_name), \
+        .clk(clk_name), \
+        .ce(ce_name), \
+        .we(we_name) \
+    )
+
+`define SYNC_RAM_REAL(addr_name, din_name, out_name, clk_name, ce_name, we_name, addr_bits_expr, data_bits_expr, data_expt_expr) \
+    `REAL_FROM_WIDTH_EXP(out_name, data_bits_expr, data_expt_expr); \
+    `SYNC_RAM_INTO_REAL(addr_name, din_name, out_name, clk_name, ce_name, we_name, addr_bits_expr, data_bits_expr, data_expt_expr)
+
+// synchronous RAM
+
 // interface functions
 
 // range is not included as a parameter since there is no
@@ -860,6 +883,49 @@ module sync_rom_real #(
     always @(posedge clk) begin
         if (ce) begin
             data <= rom[addr];
+        end
+    end
+
+    // Assign to output.  We have to explicitly handle FLOAT_REAL case
+    // because ROM data is always stored with fixed-point formatting,
+    // even when FLOAT_REAL is defined.
+    `ifdef FLOAT_REAL
+        assign out = `FIXED_TO_FLOAT(data, data_expt);
+    `else
+        localparam `RANGE_PARAM_REAL(data) = 2.0**(data_bits+data_expt-1);
+        localparam `WIDTH_PARAM_REAL(data) = data_bits;
+        localparam `EXPONENT_PARAM_REAL(data) = data_expt;
+        `ASSIGN_REAL(data, out);
+    `endif
+endmodule
+
+// adapted from the example on page 119-120 here:
+// https://www.xilinx.com/support/documentation/sw_manuals/xilinx2019_2/ug901-vivado-synthesis.pdf
+
+module sync_ram_real #(
+    `DECL_REAL(out),
+    parameter integer addr_bits=1,
+    parameter integer data_bits=1,
+    parameter integer data_expt=1
+) (
+    input wire logic [(addr_bits-1):0] addr,
+    input wire logic signed [(data_bits-1):0] din,
+    `OUTPUT_REAL(out),
+    input wire logic clk,
+    input wire logic ce,
+    input wire logic we
+);
+    // memory contents
+    logic signed [(data_bits-1):0] ram [0:((2**addr_bits)-1)];
+
+    // RAM I/O
+    logic signed [(data_bits-1):0] data;
+    always @(posedge clk) begin
+        if (ce) begin
+            if (we) begin
+                ram[addr] <= din;
+            end
+            data <= ram[addr];
         end
     end
 
