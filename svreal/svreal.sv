@@ -1,6 +1,18 @@
 `ifndef __SVREAL_SV__
 `define __SVREAL_SV__
 
+// include files for Berkeley HardFloat if needed
+`ifdef HARD_FLOAT
+    `include "HardFloat_consts.vi"
+
+    `ifndef HARD_FLOAT_CONTROL
+        `define HARD_FLOAT_CONTROL `flControl_tininessAfterRounding
+    `endif
+    `ifndef HARD_FLOAT_ROUNDING
+        `define HARD_FLOAT_ROUNDING `round_near_even
+    `endif
+`endif
+
 // fixed-point representation defaults
 // (can override by defining them externally)
 
@@ -11,6 +23,18 @@
 `ifndef LONG_WIDTH_REAL
     `define LONG_WIDTH_REAL 25
 `endif
+
+// configuration for Berkeley HardFloat, if used
+
+`ifndef HARD_FLOAT_EXP_WIDTH
+    `define HARD_FLOAT_EXP_WIDTH 8
+`endif
+
+`ifndef HARD_FLOAT_SIG_WIDTH
+    `define HARD_FLOAT_SIG_WIDTH 24
+`endif
+
+`define HARD_FLOAT_SIGN_BIT ((`HARD_FLOAT_SIG_WIDTH)+(`HARD_FLOAT_EXP_WIDTH))
 
 // declare a more generic version of $clog2 that supports
 // real number inputs, which is needed to automatically
@@ -46,6 +70,129 @@ endfunction
 `define FLOAT_TO_FIXED(value, exponent) \
     ((real'(``value``))*(2.0**(-(``exponent``))))
 
+// convert the HardFloat recoded format to a real number
+function real recfn2real(input logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] in);
+    // recoded format
+    logic rec_sign;
+    logic [(`HARD_FLOAT_EXP_WIDTH):0] rec_exp;
+    logic [((`HARD_FLOAT_SIG_WIDTH)-2):0] rec_sig;
+    logic [2:0] rec_exp_top;
+
+    // double-precision format
+    logic dbl_sign;
+    logic [10:0] dbl_exp;
+    logic [51:0] dbl_sig;
+    logic [63:0] dbl_bits;
+
+    // deconstruct input
+    rec_sign = in[`HARD_FLOAT_SIGN_BIT];
+    rec_exp = in[((`HARD_FLOAT_SIGN_BIT)-1):((`HARD_FLOAT_SIGN_BIT)-1-((`HARD_FLOAT_EXP_WIDTH)+1)+1)];
+    rec_sig = in[((`HARD_FLOAT_SIG_WIDTH)-2):0];
+    rec_exp_top = rec_exp[(`HARD_FLOAT_EXP_WIDTH):((`HARD_FLOAT_EXP_WIDTH)-3+1)];
+
+    // walk through various cases
+    if (rec_exp_top == 3'b000) begin
+        // zero
+        dbl_sign = rec_sign;
+        dbl_exp = 0;
+        dbl_sig = 0;
+    end else if (rec_exp_top == 3'b110) begin
+        // infinities
+        dbl_sign = rec_sign;
+        dbl_exp = '1;
+        dbl_sig = '0;
+    end else if (rec_exp_top == 3'b111) begin
+        // NaNs
+        dbl_sign = rec_sign;
+        dbl_exp = '1;
+        dbl_sig = rec_sig;
+    end else if (rec_exp < ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+2)) begin
+        // TODO: implement subnormal (treated as zero for now)
+        dbl_sign = rec_sign;
+        dbl_exp = 0;
+        dbl_sig = 0;
+    end else begin
+        // normal
+        dbl_sign = rec_sign;
+        dbl_exp = rec_exp
+                  - ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+1)    // remove recoding offset
+                  - ((2**((`HARD_FLOAT_EXP_WIDTH)-1))-1)    // remove exponent bias
+                  + 1023;                                   // apply exponent bias
+        if (((`HARD_FLOAT_SIG_WIDTH)-1) < 52) begin
+            // zero-pad
+            dbl_sig = {rec_sig, {(52-((`HARD_FLOAT_SIG_WIDTH)-1)){1'b0}}};
+        end else begin
+            // truncate
+            dbl_sig = rec_sig[((`HARD_FLOAT_SIG_WIDTH)-2):((`HARD_FLOAT_SIG_WIDTH)-2-52+1)];
+        end
+    end
+
+    // assign the output
+    dbl_bits = {dbl_sign, dbl_exp, dbl_sig};
+    recfn2real = $bitstoreal(dbl_bits);
+endfunction
+
+`define REC_FN_TO_REAL(value) recfn2real(value)
+
+// convert a real number to the HardFloat recoded format
+function logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] real2recfn(input real in);
+    // double-precision format
+    logic dbl_sign;
+    logic [10:0] dbl_exp;
+    logic [51:0] dbl_sig;
+    logic [63:0] dbl_bits;
+
+    // recoded format
+    logic rec_sign;
+    logic [(`HARD_FLOAT_EXP_WIDTH):0] rec_exp;
+    logic [((`HARD_FLOAT_SIG_WIDTH)-2):0] rec_sig;
+
+    // deconstruct input
+    dbl_bits = $realtobits(in);
+    dbl_sign = dbl_bits[63];
+    dbl_exp = dbl_bits[62:52];
+    dbl_sig = dbl_bits[51:0];
+
+    if (dbl_exp == 0) begin
+        // zero or subnormal
+        // TODO: handle subnormal properly
+        rec_sign = dbl_sign;
+        rec_exp = '0;
+        rec_sig = '0;
+    end else if (dbl_exp == 11'h7FF) begin
+        if (dbl_sig == 0) begin
+            // infinities
+            rec_sign = dbl_sign;
+            rec_exp = {3'b110, {((`HARD_FLOAT_EXP_WIDTH)-2){1'b0}}};
+            rec_sig = '0;
+        end else begin
+            // NaNs
+            rec_sign = dbl_sign;
+            rec_exp = {3'b111, {((`HARD_FLOAT_EXP_WIDTH)-2){1'b0}}};
+            rec_sig = '0;
+        end
+    end else begin
+        // normal
+        rec_sign = dbl_sign;
+        rec_exp = dbl_exp
+                  - 1023                                     // remove exponent bias
+                  + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))-1)     // apply exponent bias
+                  + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+1);    // apply recoding bias
+        if (((`HARD_FLOAT_SIG_WIDTH)-1) > 52) begin
+            // zero-pad (lossless)
+            rec_sig = {dbl_sig, {(((`HARD_FLOAT_SIG_WIDTH)-1)-52){1'b0}}};
+        end else begin
+            // truncate (lossy)
+            rec_sig = dbl_sig[51:(51-((`HARD_FLOAT_SIG_WIDTH)-1)+1)];
+        end
+    end
+
+    // assign the output
+    real2recfn = {rec_sign, rec_exp, rec_sig};
+endfunction
+
+`define REAL_TO_REC_FN(value) real2recfn(value)
+
 // real number parameters
 // width and exponent are only used for the fixed-point
 // representation
@@ -64,6 +211,8 @@ endfunction
 `define DATA_TYPE_REAL(width_expr) \
     `ifdef FLOAT_REAL \
         real \
+    `elsif HARD_FLOAT \
+        logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] \
     `else \
         logic signed [((``width_expr``)-1):0] \
     `endif
@@ -98,6 +247,8 @@ endfunction
 `define TO_REAL(name) \
     `ifdef FLOAT_REAL \
         (``name``) \
+    `elsif HARD_FLOAT \
+        (`REC_FN_TO_REAL(``name``)) \
     `else \
 		(`FIXED_TO_FLOAT((``name``), (`EXPONENT_PARAM_REAL(``name``)))) \
     `endif
@@ -110,6 +261,8 @@ endfunction
 `define FROM_REAL(expr, name) \
     `ifdef FLOAT_REAL \
         (``expr``) \
+    `elsif HARD_FLOAT \
+        (`REAL_TO_REC_FN(``expr``)) \
     `else \
 		(`FLOAT_TO_FIXED((``expr``), (`EXPONENT_PARAM_REAL(``name``)))) \
     `endif
@@ -119,13 +272,13 @@ endfunction
 
 // assert that real number is within specified range
 
-`define ASSERTION_REAL(in_name) \
-    assertion_real #( \
-        `PASS_REAL(in, ``in_name``), \
-        .name(`"``in_name```") \
-    ) assertion_real_``in_name``_i ( \
-        .in(``in_name``) \
-    )
+//`define ASSERTION_REAL(in_name) \
+//    assertion_real #( \
+//        `PASS_REAL(in, ``in_name``), \
+//        .name(`"``in_name```") \
+//    ) assertion_real_``in_name``_i ( \
+//        .in(``in_name``) \
+//    )
 
 // creating real numbers
 // the data type declaration comes first so that directives like mark_debug
@@ -136,9 +289,9 @@ endfunction
     localparam real `RANGE_PARAM_REAL(``name``) = ``range_expr``; \
     localparam integer `WIDTH_PARAM_REAL(``name``) = ``width_expr``; \
     localparam integer `EXPONENT_PARAM_REAL(``name``) = ``exponent_expr`` \
-    `ifdef RANGE_ASSERTIONS \
-        ; `ASSERTION_REAL(``name``) \
-    `endif
+//    `ifdef RANGE_ASSERTIONS \
+//        ; `ASSERTION_REAL(``name``) \
+//    `endif
 
 `define REAL_FROM_WIDTH_EXP(name, width_expr, exponent_expr) \
     `MAKE_FORMAT_REAL(``name``, 2.0**((``width_expr``)+(``exponent_expr``)-1), ``width_expr``, ``exponent_expr``)
@@ -476,6 +629,19 @@ endfunction
     `ifdef FLOAT_REAL \
         logic signed[((``int_width_expr``)-1):0] ``out_name``; \
         assign ``out_name`` = $floor(``in_name``) \
+    `elsif HARD_FLOAT \
+        recFNToIN #( \
+            .expWidth(`HARD_FLOAT_EXP_WIDTH), \
+            .sigWidth(`HARD_FLOAT_SIG_WIDTH), \
+            .intWidth(``int_width_expr``) \
+        ) recFNToIN_``out_name``_i ( \
+            .control(`HARD_FLOAT_CONTROL), \
+            .in(``in_name``), \
+            .roundingMode(`HARD_FLOAT_ROUNDING), \
+            .signedOut(1'b1), \
+            .out(``out_name``), \
+            .intExceptionFlags() \
+        ) \
     `else \
         `REAL_FROM_WIDTH_EXP(``out_name``, ``int_width_expr``, 0); \
         `ASSIGN_REAL(``in_name``, ``out_name``) \
@@ -491,6 +657,19 @@ endfunction
     `REAL_FROM_WIDTH_EXP(``out_name``, ``int_width_expr``, 0); \
     `ifdef FLOAT_REAL \
         assign ``out_name`` = 1.0*(``in_name``) \
+    `elsif HARD_FLOAT \
+        iNToRecFN #( \
+            .intWidth(``int_width_expr``), \
+            .expWidth(`HARD_FLOAT_EXP_WIDTH), \
+            .sigWidth(`HARD_FLOAT_SIG_WIDTH) \
+        ) iNToRecFN_``out_name``_i ( \
+            .control(`HARD_FLOAT_CONTROL), \
+            .signedIn(1'b1), \
+            .in(``in_name``), \
+            .roundingMode(`HARD_FLOAT_ROUNDING), \
+            .out(``out_name``), \
+            .exceptionFlags() \
+        ) \
     `else \
         assign ``out_name`` = ``in_name`` \
     `endif
@@ -618,6 +797,8 @@ endfunction
 `define INTF_TO_REAL(name) \
     `ifdef FLOAT_REAL \
         (``name``) \
+    `elsif HARD_FLOAT \
+        (`REC_FN_TO_REAL(``name``)) \
     `else \
         (`FIXED_TO_FLOAT((``name``), `INTF_EXPONENT_REAL(``name``))) \
     `endif
@@ -630,6 +811,8 @@ endfunction
 `define INTF_FROM_REAL(expr, name) \
     `ifdef FLOAT_REAL \
         (``expr``) \
+    `elsif HARD_FLOAT \
+        (`REAL_TO_REC_FN(``name``)) \
     `else \
 		(`FLOAT_TO_FIXED((``expr``), `INTF_EXPONENT_REAL(``name``))) \
     `endif
@@ -639,24 +822,24 @@ endfunction
 
 // module definitions
 
-module assertion_real #(
-    `DECL_REAL(in),
-    parameter name = "name"
-) (
-    `INPUT_REAL(in)
-);
-
-    localparam real min = -(`RANGE_PARAM_REAL(in));
-    localparam real max = +(`RANGE_PARAM_REAL(in));
-
-    always @(in) begin
-        if (!((min <= `TO_REAL(in)) && (`TO_REAL(in) <= max))) begin
-            $display("Real number %s with value %f out of range (%f to %f).", name, `TO_REAL(in), min, max);
-            $fatal;
-        end
-    end
-                        
-endmodule
+//module assertion_real #(
+//    `DECL_REAL(in),
+//    parameter name = "name"
+//) (
+//    `INPUT_REAL(in)
+//);
+//
+//    localparam real min = -(`RANGE_PARAM_REAL(in));
+//    localparam real max = +(`RANGE_PARAM_REAL(in));
+//
+//    always @(in) begin
+//        if (!((min <= `TO_REAL(in)) && (`TO_REAL(in) <= max))) begin
+//            $display("Real number %s with value %f out of range (%f to %f).", name, `TO_REAL(in), min, max);
+//            $fatal;
+//        end
+//    end
+//
+//endmodule
 
 module assign_real #(
     `DECL_REAL(in),
@@ -666,6 +849,8 @@ module assign_real #(
     `OUTPUT_REAL(out)
 );
     `ifdef FLOAT_REAL
+        assign out = in;
+    `elsif HARD_FLOAT
         assign out = in;
     `else
         localparam integer lshift = `EXPONENT_PARAM_REAL(in) - `EXPONENT_PARAM_REAL(out);
@@ -690,24 +875,42 @@ module add_sub_real #(
     `INPUT_REAL(b),
     `OUTPUT_REAL(c)
 );
-    `COPY_FORMAT_REAL(c, a_aligned);
-    `COPY_FORMAT_REAL(c, b_aligned);
-    
-    `ASSIGN_REAL(a, a_aligned);
-    `ASSIGN_REAL(b, b_aligned);
-    
-    generate
-        if          (opcode == `ADD_OPCODE_REAL) begin
-    		assign c = a_aligned + b_aligned;
-        end else if (opcode == `SUB_OPCODE_REAL) begin
-    		assign c = a_aligned - b_aligned;
-        end else begin
-            initial begin
-                $display("ERROR: Invalid opcode.");
-                $finish;
+    `ifndef HARD_FLOAT
+        `COPY_FORMAT_REAL(c, a_aligned);
+        `COPY_FORMAT_REAL(c, b_aligned);
+
+        `ASSIGN_REAL(a, a_aligned);
+        `ASSIGN_REAL(b, b_aligned);
+
+        generate
+            if          (opcode == `ADD_OPCODE_REAL) begin
+                assign c = a_aligned + b_aligned;
+            end else if (opcode == `SUB_OPCODE_REAL) begin
+                assign c = a_aligned - b_aligned;
+            end else begin
+                initial begin
+                    $display("ERROR: Invalid opcode.");
+                    $finish;
+                end
             end
-        end
-    endgenerate
+        endgenerate
+    `else
+        logic subOp;
+        assign subOp = (opcode == `SUB_OPCODE_REAL) ? 1'b1 : 1'b0;
+
+        addRecFN #(
+            .expWidth(`HARD_FLOAT_EXP_WIDTH),
+            .sigWidth(`HARD_FLOAT_SIG_WIDTH)
+        ) addRecFN_i (
+            .control(`HARD_FLOAT_CONTROL),
+            .subOp(subOp),
+            .a(a),
+            .b(b),
+            .roundingMode(`HARD_FLOAT_ROUNDING),
+            .out(c),
+            .exceptionFlags()
+        );
+    `endif
 endmodule
 
 module negate_real #(
@@ -717,12 +920,16 @@ module negate_real #(
     `INPUT_REAL(in),
     `OUTPUT_REAL(out)
 );
-    // align the input to the output format
-    `COPY_FORMAT_REAL(out, in_aligned);
-    `ASSIGN_REAL(in, in_aligned);
-    
-    // assign the output
-    assign out = -in_aligned;
+    `ifndef HARD_FLOAT
+        // align the input to the output format
+        `COPY_FORMAT_REAL(out, in_aligned);
+        `ASSIGN_REAL(in, in_aligned);
+
+        // assign the output
+        assign out = -in_aligned;
+    `else
+        assign out = {~in[`HARD_FLOAT_SIGN_BIT], in[((`HARD_FLOAT_SIGN_BIT)-1):0]};
+    `endif
 endmodule
 
 module abs_real #(
@@ -732,12 +939,16 @@ module abs_real #(
     `INPUT_REAL(in),
     `OUTPUT_REAL(out)
 );
-    // align the input to the output format
-    `COPY_FORMAT_REAL(out, in_aligned);
-    `ASSIGN_REAL(in, in_aligned);
-    
-    // assign the output
-    assign out = (in_aligned > 0) ? in_aligned : -in_aligned;
+    `ifndef HARD_FLOAT
+        // align the input to the output format
+        `COPY_FORMAT_REAL(out, in_aligned);
+        `ASSIGN_REAL(in, in_aligned);
+
+        // assign the output
+        assign out = (in_aligned > 0) ? in_aligned : -in_aligned;
+    `else
+        assign out = {1'b0, in[((`HARD_FLOAT_SIGN_BIT)-1):0]};
+    `endif
 endmodule
 
 module mul_real #(
@@ -749,19 +960,33 @@ module mul_real #(
     `INPUT_REAL(b),
     `OUTPUT_REAL(c)
 );
-    // create wire to hold product result
-    `MAKE_FORMAT_REAL(
-        prod, 
-        `RANGE_PARAM_REAL(a) * `RANGE_PARAM_REAL(b),
-        `WIDTH_PARAM_REAL(a) + `WIDTH_PARAM_REAL(b),
-        `EXPONENT_PARAM_REAL(a) + `EXPONENT_PARAM_REAL(b)
-    );
+    `ifndef HARD_FLOAT
+        // create wire to hold product result
+        `MAKE_FORMAT_REAL(
+            prod,
+            `RANGE_PARAM_REAL(a) * `RANGE_PARAM_REAL(b),
+            `WIDTH_PARAM_REAL(a) + `WIDTH_PARAM_REAL(b),
+            `EXPONENT_PARAM_REAL(a) + `EXPONENT_PARAM_REAL(b)
+        );
 
-    // compute product
-    assign prod = a * b;
-  
-    // assign result to output (which will left/right shift if necessary)
-    `ASSIGN_REAL(prod, c);
+        // compute product
+        assign prod = a * b;
+
+        // assign result to output (which will left/right shift if necessary)
+        `ASSIGN_REAL(prod, c);
+    `else
+        mulRecFN #(
+            .expWidth(`HARD_FLOAT_EXP_WIDTH),
+            .sigWidth(`HARD_FLOAT_SIG_WIDTH)
+        ) mulRecFN_i (
+            .control(`HARD_FLOAT_CONTROL),
+            .a(a),
+            .b(b),
+            .roundingMode(`HARD_FLOAT_ROUNDING),
+            .out(c),
+            .exceptionFlags()
+        );
+    `endif
 endmodule
 
 module comp_real #(
@@ -773,36 +998,75 @@ module comp_real #(
     `INPUT_REAL(b),
     output wire logic c
 );
-	// compute the minimum of the two exponents and align both inputs to it
+    `ifndef HARD_FLOAT
+        // compute the minimum of the two exponents and align both inputs to it
 
-    localparam integer min_exponent = `MIN_MATH(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
+        localparam integer min_exponent = `MIN_MATH(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
 
-    `REAL_FROM_WIDTH_EXP(a_aligned, (`WIDTH_PARAM_REAL(a))+(`EXPONENT_PARAM_REAL(a))-min_exponent, min_exponent);
-    `REAL_FROM_WIDTH_EXP(b_aligned, (`WIDTH_PARAM_REAL(b))+(`EXPONENT_PARAM_REAL(b))-min_exponent, min_exponent);
+        `REAL_FROM_WIDTH_EXP(a_aligned, (`WIDTH_PARAM_REAL(a))+(`EXPONENT_PARAM_REAL(a))-min_exponent, min_exponent);
+        `REAL_FROM_WIDTH_EXP(b_aligned, (`WIDTH_PARAM_REAL(b))+(`EXPONENT_PARAM_REAL(b))-min_exponent, min_exponent);
 
-    `ASSIGN_REAL(a, a_aligned);
-    `ASSIGN_REAL(b, b_aligned);
+        `ASSIGN_REAL(a, a_aligned);
+        `ASSIGN_REAL(b, b_aligned);
 
-    generate
-        if          (opcode == `GT_OPCODE_REAL) begin
-            assign c = (a_aligned >  b_aligned) ? 1'b1 : 1'b0;
-        end else if (opcode == `GE_OPCODE_REAL) begin
-            assign c = (a_aligned >= b_aligned) ? 1'b1 : 1'b0;
-        end else if (opcode == `LT_OPCODE_REAL) begin
-            assign c = (a_aligned <  b_aligned) ? 1'b1 : 1'b0;
-        end else if (opcode == `LE_OPCODE_REAL) begin
-            assign c = (a_aligned <= b_aligned) ? 1'b1 : 1'b0;
-        end else if (opcode == `EQ_OPCODE_REAL) begin
-            assign c = (a_aligned == b_aligned) ? 1'b1 : 1'b0;
-        end else if (opcode == `NE_OPCODE_REAL) begin
-            assign c = (a_aligned != b_aligned) ? 1'b1 : 1'b0;
-        end else begin
-            initial begin
-                $display("ERROR: Invalid opcode.");
-                $finish;
+        generate
+            if          (opcode == `GT_OPCODE_REAL) begin
+                assign c = (a_aligned >  b_aligned) ? 1'b1 : 1'b0;
+            end else if (opcode == `GE_OPCODE_REAL) begin
+                assign c = (a_aligned >= b_aligned) ? 1'b1 : 1'b0;
+            end else if (opcode == `LT_OPCODE_REAL) begin
+                assign c = (a_aligned <  b_aligned) ? 1'b1 : 1'b0;
+            end else if (opcode == `LE_OPCODE_REAL) begin
+                assign c = (a_aligned <= b_aligned) ? 1'b1 : 1'b0;
+            end else if (opcode == `EQ_OPCODE_REAL) begin
+                assign c = (a_aligned == b_aligned) ? 1'b1 : 1'b0;
+            end else if (opcode == `NE_OPCODE_REAL) begin
+                assign c = (a_aligned != b_aligned) ? 1'b1 : 1'b0;
+            end else begin
+                initial begin
+                    $display("ERROR: Invalid opcode.");
+                    $finish;
+                end
             end
-        end
-    endgenerate
+        endgenerate
+    `else
+        logic lt, eq, gt;
+
+        compareRecFN #(
+            .expWidth(`HARD_FLOAT_EXP_WIDTH),
+            .sigWidth(`HARD_FLOAT_SIG_WIDTH)
+        ) compareRecFN_i (
+            .a(a),
+            .b(b),
+            .signaling(1'b0),
+            .lt(lt),
+            .eq(eq),
+            .gt(gt),
+            .unordered(),
+            .exceptionFlags()
+        );
+
+        generate
+            if          (opcode == `GT_OPCODE_REAL) begin
+                assign c = gt;
+            end else if (opcode == `GE_OPCODE_REAL) begin
+                assign c = gt | eq;
+            end else if (opcode == `LT_OPCODE_REAL) begin
+                assign c = lt;
+            end else if (opcode == `LE_OPCODE_REAL) begin
+                assign c = lt | eq;
+            end else if (opcode == `EQ_OPCODE_REAL) begin
+                assign c = eq;
+            end else if (opcode == `NE_OPCODE_REAL) begin
+                assign c = ~eq;
+            end else begin
+                initial begin
+                    $display("ERROR: Invalid opcode.");
+                    $finish;
+                end
+            end
+        endgenerate
+    `endif
 endmodule
 
 module ite_real #(
@@ -891,6 +1155,9 @@ module sync_rom_real #(
     // even when FLOAT_REAL is defined.
     `ifdef FLOAT_REAL
         assign out = `FIXED_TO_FLOAT(data, data_expt);
+    `elsif HARD_FLOAT
+        // TODO: fix this
+        assign out = 0;
     `else
         localparam `RANGE_PARAM_REAL(data) = 2.0**(data_bits+data_expt-1);
         localparam `WIDTH_PARAM_REAL(data) = data_bits;
@@ -934,6 +1201,9 @@ module sync_ram_real #(
     // even when FLOAT_REAL is defined.
     `ifdef FLOAT_REAL
         assign out = `FIXED_TO_FLOAT(data, data_expt);
+    `elsif HARD_FLOAT
+        // TODO: fix this
+        assign out = 0;
     `else
         localparam `RANGE_PARAM_REAL(data) = 2.0**(data_bits+data_expt-1);
         localparam `WIDTH_PARAM_REAL(data) = data_bits;

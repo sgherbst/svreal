@@ -4,11 +4,12 @@ import fault
 
 # svreal imports
 from .common import pytest_sim_params, get_file
-from svreal import get_svreal_header
+from svreal import get_svreal_header, get_hard_float_inc_dirs, get_hard_float_sources
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
-    metafunc.parametrize('defines', [None, {'FLOAT_REAL': None}])
+    #metafunc.parametrize('defines', [None, {'FLOAT_REAL': None}])
+    metafunc.parametrize('defines', [{'HARD_FLOAT': None}])
 
 def model_func(a_i, b_i):
     res = {}
@@ -54,7 +55,7 @@ def test_arith(simulator, defines):
         # check results
         res = model_func(a_i=a_i, b_i=b_i)
         for key, val in res.items():
-            tester.expect(getattr(dut, key), val, rel_tol=0.05, abs_tol=0.05)
+            tester.expect(getattr(dut, key), val, abs_tol=0.05)
 
     # check results with hand-written vectors
     run_iteration(a_i=+1.23, b_i=+4.56)
@@ -71,9 +72,10 @@ def test_arith(simulator, defines):
     tester.compile_and_run(
         target='system-verilog',
         simulator=simulator,
-        ext_srcs=[get_file('test_arith.sv')],
-        inc_dirs=[get_svreal_header().parent],
+        ext_srcs=get_hard_float_sources()+[get_file('test_arith.sv')],
+        inc_dirs=get_hard_float_inc_dirs()+[get_svreal_header().parent],
         defines=defines,
         ext_model_file=True,
-        tmp_dir=True
+        tmp_dir=True,
+        disp_type='realtime'
     )
