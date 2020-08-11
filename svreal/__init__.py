@@ -39,8 +39,8 @@ def get_hard_float_sources():
         root / 'HardFloat_rawFN.v',
         root / 'addRecFN.v',
         root / 'compareRecFN.v',
-        #root / 'iNToRecFN.v',
+        root / 'iNToRecFN.v',
         root / 'mulRecFN.v',
-        #root / 'recFNToIN.v'
+        root / 'recFNToIN.v'
     ]
 
