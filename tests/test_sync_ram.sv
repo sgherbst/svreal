@@ -4,7 +4,7 @@
 
 module test_sync_ram (
     input [1:0] addr,
-    input signed [((`WIDTH)-1):0] din,
+    input [((`WIDTH)-1):0] din,
     output real out,
     input clk,
     input ce,

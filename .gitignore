@@ -3,6 +3,7 @@
 *.log
 *.egg-info
 *.jou
+*.mem
 xcelium.d/
 xrun.history
 __pycache__

@@ -1157,8 +1157,7 @@ module sync_rom_real #(
     `ifdef FLOAT_REAL
         assign out = `FIXED_TO_FLOAT(data, data_expt);
     `elsif HARD_FLOAT
-        // TODO: fix this
-        assign out = 0;
+        assign out = data;
     `else
         localparam `RANGE_PARAM_REAL(data) = 2.0**(data_bits+data_expt-1);
         localparam `WIDTH_PARAM_REAL(data) = data_bits;
@@ -1203,8 +1202,7 @@ module sync_ram_real #(
     `ifdef FLOAT_REAL
         assign out = `FIXED_TO_FLOAT(data, data_expt);
     `elsif HARD_FLOAT
-        // TODO: fix this
-        assign out = 0;
+        assign out = data;
     `else
         localparam `RANGE_PARAM_REAL(data) = 2.0**(data_bits+data_expt-1);
         localparam `WIDTH_PARAM_REAL(data) = data_bits;
