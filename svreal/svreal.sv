@@ -876,42 +876,42 @@ module add_sub_real #(
     `INPUT_REAL(b),
     `OUTPUT_REAL(c)
 );
-    `ifndef HARD_FLOAT
-        `COPY_FORMAT_REAL(c, a_aligned);
-        `COPY_FORMAT_REAL(c, b_aligned);
+`ifndef HARD_FLOAT
+    `COPY_FORMAT_REAL(c, a_aligned);
+    `COPY_FORMAT_REAL(c, b_aligned);
 
-        `ASSIGN_REAL(a, a_aligned);
-        `ASSIGN_REAL(b, b_aligned);
+    `ASSIGN_REAL(a, a_aligned);
+    `ASSIGN_REAL(b, b_aligned);
 
-        generate
-            if          (opcode == `ADD_OPCODE_REAL) begin
-                assign c = a_aligned + b_aligned;
-            end else if (opcode == `SUB_OPCODE_REAL) begin
-                assign c = a_aligned - b_aligned;
-            end else begin
-                initial begin
-                    $display("ERROR: Invalid opcode.");
-                    $finish;
-                end
+    generate
+        if          (opcode == `ADD_OPCODE_REAL) begin
+            assign c = a_aligned + b_aligned;
+        end else if (opcode == `SUB_OPCODE_REAL) begin
+            assign c = a_aligned - b_aligned;
+        end else begin
+            initial begin
+                $display("ERROR: Invalid opcode.");
+                $finish;
             end
-        endgenerate
-    `else
-        logic subOp;
-        assign subOp = (opcode == `SUB_OPCODE_REAL) ? 1'b1 : 1'b0;
+        end
+    endgenerate
+`else
+    logic subOp;
+    assign subOp = (opcode == `SUB_OPCODE_REAL) ? 1'b1 : 1'b0;
 
-        addRecFN #(
-            .expWidth(`HARD_FLOAT_EXP_WIDTH),
-            .sigWidth(`HARD_FLOAT_SIG_WIDTH)
-        ) addRecFN_i (
-            .control(`HARD_FLOAT_CONTROL),
-            .subOp(subOp),
-            .a(a),
-            .b(b),
-            .roundingMode(`HARD_FLOAT_ROUNDING),
-            .out(c),
-            .exceptionFlags()
-        );
-    `endif
+    addRecFN #(
+        .expWidth(`HARD_FLOAT_EXP_WIDTH),
+        .sigWidth(`HARD_FLOAT_SIG_WIDTH)
+    ) addRecFN_i (
+        .control(`HARD_FLOAT_CONTROL),
+        .subOp(subOp),
+        .a(a),
+        .b(b),
+        .roundingMode(`HARD_FLOAT_ROUNDING),
+        .out(c),
+        .exceptionFlags()
+    );
+`endif
 endmodule
 
 module negate_real #(
@@ -921,16 +921,16 @@ module negate_real #(
     `INPUT_REAL(in),
     `OUTPUT_REAL(out)
 );
-    `ifndef HARD_FLOAT
-        // align the input to the output format
-        `COPY_FORMAT_REAL(out, in_aligned);
-        `ASSIGN_REAL(in, in_aligned);
+`ifndef HARD_FLOAT
+    // align the input to the output format
+    `COPY_FORMAT_REAL(out, in_aligned);
+    `ASSIGN_REAL(in, in_aligned);
 
-        // assign the output
-        assign out = -in_aligned;
-    `else
-        assign out = {~in[`HARD_FLOAT_SIGN_BIT], in[((`HARD_FLOAT_SIGN_BIT)-1):0]};
-    `endif
+    // assign the output
+    assign out = -in_aligned;
+`else
+    assign out = {~in[`HARD_FLOAT_SIGN_BIT], in[((`HARD_FLOAT_SIGN_BIT)-1):0]};
+`endif
 endmodule
 
 module abs_real #(
@@ -940,16 +940,16 @@ module abs_real #(
     `INPUT_REAL(in),
     `OUTPUT_REAL(out)
 );
-    `ifndef HARD_FLOAT
-        // align the input to the output format
-        `COPY_FORMAT_REAL(out, in_aligned);
-        `ASSIGN_REAL(in, in_aligned);
+`ifndef HARD_FLOAT
+    // align the input to the output format
+    `COPY_FORMAT_REAL(out, in_aligned);
+    `ASSIGN_REAL(in, in_aligned);
 
-        // assign the output
-        assign out = (in_aligned > 0) ? in_aligned : -in_aligned;
-    `else
-        assign out = {1'b0, in[((`HARD_FLOAT_SIGN_BIT)-1):0]};
-    `endif
+    // assign the output
+    assign out = (in_aligned > 0) ? in_aligned : -in_aligned;
+`else
+    assign out = {1'b0, in[((`HARD_FLOAT_SIGN_BIT)-1):0]};
+`endif
 endmodule
 
 module mul_real #(
@@ -961,33 +961,33 @@ module mul_real #(
     `INPUT_REAL(b),
     `OUTPUT_REAL(c)
 );
-    `ifndef HARD_FLOAT
-        // create wire to hold product result
-        `MAKE_FORMAT_REAL(
-            prod,
-            `RANGE_PARAM_REAL(a) * `RANGE_PARAM_REAL(b),
-            `WIDTH_PARAM_REAL(a) + `WIDTH_PARAM_REAL(b),
-            `EXPONENT_PARAM_REAL(a) + `EXPONENT_PARAM_REAL(b)
-        );
+`ifndef HARD_FLOAT
+    // create wire to hold product result
+    `MAKE_FORMAT_REAL(
+        prod,
+        `RANGE_PARAM_REAL(a) * `RANGE_PARAM_REAL(b),
+        `WIDTH_PARAM_REAL(a) + `WIDTH_PARAM_REAL(b),
+        `EXPONENT_PARAM_REAL(a) + `EXPONENT_PARAM_REAL(b)
+    );
 
-        // compute product
-        assign prod = a * b;
+    // compute product
+    assign prod = a * b;
 
-        // assign result to output (which will left/right shift if necessary)
-        `ASSIGN_REAL(prod, c);
-    `else
-        mulRecFN #(
-            .expWidth(`HARD_FLOAT_EXP_WIDTH),
-            .sigWidth(`HARD_FLOAT_SIG_WIDTH)
-        ) mulRecFN_i (
-            .control(`HARD_FLOAT_CONTROL),
-            .a(a),
-            .b(b),
-            .roundingMode(`HARD_FLOAT_ROUNDING),
-            .out(c),
-            .exceptionFlags()
-        );
-    `endif
+    // assign result to output (which will left/right shift if necessary)
+    `ASSIGN_REAL(prod, c);
+`else
+    mulRecFN #(
+        .expWidth(`HARD_FLOAT_EXP_WIDTH),
+        .sigWidth(`HARD_FLOAT_SIG_WIDTH)
+    ) mulRecFN_i (
+        .control(`HARD_FLOAT_CONTROL),
+        .a(a),
+        .b(b),
+        .roundingMode(`HARD_FLOAT_ROUNDING),
+        .out(c),
+        .exceptionFlags()
+    );
+`endif
 endmodule
 
 module comp_real #(
@@ -999,75 +999,75 @@ module comp_real #(
     `INPUT_REAL(b),
     output wire logic c
 );
-    `ifndef HARD_FLOAT
-        // compute the minimum of the two exponents and align both inputs to it
+`ifndef HARD_FLOAT
+    // compute the minimum of the two exponents and align both inputs to it
 
-        localparam integer min_exponent = `MIN_MATH(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
+    localparam integer min_exponent = `MIN_MATH(`EXPONENT_PARAM_REAL(a), `EXPONENT_PARAM_REAL(b));
 
-        `REAL_FROM_WIDTH_EXP(a_aligned, (`WIDTH_PARAM_REAL(a))+(`EXPONENT_PARAM_REAL(a))-min_exponent, min_exponent);
-        `REAL_FROM_WIDTH_EXP(b_aligned, (`WIDTH_PARAM_REAL(b))+(`EXPONENT_PARAM_REAL(b))-min_exponent, min_exponent);
+    `REAL_FROM_WIDTH_EXP(a_aligned, (`WIDTH_PARAM_REAL(a))+(`EXPONENT_PARAM_REAL(a))-min_exponent, min_exponent);
+    `REAL_FROM_WIDTH_EXP(b_aligned, (`WIDTH_PARAM_REAL(b))+(`EXPONENT_PARAM_REAL(b))-min_exponent, min_exponent);
 
-        `ASSIGN_REAL(a, a_aligned);
-        `ASSIGN_REAL(b, b_aligned);
+    `ASSIGN_REAL(a, a_aligned);
+    `ASSIGN_REAL(b, b_aligned);
 
-        generate
-            if          (opcode == `GT_OPCODE_REAL) begin
-                assign c = (a_aligned >  b_aligned) ? 1'b1 : 1'b0;
-            end else if (opcode == `GE_OPCODE_REAL) begin
-                assign c = (a_aligned >= b_aligned) ? 1'b1 : 1'b0;
-            end else if (opcode == `LT_OPCODE_REAL) begin
-                assign c = (a_aligned <  b_aligned) ? 1'b1 : 1'b0;
-            end else if (opcode == `LE_OPCODE_REAL) begin
-                assign c = (a_aligned <= b_aligned) ? 1'b1 : 1'b0;
-            end else if (opcode == `EQ_OPCODE_REAL) begin
-                assign c = (a_aligned == b_aligned) ? 1'b1 : 1'b0;
-            end else if (opcode == `NE_OPCODE_REAL) begin
-                assign c = (a_aligned != b_aligned) ? 1'b1 : 1'b0;
-            end else begin
-                initial begin
-                    $display("ERROR: Invalid opcode.");
-                    $finish;
-                end
+    generate
+        if          (opcode == `GT_OPCODE_REAL) begin
+            assign c = (a_aligned >  b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `GE_OPCODE_REAL) begin
+            assign c = (a_aligned >= b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `LT_OPCODE_REAL) begin
+            assign c = (a_aligned <  b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `LE_OPCODE_REAL) begin
+            assign c = (a_aligned <= b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `EQ_OPCODE_REAL) begin
+            assign c = (a_aligned == b_aligned) ? 1'b1 : 1'b0;
+        end else if (opcode == `NE_OPCODE_REAL) begin
+            assign c = (a_aligned != b_aligned) ? 1'b1 : 1'b0;
+        end else begin
+            initial begin
+                $display("ERROR: Invalid opcode.");
+                $finish;
             end
-        endgenerate
-    `else
-        logic lt, eq, gt;
+        end
+    endgenerate
+`else
+    logic lt, eq, gt;
 
-        compareRecFN #(
-            .expWidth(`HARD_FLOAT_EXP_WIDTH),
-            .sigWidth(`HARD_FLOAT_SIG_WIDTH)
-        ) compareRecFN_i (
-            .a(a),
-            .b(b),
-            .signaling(1'b0),
-            .lt(lt),
-            .eq(eq),
-            .gt(gt),
-            .unordered(),
-            .exceptionFlags()
-        );
+    compareRecFN #(
+        .expWidth(`HARD_FLOAT_EXP_WIDTH),
+        .sigWidth(`HARD_FLOAT_SIG_WIDTH)
+    ) compareRecFN_i (
+        .a(a),
+        .b(b),
+        .signaling(1'b0),
+        .lt(lt),
+        .eq(eq),
+        .gt(gt),
+        .unordered(),
+        .exceptionFlags()
+    );
 
-        generate
-            if          (opcode == `GT_OPCODE_REAL) begin
-                assign c = gt;
-            end else if (opcode == `GE_OPCODE_REAL) begin
-                assign c = gt | eq;
-            end else if (opcode == `LT_OPCODE_REAL) begin
-                assign c = lt;
-            end else if (opcode == `LE_OPCODE_REAL) begin
-                assign c = lt | eq;
-            end else if (opcode == `EQ_OPCODE_REAL) begin
-                assign c = eq;
-            end else if (opcode == `NE_OPCODE_REAL) begin
-                assign c = ~eq;
-            end else begin
-                initial begin
-                    $display("ERROR: Invalid opcode.");
-                    $finish;
-                end
+    generate
+        if          (opcode == `GT_OPCODE_REAL) begin
+            assign c = gt;
+        end else if (opcode == `GE_OPCODE_REAL) begin
+            assign c = gt | eq;
+        end else if (opcode == `LT_OPCODE_REAL) begin
+            assign c = lt;
+        end else if (opcode == `LE_OPCODE_REAL) begin
+            assign c = lt | eq;
+        end else if (opcode == `EQ_OPCODE_REAL) begin
+            assign c = eq;
+        end else if (opcode == `NE_OPCODE_REAL) begin
+            assign c = ~eq;
+        end else begin
+            initial begin
+                $display("ERROR: Invalid opcode.");
+                $finish;
             end
-        endgenerate
-    `endif
+        end
+    endgenerate
+`endif
 endmodule
 
 module ite_real #(
