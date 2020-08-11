@@ -1,6 +1,6 @@
 # svreal
 [![Actions Status](https://github.com/sgherbst/svreal/workflows/Regression/badge.svg)](https://github.com/sgherbst/svreal/actions)
-[![BuildKite Status](https://badge.buildkite.com/45ed712ae8720e9a3e7c040d2e3bc441a18b6ef269e4573723.svg)](https://buildkite.com/stanford-aha/svreal)
+[![BuildKite Status](https://badge.buildkite.com/45ed712ae8720e9a3e7c040d2e3bc441a18b6ef269e4573723.svg?branch=master)](https://buildkite.com/stanford-aha/svreal)
 [![Code Coverage](https://codecov.io/gh/sgherbst/svreal/branch/master/graph/badge.svg)](https://codecov.io/gh/sgherbst/svreal)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/svreal.svg)](https://badge.fury.io/py/svreal)
