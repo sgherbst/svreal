@@ -3,17 +3,14 @@ import magma as m
 import fault
 
 # svreal imports
-from .common import pytest_sim_params, get_file
-from svreal import get_svreal_header
+from .common import *
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc, simulators=['ncsim', 'vcs', 'vivado'])
-    metafunc.parametrize('defines', [None,
-                               {'FLOAT_REAL': None},
-                               {'INTF_USE_LOCAL': None},
-                               {'INTF_USE_LOCAL': None, 'FLOAT_REAL': None}])
+    pytest_real_type_params(metafunc)
+    metafunc.parametrize('defines', [None, {'INTF_USE_LOCAL': None}])
 
-def test_iface(simulator, defines):
+def test_iface(simulator, real_type, defines):
     # declare circuit
     class dut(m.Circuit):
         name = 'test_iface'
@@ -34,12 +31,9 @@ def test_iface(simulator, defines):
 
     # run the test
     tester.compile_and_run(
-        target='system-verilog',
         simulator=simulator,
         ext_srcs=[get_file('test_iface_core.sv'),
                   get_file('test_iface.sv')],
-        inc_dirs=[get_svreal_header().parent],
-        defines=defines,
-        ext_model_file=True,
-        tmp_dir=True
+        real_type=real_type,
+        defines=defines
     )

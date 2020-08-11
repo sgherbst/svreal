@@ -3,14 +3,13 @@ import magma as m
 import fault
 
 # svreal imports
-from .common import pytest_sim_params, get_file
-from svreal import get_svreal_header
+from .common import *
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
-    metafunc.parametrize('defines', [{}, {'FLOAT_REAL': None}])
+    pytest_real_type_params(metafunc)
 
-def test_sync_ram(simulator, defines, width=18, exponent=-12):
+def test_sync_ram(simulator, real_type, width=18, exponent=-12):
     # declare circuit
     class dut(m.Circuit):
         name = 'test_sync_ram'
@@ -24,7 +23,7 @@ def test_sync_ram(simulator, defines, width=18, exponent=-12):
         )
 
     # define the test
-    t = fault.Tester(dut, dut.clk)
+    t = SvrealTester(dut, dut.clk)
 
     # initialize
     t.zero_inputs()
@@ -53,14 +52,12 @@ def test_sync_ram(simulator, defines, width=18, exponent=-12):
         t.expect(dut.out, write_data[addr], abs_tol=0.001)
 
     # update defines
-    defines.update(dict(WIDTH=width, EXPONENT=exponent))
+    defines = {'WIDTH': width, 'EXPONENT': exponent}
 
     # run the test
     t.compile_and_run(
-        target='system-verilog',
         simulator=simulator,
         ext_srcs=[get_file('test_sync_ram.sv')],
-        inc_dirs=[get_svreal_header().parent],
-        defines=defines,
-        ext_model_file=True
+        real_type=real_type,
+        defines=defines
     )

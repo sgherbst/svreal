@@ -272,13 +272,13 @@ endfunction
 
 // assert that real number is within specified range
 
-//`define ASSERTION_REAL(in_name) \
-//    assertion_real #( \
-//        `PASS_REAL(in, ``in_name``), \
-//        .name(`"``in_name```") \
-//    ) assertion_real_``in_name``_i ( \
-//        .in(``in_name``) \
-//    )
+`define ASSERTION_REAL(in_name) \
+    assertion_real #( \
+        `PASS_REAL(in, ``in_name``), \
+        .name(`"``in_name```") \
+    ) assertion_real_``in_name``_i ( \
+        .in(``in_name``) \
+    )
 
 // creating real numbers
 // the data type declaration comes first so that directives like mark_debug
@@ -289,9 +289,9 @@ endfunction
     localparam real `RANGE_PARAM_REAL(``name``) = ``range_expr``; \
     localparam integer `WIDTH_PARAM_REAL(``name``) = ``width_expr``; \
     localparam integer `EXPONENT_PARAM_REAL(``name``) = ``exponent_expr`` \
-//    `ifdef RANGE_ASSERTIONS \
-//        ; `ASSERTION_REAL(``name``) \
-//    `endif
+    `ifdef RANGE_ASSERTIONS \
+        ; `ASSERTION_REAL(``name``) \
+    `endif
 
 `define REAL_FROM_WIDTH_EXP(name, width_expr, exponent_expr) \
     `MAKE_FORMAT_REAL(``name``, 2.0**((``width_expr``)+(``exponent_expr``)-1), ``width_expr``, ``exponent_expr``)
@@ -822,24 +822,24 @@ endfunction
 
 // module definitions
 
-//module assertion_real #(
-//    `DECL_REAL(in),
-//    parameter name = "name"
-//) (
-//    `INPUT_REAL(in)
-//);
-//
-//    localparam real min = -(`RANGE_PARAM_REAL(in));
-//    localparam real max = +(`RANGE_PARAM_REAL(in));
-//
-//    always @(in) begin
-//        if (!((min <= `TO_REAL(in)) && (`TO_REAL(in) <= max))) begin
-//            $display("Real number %s with value %f out of range (%f to %f).", name, `TO_REAL(in), min, max);
-//            $fatal;
-//        end
-//    end
-//
-//endmodule
+module assertion_real #(
+    `DECL_REAL(in),
+    parameter name = "name"
+) (
+    `INPUT_REAL(in)
+);
+
+    localparam real min = -(`RANGE_PARAM_REAL(in));
+    localparam real max = +(`RANGE_PARAM_REAL(in));
+
+    always @(in) begin
+        if (!((min <= `TO_REAL(in)) && (`TO_REAL(in) <= max))) begin
+            $display("Real number %s with value %f out of range (%f to %f).", name, `TO_REAL(in), min, max);
+            $fatal;
+        end
+    end
+
+endmodule
 
 module assign_real #(
     `DECL_REAL(in),

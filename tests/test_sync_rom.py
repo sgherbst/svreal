@@ -3,14 +3,13 @@ import magma as m
 import fault
 
 # svreal imports
-from .common import pytest_sim_params, get_file
-from svreal import get_svreal_header
+from .common import *
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
-    metafunc.parametrize('defines', [{}, {'FLOAT_REAL': None}])
+    pytest_real_type_params(metafunc)
 
-def test_sync_rom(simulator, defines):
+def test_sync_rom(simulator, real_type):
     # declare circuit
     class dut(m.Circuit):
         io = m.IO(
@@ -22,7 +21,7 @@ def test_sync_rom(simulator, defines):
         name='test_sync_rom'
 
     # define the test
-    t = fault.Tester(dut, dut.clk)
+    t = SvrealTester(dut, dut.clk)
 
     # initialize
     t.poke(dut.clk, 0)
@@ -48,16 +47,13 @@ def test_sync_rom(simulator, defines):
         t.expect(dut.out, expct[-1], abs_tol=0.001)
 
     # add path to ROM
-    defines = defines.copy()
     path_to_mem = get_file('test_sync_rom.mem').resolve()
-    defines['PATH_TO_MEM'] = f'"{path_to_mem}"'
+    defines = {'PATH_TO_MEM': f'"{path_to_mem}"'}
 
     # run the test
     t.compile_and_run(
-        target='system-verilog',
         simulator=simulator,
         ext_srcs=[get_file('test_sync_rom.sv')],
-        inc_dirs=[get_svreal_header().parent],
-        defines=defines,
-        ext_model_file=True
+        real_type=real_type,
+        defines=defines
     )

@@ -3,13 +3,11 @@ import magma as m
 import fault
 
 # svreal imports
-from .common import pytest_sim_params, get_file
-from svreal import get_svreal_header, get_hard_float_inc_dirs, get_hard_float_sources
+from .common import *
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
-    #metafunc.parametrize('defines', [None, {'FLOAT_REAL': None}])
-    metafunc.parametrize('defines', [{'HARD_FLOAT': None}])
+    pytest_real_type_params(metafunc)
 
 def model_func(a_i, b_i):
     res = {}
@@ -23,7 +21,7 @@ def model_func(a_i, b_i):
 
     return res
 
-def test_arith(simulator, defines):
+def test_arith(simulator, real_type):
     # declare circuit
     class dut(m.Circuit):
         name = 'test_arith'
@@ -40,7 +38,7 @@ def test_arith(simulator, defines):
         )
 
     # define the test
-    tester = fault.Tester(dut, expect_strict_default=True)
+    tester = SvrealTester(dut)
 
     # generic check routine
     def run_iteration(a_i, b_i):
@@ -70,12 +68,7 @@ def test_arith(simulator, defines):
 
     # run the test
     tester.compile_and_run(
-        target='system-verilog',
         simulator=simulator,
-        ext_srcs=get_hard_float_sources()+[get_file('test_arith.sv')],
-        inc_dirs=get_hard_float_inc_dirs()+[get_svreal_header().parent],
-        defines=defines,
-        ext_model_file=True,
-        tmp_dir=True,
-        disp_type='realtime'
+        ext_srcs=[get_file('test_arith.sv')],
+        real_type=real_type
     )

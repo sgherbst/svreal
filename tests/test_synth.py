@@ -1,14 +1,14 @@
 # svreal imports
-from .common import pytest_synth_params, run_synth, get_file, get_dir
-from svreal import get_svreal_header
+from .common import *
 
 def pytest_generate_tests(metafunc):
     pytest_synth_params(metafunc)
+    pytest_real_type_params(metafunc, ['FIXED_POINT', 'HARD_FLOAT'])
 
-def test_synth(synth):
+def test_synth(synth, real_type):
     run_synth(synth=synth,
               src_files=[get_file('test_synth.sv')],
-              hdr_files=[get_svreal_header()],
+              real_type=real_type,
               top='test_synth',
               cwd=get_dir('tmp/test_synth')
     )
