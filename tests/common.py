@@ -75,6 +75,7 @@ def run_synth(synth, top=None, cwd='build', src_files=None, hdr_files=None, defi
         hdr_files = get_hard_float_headers() + hdr_files
 
     # update define variables
+    defines = defines.copy()
     if real_type == 'HARD_FLOAT':
         defines['HARD_FLOAT'] = None
 
@@ -177,6 +178,7 @@ class SvrealTester(fault.Tester):
             inc_dirs = get_hard_float_inc_dirs() + inc_dirs
 
         # add defines as needed for the real number type
+        defines = defines.copy()
         if real_type == 'FIXED_POINT':
             pass
         elif real_type == 'FLOAT_REAL':

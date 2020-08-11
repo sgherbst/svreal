@@ -813,7 +813,7 @@ endfunction
     `ifdef FLOAT_REAL \
         (``expr``) \
     `elsif HARD_FLOAT \
-        (`REAL_TO_REC_FN(``name``)) \
+        (`REAL_TO_REC_FN(``expr``)) \
     `else \
 		(`FLOAT_TO_FIXED((``expr``), `INTF_EXPONENT_REAL(``name``))) \
     `endif
