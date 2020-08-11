@@ -12,9 +12,19 @@ def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
     pytest_real_type_params(metafunc)
 
-def model_func(r2i_i, i2r_i):
-    r2i_o = int(floor(r2i_i))
+def model_func(r2i_i, i2r_i, real_type):
+    # model real -> int conversion
+    # the fixed-point mode rounds down, while
+    # the HardFloat mode rounds normally
+    if real_type == 'HARD_FLOAT':
+        r2i_o = int(round(r2i_i))
+    else:
+        r2i_o = int(floor(r2i_i))
+
+    # model int -> real conversion
     i2r_o = float(i2r_i)
+
+    # return results
     return r2i_o, i2r_o
 
 def test_conv(simulator, real_type):
@@ -42,7 +52,7 @@ def test_conv(simulator, real_type):
         tester.eval()
 
         # check results
-        r2i_o, i2r_o = model_func(r2i_i=r2i_i, i2r_i=i2r_i)
+        r2i_o, i2r_o = model_func(r2i_i=r2i_i, i2r_i=i2r_i, real_type=real_type)
         tester.expect(dut.r2i_o, r2i_o)
         tester.expect(dut.i2r_o, i2r_o, strict=False)
 

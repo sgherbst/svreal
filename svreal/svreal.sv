@@ -630,6 +630,7 @@ endfunction
         logic signed[((``int_width_expr``)-1):0] ``out_name``; \
         assign ``out_name`` = $floor(``in_name``) \
     `elsif HARD_FLOAT \
+        logic signed[((``int_width_expr``)-1):0] ``out_name``; \
         recFNToIN #( \
             .expWidth(`HARD_FLOAT_EXP_WIDTH), \
             .sigWidth(`HARD_FLOAT_SIG_WIDTH), \
