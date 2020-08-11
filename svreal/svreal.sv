@@ -120,10 +120,10 @@ function real recfn2real(input logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_
                   + 1023;                                   // apply exponent bias
         if (((`HARD_FLOAT_SIG_WIDTH)-1) < 52) begin
             // zero-pad
-            dbl_sig = {rec_sig, {(52-((`HARD_FLOAT_SIG_WIDTH)-1)){1'b0}}};
+            dbl_sig = rec_sig << (52-((`HARD_FLOAT_SIG_WIDTH)-1));
         end else begin
             // truncate
-            dbl_sig = rec_sig[((`HARD_FLOAT_SIG_WIDTH)-2):((`HARD_FLOAT_SIG_WIDTH)-2-52+1)];
+            dbl_sig = rec_sig >> (((`HARD_FLOAT_SIG_WIDTH)-1)-52);
         end
     end
 
@@ -180,10 +180,10 @@ function logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] real2recfn(
                   + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+1);    // apply recoding bias
         if (((`HARD_FLOAT_SIG_WIDTH)-1) > 52) begin
             // zero-pad (lossless)
-            rec_sig = {dbl_sig, {(((`HARD_FLOAT_SIG_WIDTH)-1)-52){1'b0}}};
+            rec_sig = dbl_sig << (((`HARD_FLOAT_SIG_WIDTH)-1)-52);
         end else begin
             // truncate (lossy)
-            rec_sig = dbl_sig[51:(51-((`HARD_FLOAT_SIG_WIDTH)-1)+1)];
+            rec_sig = dbl_sig >> (52-((`HARD_FLOAT_SIG_WIDTH)-1));
         end
     end
 

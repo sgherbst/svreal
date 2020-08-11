@@ -21,7 +21,7 @@ def test_iface(simulator, real_type, defines):
         )
 
     # define the test
-    tester = fault.Tester(dut, expect_strict_default=True)
+    tester = SvrealTester(dut)
 
     # initialize
     tester.poke(dut.a_i, 1.23)
