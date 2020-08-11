@@ -8,7 +8,7 @@ from fault.subprocess_run import subprocess_run
 
 # svreal imports
 from svreal import (get_hard_float_sources, get_hard_float_inc_dirs,
-                    get_svreal_header)
+                    get_hard_float_headers, get_svreal_header)
 
 TEST_DIR = Path(__file__).resolve().parent
 
@@ -70,9 +70,13 @@ def run_synth(synth, top=None, cwd='build', src_files=None, hdr_files=None, defi
         src_files = get_hard_float_sources() + src_files
 
     # add to header files
-    hdr_files = [get_svreal_header().parent] + hdr_files
+    hdr_files = [get_svreal_header()] + hdr_files
     if real_type == 'HARD_FLOAT':
-        hdr_files = get_hard_float_inc_dirs() + hdr_files
+        hdr_files = get_hard_float_headers() + hdr_files
+
+    # update define variables
+    if real_type == 'HARD_FLOAT':
+        defines['HARD_FLOAT'] = None
 
     # run synthesis using the desired tool
     if synth == 'vivado':

@@ -24,12 +24,16 @@ def get_hard_float_dir():
 def get_hard_float_specialization():
     return os.environ.get('HARD_FLOAT_SPECIALIZATION', 'RISCV')
 
-def get_hard_float_inc_dirs():
+def get_hard_float_headers():
     root = get_hard_float_dir()
     return [
-        root / 'source',
-        root / 'source' / get_hard_float_specialization()
+        root / 'source' / 'HardFloat_consts.vi',
+        root / 'source' / 'HardFloat_localFuncs.vi',
+        root / 'source' / get_hard_float_specialization() / 'HardFloat_specialize.vi'
     ]
+
+def get_hard_float_inc_dirs():
+    return list(set(elem.parent for elem in get_hard_float_headers()))
 
 def get_hard_float_sources():
     root = get_hard_float_dir() / 'source'
