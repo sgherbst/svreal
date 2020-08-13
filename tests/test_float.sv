@@ -3,8 +3,7 @@
 `include "svreal.sv"
 
 module test_float;
-    localparam real inf = 1e1000;
-    localparam real nan = 0*inf;
+    real inf, nan;  // will be assigned during test
 
     `MAKE_REAL(x, 10); // range is arbitrary for floating point...
 
@@ -38,6 +37,11 @@ module test_float;
     endfunction
 
     initial begin
+        // inf and nan need to be assigned like this because
+        // Xcelium will error out if we just did inf = 1e1000
+        inf = $bitstoreal(64'h7FF0000000000000);
+        nan = $bitstoreal(64'h7FF8000000000000);
+
         `FORCE_REAL(0.0, x);
         #1;
         check_equals(out, 0.0);
