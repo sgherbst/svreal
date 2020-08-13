@@ -14,7 +14,7 @@ def test_sync_ram(simulator, real_type):
     # determine formatting
     if real_type == 'HARD_FLOAT':
         exp_width = 8
-        sig_width = 24
+        sig_width = 23
         def conv_func(in_):
             return real2recfn(in_=in_, exp_width=exp_width, sig_width=sig_width)
         defines = {

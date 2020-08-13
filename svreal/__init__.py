@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from svreal.hard_float import real2recfn, recfn2real
-from svreal.fixed_point import real2fixed, fixed2real
+from svreal.fixed_point import real2fixed, fixed2real, calc_fixed_exp
 
 PACK_DIR = Path(__file__).resolve().parent
 

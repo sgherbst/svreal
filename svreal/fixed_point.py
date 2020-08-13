@@ -1,4 +1,19 @@
-def fixed2real(in_, exp, width=None, treat_as_unsigned=False):
+from math import log2, ceil, isinf, isnan
+
+def clog2(x):
+    return int(ceil(log2(x)))
+
+def calc_fixed_exp(range, width=25):
+    if isinf(range):
+        raise Exception('Function undefined for an infinite range.')
+    elif isnan(range):
+        raise Exception('Function undefined when range is NaN.')
+    elif range == 0:
+        return 0
+    else:
+        return clog2(range/((1<<(width-1))-1))
+
+def fixed2real(in_, exp, width=25, treat_as_unsigned=False):
     # if the incoming integer is unsigned, we have to convert
     # it to a signed integer based on the width
     if treat_as_unsigned:
@@ -8,7 +23,13 @@ def fixed2real(in_, exp, width=None, treat_as_unsigned=False):
     # return result
     return in_ * (2**exp)
 
-def real2fixed(in_, exp, width=None, treat_as_unsigned=False):
+def real2fixed(in_, exp, width=25, treat_as_unsigned=False):
+    # check for special cases
+    if isinf(in_):
+        raise Exception('Cannot represent infinite values in fixed-point.')
+    if isnan(in_):
+        raise Exception('Cannot represent NaN values in fixed-point.')
+
     # compute the signed integer representation
     retval = int(round(in_ * (2**(-exp))))
 
@@ -18,4 +39,3 @@ def real2fixed(in_, exp, width=None, treat_as_unsigned=False):
 
     # return result
     return retval
-
