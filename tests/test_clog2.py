@@ -3,7 +3,6 @@ from math import log2, ceil
 
 # AHA imports
 import magma as m
-import fault
 
 # svreal imports
 from .common import *
@@ -17,7 +16,7 @@ def model_func(x):
     else:
         return int(ceil(log2(x)))
 
-def test_math(simulator):
+def test_clog2(simulator):
     # declare circuit
     class dut(m.Circuit):
         name = 'test_clog2'

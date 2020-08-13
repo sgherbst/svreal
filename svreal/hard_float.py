@@ -100,13 +100,12 @@ def real2recfn(in_, exp_width=8, sig_width=23):
         if rec_exp < ((1<<(exp_width-1))+2):
             # TODO: handle case where input is normal but output is subnormal
             # for now the output is simply zero
-            rec_sign = dbl_sign
             rec_exp = 0
             rec_sig = 0
         elif rec_exp > ((3*(1<<(exp_width-1)))-1):
-            # TODO: decide how to handle the case where the output exponent is out
-            # of bounds.  Should this produce an infinity or raise an exception?
-            raise Exception('Recoded exponent is out of bounds.')
+            # Exponent is too large to be represented, so treat as an infinity
+            rec_exp = 0b110 << (exp_width-2)
+            rec_sig = 0
         else:
             if (sig_width-1) > 52:
                 # zero-pad (lossless)

@@ -105,7 +105,7 @@ function real recfn2real(input logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_
         // NaNs
         dbl_sign = rec_sign;
         dbl_exp = '1;
-        dbl_sig = rec_sig;
+        dbl_sig = '1;
     end else if (rec_exp < ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+2)) begin
         // TODO: implement subnormal (treated as zero for now)
         dbl_sign = rec_sign;
@@ -144,6 +144,7 @@ function logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] real2recfn(
 
     // recoded format
     logic rec_sign;
+    int rec_exp_int;
     logic [(`HARD_FLOAT_EXP_WIDTH):0] rec_exp;
     logic [((`HARD_FLOAT_SIG_WIDTH)-2):0] rec_sig;
 
@@ -174,16 +175,28 @@ function logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] real2recfn(
     end else begin
         // normal
         rec_sign = dbl_sign;
-        rec_exp = dbl_exp
-                  - 1023                                     // remove exponent bias
-                  + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))-1)     // apply exponent bias
-                  + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+1);    // apply recoding bias
-        if (((`HARD_FLOAT_SIG_WIDTH)-1) > 52) begin
-            // zero-pad (lossless)
-            rec_sig = dbl_sig << (((`HARD_FLOAT_SIG_WIDTH)-1)-52);
+        rec_exp_int = dbl_exp
+                      - 1023                                     // remove exponent bias
+                      + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))-1)     // apply exponent bias
+                      + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+1);    // apply recoding bias
+        if (rec_exp_int < ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+2)) begin
+            // TODO: handle case where input is normal but output is subnormal
+            // for now the output is simply zero
+            rec_exp = '0;
+            rec_sig = '0;
+        end else if (rec_exp_int > ((3*(2**((`HARD_FLOAT_EXP_WIDTH)-1)))-1)) begin
+            // Exponent is too large to be represented, so treat as an infinity
+            rec_exp = {3'b110, {((`HARD_FLOAT_EXP_WIDTH)-2){1'b0}}};
+            rec_sig = '0;
         end else begin
-            // truncate (lossy)
-            rec_sig = dbl_sig >> (52-((`HARD_FLOAT_SIG_WIDTH)-1));
+            rec_exp = rec_exp_int;
+            if (((`HARD_FLOAT_SIG_WIDTH)-1) > 52) begin
+                // zero-pad (lossless)
+                rec_sig = dbl_sig << (((`HARD_FLOAT_SIG_WIDTH)-1)-52);
+            end else begin
+                // truncate (lossy)
+                rec_sig = dbl_sig >> (52-((`HARD_FLOAT_SIG_WIDTH)-1));
+            end
         end
     end
 

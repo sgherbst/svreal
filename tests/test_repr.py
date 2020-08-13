@@ -66,6 +66,5 @@ def test_hard_float():
     assert isnan(there_and_back(float('nan'))), \
         'nan was not processed properly'
 
-    # dealing with numbers that cannot be represented
-    with pytest.raises(Exception, match='Recoded exponent is out of bounds.'):
-        there_and_back(1e100)
+    check_val(1e100, eq=float('inf'))
+    check_val(-1e100, eq=float('-inf'))
