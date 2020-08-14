@@ -1,7 +1,9 @@
 import struct
 
+from .constants import *
 
-def recfn2real(in_, exp_width=8, sig_width=23):
+def recfn2real(in_, exp_width=DEF_HARD_FLOAT_EXP_WIDTH,
+               sig_width=DEF_HARD_FLOAT_SIG_WIDTH):
     # deconstruct input into binary strings
     rec_sign = (in_ >> (exp_width+sig_width)) & 1
     rec_exp = (in_>>(sig_width-1)) & ((1<<(exp_width+1))-1)
@@ -56,7 +58,8 @@ def recfn2real(in_, exp_width=8, sig_width=23):
     return struct.unpack('>d', struct.pack('>Q', dbl_bits))[0]
 
 
-def real2recfn(in_, exp_width=8, sig_width=23):
+def real2recfn(in_, exp_width=DEF_HARD_FLOAT_EXP_WIDTH,
+               sig_width=DEF_HARD_FLOAT_SIG_WIDTH):
     # deconstruct input
     dbl_bits = struct.unpack('>Q', struct.pack('>d', in_))[0]
     dbl_sign = (dbl_bits >> 63) & 1

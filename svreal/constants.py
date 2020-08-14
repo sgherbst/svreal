@@ -1,0 +1,6 @@
+# These values should match what is in svreal.sv
+
+DEF_LONG_WIDTH_REAL = 25
+DEF_SHORT_WIDTH_REAL = 18
+DEF_HARD_FLOAT_EXP_WIDTH = 8
+DEF_HARD_FLOAT_SIG_WIDTH = 23

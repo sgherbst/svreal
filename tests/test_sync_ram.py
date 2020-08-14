@@ -4,7 +4,8 @@ import fault
 
 # svreal imports
 from .common import *
-from svreal import real2fixed, real2recfn
+from svreal import (real2fixed, real2recfn, DEF_HARD_FLOAT_EXP_WIDTH,
+                    DEF_HARD_FLOAT_SIG_WIDTH)
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
@@ -13,8 +14,8 @@ def pytest_generate_tests(metafunc):
 def test_sync_ram(simulator, real_type):
     # determine formatting
     if real_type == RealType.HardFloat:
-        exp_width = 8
-        sig_width = 23
+        exp_width = DEF_HARD_FLOAT_EXP_WIDTH
+        sig_width = DEF_HARD_FLOAT_SIG_WIDTH
         def conv_func(in_):
             return real2recfn(in_=in_, exp_width=exp_width, sig_width=sig_width)
         defines = {
