@@ -1,10 +1,6 @@
 # install HardFloat
-cd svreal
-wget https://github.com/sgherbst/svreal/releases/download/bogus/HardFloat-1.zip
-unzip HardFloat-1.zip
-mv HardFloat-1 HardFloat
-rm HardFloat-1.zip
-cd ..
+wget -O install_hardfloat.sh https://git.io/JJ5YF
+source install_hardfloat.sh
 
 # install svreal
 pip install -e .
