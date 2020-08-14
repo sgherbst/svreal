@@ -12,7 +12,7 @@ def pytest_generate_tests(metafunc):
 
 def test_sync_rom(simulator, real_type, abs_tol=0.001):
     # determine formatting
-    if real_type == 'HARD_FLOAT':
+    if real_type == RealType.HardFloat:
         exp_width = 8
         sig_width = 23
         def conv_func(in_):
@@ -39,7 +39,7 @@ def test_sync_rom(simulator, real_type, abs_tol=0.001):
 
     # write the lookup table
     expct = [1.23, -2.34, 3.45, -4.56]
-    path_to_mem = get_file(f'test_sync_rom_{real_type.lower()}.mem').resolve()
+    path_to_mem = get_file(f'test_sync_rom_{real_type.value.lower()}.mem').resolve()
     with open(path_to_mem, 'w') as f:
         for elem in expct:
             line = conv_func(elem)  # format input as an integer

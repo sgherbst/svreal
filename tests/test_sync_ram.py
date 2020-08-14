@@ -12,7 +12,7 @@ def pytest_generate_tests(metafunc):
 
 def test_sync_ram(simulator, real_type):
     # determine formatting
-    if real_type == 'HARD_FLOAT':
+    if real_type == RealType.HardFloat:
         exp_width = 8
         sig_width = 23
         def conv_func(in_):

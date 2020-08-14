@@ -23,5 +23,5 @@ def test_float(simulator):
         simulator=simulator,
         ext_srcs=[get_file('test_float.sv')],
         ext_test_bench=True,
-        real_type='HARD_FLOAT'
+        real_type=RealType.HardFloat
     )

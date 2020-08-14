@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from svreal.enums import RealType
 from svreal.hard_float import real2recfn, recfn2real
 from svreal.fixed_point import real2fixed, fixed2real, calc_fixed_exp
 

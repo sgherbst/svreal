@@ -8,7 +8,8 @@ from fault.subprocess_run import subprocess_run
 
 # svreal imports
 from svreal import (get_hard_float_sources, get_hard_float_inc_dirs,
-                    get_hard_float_headers, get_svreal_header)
+                    get_hard_float_headers, get_svreal_header,
+                    RealType)
 
 TEST_DIR = Path(__file__).resolve().parent
 
@@ -41,7 +42,7 @@ def pytest_sim_params(metafunc, simulators=None):
 
 def pytest_real_type_params(metafunc, real_types=None):
     if real_types is None:
-        real_types = ['FIXED_POINT', 'FLOAT_REAL', 'HARD_FLOAT']
+        real_types = [RealType.FixedPoint, RealType.FloatReal, RealType.HardFloat]
 
     if 'real_type' in metafunc.fixturenames:
         metafunc.parametrize('real_type', real_types)
@@ -56,7 +57,7 @@ def pytest_synth_params(metafunc):
         metafunc.parametrize('synth', targets)
 
 def run_synth(synth, top=None, cwd='build', src_files=None, hdr_files=None, defines=None,
-              real_type='FIXED_POINT'):
+              real_type=RealType.FixedPoint):
     # set defaults
     if src_files is None:
         src_files = []
@@ -66,17 +67,17 @@ def run_synth(synth, top=None, cwd='build', src_files=None, hdr_files=None, defi
         defines = {}
 
     # add to source files
-    if real_type == 'HARD_FLOAT':
+    if real_type == RealType.HardFloat:
         src_files = get_hard_float_sources() + src_files
 
     # add to header files
     hdr_files = [get_svreal_header()] + hdr_files
-    if real_type == 'HARD_FLOAT':
+    if real_type == RealType.HardFloat:
         hdr_files = get_hard_float_headers() + hdr_files
 
     # update define variables
     defines = defines.copy()
-    if real_type == 'HARD_FLOAT':
+    if real_type == RealType.HardFloat:
         defines['HARD_FLOAT'] = None
 
     # run synthesis using the desired tool
@@ -154,7 +155,7 @@ class SvrealTester(fault.Tester):
 
     def compile_and_run(self, target='system-verilog', ext_srcs=None,
                         inc_dirs=None, ext_model_file=True, tmp_dir=None,
-                        disp_type=None, real_type='FIXED_POINT',
+                        disp_type=None, real_type=RealType.FixedPoint,
                         defines=None, **kwargs):
         # set defaults
         if ext_srcs is None:
@@ -169,21 +170,21 @@ class SvrealTester(fault.Tester):
             defines = {}
 
         # add to ext_srcs
-        if real_type == 'HARD_FLOAT':
+        if real_type == RealType.HardFloat:
             ext_srcs = get_hard_float_sources() + ext_srcs
 
         # add to inc_dirs
         inc_dirs = [get_svreal_header().parent] + inc_dirs
-        if real_type == 'HARD_FLOAT':
+        if real_type == RealType.HardFloat:
             inc_dirs = get_hard_float_inc_dirs() + inc_dirs
 
         # add defines as needed for the real number type
         defines = defines.copy()
-        if real_type == 'FIXED_POINT':
+        if real_type == RealType.FixedPoint:
             pass
-        elif real_type == 'FLOAT_REAL':
+        elif real_type == RealType.FloatReal:
             defines['FLOAT_REAL'] = None
-        elif real_type == 'HARD_FLOAT':
+        elif real_type == RealType.HardFloat:
             defines['HARD_FLOAT'] = None
 
         # call the command

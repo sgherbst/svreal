@@ -3,7 +3,7 @@ from .common import *
 
 def pytest_generate_tests(metafunc):
     pytest_synth_params(metafunc)
-    pytest_real_type_params(metafunc, ['FIXED_POINT', 'HARD_FLOAT'])
+    pytest_real_type_params(metafunc, [RealType.FixedPoint, RealType.HardFloat])
 
 def test_synth(synth, real_type):
     run_synth(synth=synth,
