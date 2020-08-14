@@ -637,6 +637,8 @@ endfunction
     `MIN_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
 
 // conversion from real number to integer
+// note that this always rounds down, regardless of whether HARD_FLOAT
+// is used or not.
 
 `define REAL_TO_INT(in_name, int_width_expr, out_name) \
     `ifdef FLOAT_REAL \
@@ -651,7 +653,7 @@ endfunction
         ) recFNToIN_``out_name``_i ( \
             .control(`HARD_FLOAT_CONTROL), \
             .in(``in_name``), \
-            .roundingMode(`HARD_FLOAT_ROUNDING), \
+            .roundingMode(`round_min), \
             .signedOut(1'b1), \
             .out(``out_name``), \
             .intExceptionFlags() \
