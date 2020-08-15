@@ -34,6 +34,8 @@
     `define HARD_FLOAT_SIG_WIDTH 23
 `endif
 
+`define HARD_FLOAT_WIDTH (1+(`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH))
+
 `define HARD_FLOAT_SIGN_BIT ((`HARD_FLOAT_SIG_WIDTH)+(`HARD_FLOAT_EXP_WIDTH))
 
 // declare a more generic version of $clog2 that supports
@@ -225,7 +227,7 @@ endfunction
     `ifdef FLOAT_REAL \
         real \
     `elsif HARD_FLOAT \
-        logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] \
+        logic [(`HARD_FLOAT_SIGN_BIT):0] \
     `else \
         logic signed [((``width_expr``)-1):0] \
     `endif
@@ -714,12 +716,21 @@ endfunction
     `DFF_INTO_REAL(``d_name``, ``q_name``, ``rst_name``, ``clk_name``, ``cke_name``, ``init_expr``)
 
 // synchronous ROM
+// note that the data_bits_expr input is ignored when HARD_FLOAT is defined, because HARD_FLOAT
+// signals always have width HARD_FLOAT_WIDTH.  this makes it easier to swap between default
+// operation (fixed-point) and HARD_FLOAT
 
 `define SYNC_ROM_INTO_REAL(addr_name, out_name, clk_name, ce_name, addr_bits_expr, data_bits_expr, file_path_expr, data_expt_expr) \
     sync_rom_real #( \
         `PASS_REAL(out, out_name), \
         .addr_bits(addr_bits_expr), \
-        .data_bits(data_bits_expr), \
+        .data_bits( \
+            `ifdef HARD_FLOAT \
+                `HARD_FLOAT_WIDTH \
+            `else \
+                data_bits_expr \
+            `endif \
+        ), \
         .data_expt(data_expt_expr), \
         .file_path(file_path_expr) \
     ) sync_rom_real_``out_name``_i ( \
@@ -734,12 +745,21 @@ endfunction
     `SYNC_ROM_INTO_REAL(addr_name, out_name, clk_name, ce_name, addr_bits_expr, data_bits_expr, file_path_expr, data_expt_expr)
 
 // synchronous RAM
+// note that the data_bits_expr input is ignored when HARD_FLOAT is defined, because HARD_FLOAT
+// signals always have width HARD_FLOAT_WIDTH.  this makes it easier to swap between default
+// operation (fixed-point) and HARD_FLOAT
 
 `define SYNC_RAM_INTO_REAL(addr_name, din_name, out_name, clk_name, ce_name, we_name, addr_bits_expr, data_bits_expr, data_expt_expr) \
     sync_ram_real #( \
         `PASS_REAL(out, out_name), \
         .addr_bits(addr_bits_expr), \
-        .data_bits(data_bits_expr), \
+        .data_bits( \
+            `ifdef HARD_FLOAT \
+                `HARD_FLOAT_WIDTH \
+            `else \
+                data_bits_expr \
+            `endif \
+        ), \
         .data_expt(data_expt_expr) \
     ) sync_ram_real_``out_name``_i ( \
         .addr(addr_name), \

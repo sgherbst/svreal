@@ -5,7 +5,7 @@ import fault
 # svreal imports
 from .common import *
 from svreal import (real2fixed, real2recfn, fixed2real, recfn2real,
-                    DEF_HARD_FLOAT_EXP_WIDTH, DEF_HARD_FLOAT_SIG_WIDTH)
+                    DEF_HARD_FLOAT_WIDTH)
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
@@ -14,29 +14,16 @@ def pytest_generate_tests(metafunc):
 def test_sync_rom(simulator, real_type, abs_tol=0.001):
     # determine formatting
     if real_type == RealType.HardFloat:
-        exp_width = DEF_HARD_FLOAT_EXP_WIDTH
-        sig_width = DEF_HARD_FLOAT_SIG_WIDTH
-        def conv_func(in_):
-            return real2recfn(in_=in_, exp_width=exp_width, sig_width=sig_width)
-        def inv_func(in_):
-            return recfn2real(in_=in_, exp_width=exp_width, sig_width=sig_width)
-        defines = {
-            'WIDTH': exp_width+sig_width+1,
-            'EXPONENT': 0,
-            'HARD_FLOAT_EXP_WIDTH': exp_width,
-            'HARD_FLOAT_SIG_WIDTH': sig_width
-        }
+        width = DEF_HARD_FLOAT_WIDTH
+        conv_func = real2recfn
+        inv_func = recfn2real
     else:
         width = 18
         exponent = -12
-        def conv_func(in_):
-            return real2fixed(in_=in_, exp=exponent, width=width, treat_as_unsigned=True)
-        def inv_func(in_):
-            return fixed2real(in_=in_, exp=exponent, width=width, treat_as_unsigned=True)
-        defines = {
-            'WIDTH': width,
-            'EXPONENT': exponent
-        }
+        def conv_func(x):
+            return real2fixed(x, exp=exponent, width=width, treat_as_unsigned=True)
+        def inv_func(x):
+            return fixed2real(x, exp=exponent, width=width, treat_as_unsigned=True)
 
     # write the lookup table
     expct = [1.23, -2.34, 3.45, -4.56]
@@ -46,7 +33,7 @@ def test_sync_rom(simulator, real_type, abs_tol=0.001):
             line = conv_func(elem)  # format input as an integer
             line = bin(line)  # convert to binary string
             line = line.replace('0b', '')  # strip the beginning '0b'
-            line = line.rjust(defines['WIDTH'], '0')  # pad to the right width
+            line = line.rjust(width, '0')  # pad to the right width
             f.write(line + '\n')
 
     # verify the lookup table
@@ -93,13 +80,10 @@ def test_sync_rom(simulator, real_type, abs_tol=0.001):
         t.step(2)
         t.expect(dut.out, expct[-1], abs_tol=abs_tol)
 
-    # add path to ROM
-    defines['PATH_TO_MEM'] = f'"{path_to_mem}"'
-
     # run the test
     t.compile_and_run(
         simulator=simulator,
         ext_srcs=[get_file('test_sync_rom.sv')],
         real_type=real_type,
-        defines=defines
+        defines={'PATH_TO_MEM': f'"{path_to_mem}"'}
     )

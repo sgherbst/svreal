@@ -4,8 +4,7 @@ import fault
 
 # svreal imports
 from .common import *
-from svreal import (real2fixed, real2recfn, DEF_HARD_FLOAT_EXP_WIDTH,
-                    DEF_HARD_FLOAT_SIG_WIDTH)
+from svreal import real2fixed, real2recfn, DEF_HARD_FLOAT_WIDTH
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
@@ -14,31 +13,20 @@ def pytest_generate_tests(metafunc):
 def test_sync_ram(simulator, real_type):
     # determine formatting
     if real_type == RealType.HardFloat:
-        exp_width = DEF_HARD_FLOAT_EXP_WIDTH
-        sig_width = DEF_HARD_FLOAT_SIG_WIDTH
-        def conv_func(in_):
-            return real2recfn(in_=in_, exp_width=exp_width, sig_width=sig_width)
-        defines = {
-            'WIDTH': exp_width+sig_width+1,
-            'EXPONENT': 0,
-            'HARD_FLOAT_EXP_WIDTH': exp_width,
-            'HARD_FLOAT_SIG_WIDTH': sig_width
-        }
+        width = DEF_HARD_FLOAT_WIDTH
+        conv_func = real2recfn
     else:
+        width = 18
         exponent = -12
-        def conv_func(in_):
-            return real2fixed(in_=in_, exp=exponent)
-        defines = {
-            'WIDTH': 18,
-            'EXPONENT': exponent
-        }
+        def conv_func(x):
+            return real2fixed(x, exp=exponent)
 
     # declare circuit
     class dut(m.Circuit):
         name = 'test_sync_ram'
         io = m.IO(
             addr=m.In(m.Bits[2]),
-            din=m.In(m.Bits[defines['WIDTH']]),
+            din=m.In(m.Bits[width]),
             out=fault.RealOut,
             clk=m.ClockIn,
             ce=m.BitIn,
@@ -79,5 +67,5 @@ def test_sync_ram(simulator, real_type):
         simulator=simulator,
         ext_srcs=[get_file('test_sync_ram.sv')],
         real_type=real_type,
-        defines=defines
+        defines={'WIDTH': width}
     )

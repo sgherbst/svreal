@@ -8,6 +8,6 @@ module test_sync_rom (
     input clk,
     input ce
 );
-    `SYNC_ROM_REAL(addr, out_int, clk, ce, 2, `WIDTH, `PATH_TO_MEM, `EXPONENT);
+    `SYNC_ROM_REAL(addr, out_int, clk, ce, 2, 18, `PATH_TO_MEM, -12);
     assign out = `TO_REAL(out_int);
 endmodule
