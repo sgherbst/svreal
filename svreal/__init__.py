@@ -15,14 +15,13 @@ def get_hard_float_dir():
     if 'HARD_FLOAT_INST_DIR' in os.environ:
         return Path(os.environ['HARD_FLOAT_INST_DIR']).resolve()
     else:
-        retval = PACK_DIR / 'HardFloat'
-        if retval.exists():
-            return retval
-        else:
-            raise Exception(f'Could not find HardFloat installation.  '
-                            f'Please move the HardFloat directory in {PACK_DIR} or '
-                            f'set the the HARD_FLOAT_INST_DIR environment variable to its absolute path.  '
-                            f'HardFloat can be downloaded from http://www.jhauser.us/arithmetic/HardFloat.html')
+        for retval in [PACK_DIR / 'HardFloat-1', PACK_DIR / 'HardFloat']:
+            if retval.exists():
+                return retval
+        raise Exception(f'Could not find HardFloat installation.  '
+                        f'Please move the HardFloat directory in {PACK_DIR} or '
+                        f'set the the HARD_FLOAT_INST_DIR environment variable to its absolute path.  '
+                        f'HardFloat can be downloaded from http://www.jhauser.us/arithmetic/HardFloat.html')
 
 def get_hard_float_specialization():
     return os.environ.get('HARD_FLOAT_SPECIALIZATION', 'RISCV')

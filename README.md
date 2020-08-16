@@ -5,7 +5,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/svreal.svg)](https://badge.fury.io/py/svreal)
 
-**svreal** is a single-file SystemVerilog library that makes it easy to perform fixed-point operations in a synthesizable fashion in SystemVerilog.  The exponent and alignment details are handled automatically, so the user is free to customize the format of each fixed-point signal in the design without inconvenience.  For debugging range/resolution issues, the user can switch all signal types to a floating-point representation using a single **define** command-line option.  Supported fixed-point operations include addition, subtraction, negation, multiplication, comparison, and conditional assignment.
+**svreal** is a single-file SystemVerilog library that makes it easy to perform real-number operations in a synthesizable fashion in SystemVerilog.  Both fixed-point and floating-point representations are supported.  
+
+By default, a fixed-point format is used; the exponent and alignment details are handled automatically, so the user is free to customize the format of each fixed-point signal in the design without inconvenience.  
+
+The user can switch to a floating-point representation using one of two compiler flags: `` `FLOAT_REAL `` targets the builtin SystemVerilog **real** type (not synthesizable), whereas `` `HARD_FLOAT `` targets the synthesizable [Berkeley HardFloat](http://www.jhauser.us/arithmetic/HardFloat.html) library.
 
 # Installation
 
@@ -13,7 +17,19 @@
 > pip install svreal
 ```
 
-If you get a permissions error when running the **pip** command, you can try adding the **--user** flag.  This will cause **pip** to install packages in your user directory rather than to a system-wide location.
+If you get a permissions error when running the **pip** command, you can try adding the ```--user``` flag.  This will cause **pip** to install packages in your user directory rather than to a system-wide location.
+
+## HardFloat
+
+If you want to have support for the synthesizable floating-point format, then you'll need to install Berkeley HardFloat.  To do that:
+1. Download ``HardFloat-1.zip`` from the [HardFloat website](http://www.jhauser.us/arithmetic/HardFloat.html).
+2. Unzip it and move the ``HardFloat-1`` directory into the **svreal** installation directory:
+```shell
+> unzip HardFloat-1.zip
+> python -c 'import svreal; print(svreal.PACK_DIR)'
+/path/to/svreal
+> mv HardFloat-1 /path/to/svreal/.
+```
 
 # Introduction
 
