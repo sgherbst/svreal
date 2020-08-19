@@ -5,11 +5,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/svreal.svg)](https://badge.fury.io/py/svreal)
 
-**svreal** is a single-file SystemVerilog library that makes it easy to perform real-number operations in a synthesizable fashion in SystemVerilog.  Both fixed-point and floating-point representations are supported.  
+**svreal** is a SystemVerilog library that makes it easy to perform real-number operations in a synthesizable fashion in SystemVerilog.  Both fixed-point and floating-point representations are supported.  
 
 By default, a fixed-point format is used; the exponent and alignment details are handled automatically, so the user is free to customize the format of each fixed-point signal in the design without inconvenience.  
 
-The user can switch to a floating-point representation using one of two compiler flags: `` `FLOAT_REAL `` targets the builtin SystemVerilog **real** type (not synthesizable), whereas `` `HARD_FLOAT `` targets the synthesizable [Berkeley HardFloat](http://www.jhauser.us/arithmetic/HardFloat.html) library.
+It is possible to switch to a floating-point representation using one of two compiler flags: **FLOAT_REAL** targets the builtin SystemVerilog **real** type (not synthesizable), whereas **HARD_FLOAT** targets the synthesizable [Berkeley HardFloat](http://www.jhauser.us/arithmetic/HardFloat.html) library.
 
 # Installation
 
@@ -30,6 +30,8 @@ If you want to have support for the synthesizable floating-point format, then yo
 /path/to/svreal
 > mv HardFloat-1 /path/to/svreal/.
 ```
+
+In case you already have HardFloat installed, or don't want to install it in the **svreal** package directory, you can set the **HARD_FLOAT_INST_DIR** environment variable to the absolute path to the **HardFloat-1** directory.
 
 # Introduction
 
@@ -62,11 +64,28 @@ This method of selecting the exponent guarantees that the user-specified range c
 
 Since the user has not provided any formatting information for **c**, its range is automatically determined from the ranges of **a** and **b**.  Since **a** is +/- 5.0 and **b** is +/- 10.0, the range of **c** is +/- 15.0.  The width of **c** defaults to **\`LONG_WIDTH_REAL**, and its exponent is calculated using the formula above.
 
+## Floating-point formatting
+
+**svreal** supports synthesizable floating-point operations via [Berkeley HardFloat](http://www.jhauser.us/arithmetic/HardFloat.html).  To switch the real-number representation from fixed-point to floating-point, define the **HARD_FLOAT** flag (e.g., **+define+HARD_FLOAT**).
+
+In order for this to work, you'll need to have installed the HardFloat library as described earlier.  Since HardFloat is installed separately, the simulation or synthesis tool will need to know where the HardFloat headers and source files are located.  To make that straightforward, the **svreal** Python package provides several functions:
+1. **get_hard_float_headers**: Returns a list of the absolute paths to the HardFloat Verilog headers.
+2. **get_hard_float_sources**: Returns a list of the absolute paths to the HardFloat Verilog source files.
+3. **get_hard_float_inc_dirs**: Returns a list of the absolute paths to the directories containing the HardFloat Verilog headers (for use with a command-line argument like **+incdir+**)
+
+In most cases, using **HARD_FLOAT** does not require any code changes.  Although some **svreal** commands specify range, width, or exponent information, those are ignored when using **HARD_FLOAT**, since it uses a single floating-point format (**recfn**) throughout the entire design.
+
+**recfn** is the HardFloat "recoded" format, described in section 5.2 of the [HardFloat documentation](http://www.jhauser.us/arithmetic/HardFloat-1/doc/HardFloat-Verilog.html); it has a 1-to-1 mapping to the IEEE 754 floating-point format but is optimized for better synthesis results.  The user can adjust exponent and significand widths using **HARD_FLOAT_EXP_WIDTH** (default 8) and **HARD_FLOAT_SIG_WIDTH** (default 23), which have the same meaning as **expWidth** and **sigWidth** in the HardFloat documentation.
+
+Although **svreal** mostly handles conversions to and from the **recfn** format, the **svreal** Python module provides the functions **recfn2real** and **real2recfn**.  These conversion functions are useful for tasks like computing the contents of ROMs that store floating-point numbers.
+
 ## Debugging
 
-Suppose that the range of **a** is not sufficient to contain the value being assigned to it.  Then **a** may contain an entirely wrong value due to overflow.  In order to debug this problem, define the **FLOAT_REAL** flag (for example, using **+define+FLOAT_REAL**).  This switches the real number representation from fixed-point to float-point, which helps the user to identify whether the fixed-point representation is the cause of the problem, or whether it is something else.  In addition, this flag adds assertions to check if any real-number signal exceeds its specified range.
+Suppose that the range of **a** is not sufficient to contain the value being assigned to it.  Then **a** may contain an entirely wrong value due to overflow.  In order to debug this problem, define the **FLOAT_REAL** flag (e.g., **+define+FLOAT_REAL**).  This switches the real number representation from fixed-point to float-point, which helps the user to identify whether the fixed-point representation is the cause of the problem, or whether it is something else.  In addition, this flag adds assertions to check if any real-number signal exceeds its specified range.
 
 It is also possible to debug underflow issues using **svreal**.  First set the **FLOAT_REAL** flag to switch to a floating-point representation.  If the problem goes away, but there are no assertion errors indicating overflows, then the problem is likely due to inadequate resolution in one or more **svreal** signals.  This theory can be validated by increasing **\`LONG_WIDTH_REAL** and/or **\`SHORT_WIDTH_REAL**.  If increasing **\`SHORT_WIDTH_REAL** helps, then one or more multiplication constants need to have higher resolution.  Otherwise, one or more fixed-point signals or additive constants need more resolution.
+
+While the **HARD_FLOAT** flag could be used for a similar purpose, since it also switches the real number representation to a floating-point format, **FLOAT_REAL** is generally better for debugging because it simulates faster than **HARD_FLOAT** (at least 10x faster).
 
 ## Operations available
 
@@ -100,7 +119,7 @@ These operations take two inputs (first and second arguments) and produce one ou
 `ITE_REAL(cond, val_if_true, val_if_false, out);
 ```
 
-This is a handy operation when constructing conditional operations: if **cond** is "1", then **val_if_true** is muxed to **out**, otherwise if **cond** is "0", then **val_if_false** is muxed to **out**.  Note that this is not implemented as a literal mux, but instead performs alignment as necessary. Hence, the formats of all three fixed-point numbers can be different.
+This is a handy operation when constructing conditional operations: if **cond** is "1", then **val_if_true** is muxed to **out**, otherwise if **cond** is "0", then **val_if_false** is muxed to **out**.  Note that this is not implemented as a literal mux, but instead performs alignment as necessary. Hence, if a fixed-point representation is being used, it's OK if the formats of all three numbers are different.
 
 ### Real <-> integer conversion
 
@@ -126,7 +145,7 @@ The macro \`INT_TO_REAL takes as its first argument a **logic signed** type and 
 `NE_REAL(lhs, rhs, out);
 ```
 
-Comparisons always take two fixed-point numbers as the first two arguments, ordered as the left-hand side followed by the right-hand side.  The third macro argument is the output, which is a single bit (type **logic**) with value "1" if the comparison is true and "0" if it is false.
+Comparisons always take two real numbers as the first two arguments, ordered as the left-hand side followed by the right-hand side.  The third macro argument is the output, which is a single bit (type **logic**) with value "1" if the comparison is true and "0" if it is false.
 
 ### Working with constants
 
@@ -137,9 +156,11 @@ Comparisons always take two fixed-point numbers as the first two arguments, orde
 `MUL_CONST_REAL(const, in, out);
 ```
 
-Several functions are available to work with numeric constants.  **\`MAKE_CONST_REAL** creates a new **svreal** type and assigns the given real-number constant to it.  Its width defaults to **\`LONG_WIDTH_REAL** and the exponent is selected automatically based on the constant value.  **\`ASSIGN_CONST_REAL** is similar but does not declare a new **svreal** type; it simply assigns the constant to an existing fixed-point signal (performing the floating-to-fixed conversion at compile time).
+Several functions are available to work with numeric constants.  **\`MAKE_CONST_REAL** creates a new **svreal** type and assigns the given real-number constant to it.  Its width defaults to **\`LONG_WIDTH_REAL** and the exponent is selected automatically based on the constant value.  **\`ASSIGN_CONST_REAL** is similar but does not declare a new **svreal** type; it simply assigns the constant to an existing real-number signal (performing the conversion of the constant to fixed- or floating-point at compile time).
 
-**\`ADD_CONST_REAL** and **\`MUL_CONST_REAL** allow the user to add a constant to a number or multiply a constant by a number, respectively.  There is one special caveat for **\`MUL_CONST_REAL**, which is that it represents the constant with a fixed-point number of width **\`SHORT_WIDTH_REAL** (18 unless overridden by the user).  As a result, the user can cause **\`MUL_CONST_REAL** to consume exactly one DSP block by picking **\`LONG_WIDTH_REAL** and **\`SHORT_WIDTH_REAL** to be the operand widths of the target FPGA's DSP multipliers.
+**\`ADD_CONST_REAL** and **\`MUL_CONST_REAL** allow the user to add a constant to a number or multiply a constant by a number, respectively.
+
+When a fixed-point representation is being used, there is one special caveat for **\`MUL_CONST_REAL**: it represents the constant with a fixed-point number of width **\`SHORT_WIDTH_REAL** (18 unless overridden by the user).  As a result, the user can cause **\`MUL_CONST_REAL** to consume exactly one DSP block by picking **\`LONG_WIDTH_REAL** and **\`SHORT_WIDTH_REAL** to be the operand widths of the target FPGA's DSP multipliers.
 
 ### Memory
 
@@ -147,7 +168,7 @@ Several functions are available to work with numeric constants.  **\`MAKE_CONST_
 `DFF_REAL(d, q, rst, clk, cke, init);
 ```
 
-Fixed-point memory is implemented as a generic D-type flip-flop (DFF).  The input to this flip-flop is **d**, and the output is **q**.  Both are fixed-point types, but it's fine if they can have different formats.
+Fixed-point memory is implemented as a generic D-type flip-flop (DFF).  The input to this flip-flop is **d**, and the output is **q**.  When a fixed-point format is used, it's OK if **d** and **q** have different formats.
 
 The **rst** signals is a single active-high bit (type **logic**).  It's a synchronous reset, and when active it causes **q** to take the value of **init**.  **init** is simply a real-number value like "1.23".
 
@@ -155,7 +176,7 @@ Finally, **clk** and **cke** are single bit signals (type **logic**).  **clk** i
 
 ### Assigning results to existing signals
 
-Most operations have an alternate form that allows the user to assign the result of an operation to an existing fixed-point signal.  This is indicated by the word **INTO** in the macro name.  For example, suppose that we have defined three signals, **a**, **b**, and **c**, and want to assign the sum of **a** and **b** into **c**:
+Most operations have an alternate form that allows the user to assign the result of an operation to an existing real-number signal.  This is indicated by the word **INTO** in the macro name.  For example, suppose that we have defined three signals, **a**, **b**, and **c**, and want to assign the sum of **a** and **b** into **c**:
 
 ```verilog
 `MAKE_REAL(a, 10.0); // i.e., +/- 10
@@ -180,9 +201,11 @@ Most operations have an alternate form ending with **GENERIC** that allows the u
 
 This means: multiply **a** and **b** and store the result in **c** with the appropriate alignment.  The width of **c** is given the custom value "40", and the range of **c** is still determined automatically.  As a result, the user can control the precision of intermediate results, and this in turn is useful when debugging underflow issues.
 
-## Passing fixed-point signals
+## Passing real-number signals
 
-Since compile-time parameters are used to store some of the fixed-point formatting information, some care must be taken when passing **svreal** signals through a hierarchy to ensure that information is not lost.  Consider this example, in which an outer block instantiates a module that multiplies together two signals to produce an output:
+Since compile-time parameters are used to store fixed-point formatting information, some care must be taken when passing **svreal** signals through a hierarchy to ensure that information is not lost.  This is not strictly necessary when using **HARD_FLOAT**, but is still good practice because it makes it easier to switch to fixed-point.
+
+Consider this example, in which an outer block instantiates a module that multiplies together two signals to produce an output:
 
 ```verilog
 `include "svreal.sv"
@@ -221,7 +244,7 @@ Going up one level to the outer block, observe that a special macro **\`PASS_REA
 
 ## Using interfaces
 
-Suppose you want to bundle **svreal** signals into an interface.  This might make it easier to pass around groups of fixed-point numbers, or allow you to pass digital control signals along with the fixed point numbers.  This task can be achieved using a set of special **svreal** macros.
+Suppose you want to bundle **svreal** signals into an interface.  This might make it easier to pass around groups of real numbers, or allow you to pass digital control signals along with the fixed point numbers.  This task can be achieved using a set of special **svreal** macros.
 
 Here's the simplest such interface, containing a single **svreal** signal and nothing else: 
 
