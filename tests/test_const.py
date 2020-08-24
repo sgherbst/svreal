@@ -3,14 +3,13 @@ import magma as m
 import fault
 
 # svreal imports
-from .common import pytest_sim_params, get_file
-from svreal import get_svreal_header
+from .common import *
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
-    metafunc.parametrize('defines', [None, {'FLOAT_REAL': None}])
+    pytest_real_type_params(metafunc)
 
-def test_const(simulator, defines):
+def test_const(simulator, real_type):
     # constant definitions
     a_const = 1.23
     b_const = 4.56
@@ -28,7 +27,7 @@ def test_const(simulator, defines):
         )
 
     # define the test
-    tester = fault.Tester(dut, expect_strict_default=True)
+    tester = SvrealTester(dut)
 
     # test a_o output
     tester.eval()
@@ -54,12 +53,8 @@ def test_const(simulator, defines):
 
     # run the test
     tester.compile_and_run(
-        target='system-verilog',
         simulator=simulator,
         ext_srcs=[get_file('test_const.sv')],
-        inc_dirs=[get_svreal_header().parent],
-        defines=defines,
         parameters=parameters,
-        ext_model_file=True,
-        tmp_dir=True
+        real_type=real_type
     )

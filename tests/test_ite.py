@@ -3,17 +3,16 @@ import magma as m
 import fault
 
 # svreal imports
-from .common import pytest_sim_params, get_file
-from svreal import get_svreal_header
+from .common import *
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
-    metafunc.parametrize('defines', [None, {'FLOAT_REAL': None}])
+    pytest_real_type_params(metafunc)
 
 def model_func(a_i, b_i, cond_i):
     return a_i if cond_i else b_i
 
-def test_ite(simulator, defines):
+def test_ite(simulator, real_type):
     # declare circuit
     class dut(m.Circuit):
         name = 'test_ite'
@@ -25,7 +24,7 @@ def test_ite(simulator, defines):
         )
 
     # define the test
-    tester = fault.Tester(dut, expect_strict_default=True)
+    tester = SvrealTester(dut)
 
     # generic check routine
     def run_iteration(a_i, b_i, cond_i):
@@ -54,11 +53,7 @@ def test_ite(simulator, defines):
 
     # run the test
     tester.compile_and_run(
-        target='system-verilog',
         simulator=simulator,
         ext_srcs=[get_file('test_ite.sv')],
-        inc_dirs=[get_svreal_header().parent],
-        defines=defines,
-        ext_model_file=True,
-        tmp_dir=True
+        real_type=real_type
     )

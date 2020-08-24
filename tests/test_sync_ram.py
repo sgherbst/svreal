@@ -3,14 +3,24 @@ import magma as m
 import fault
 
 # svreal imports
-from .common import pytest_sim_params, get_file
-from svreal import get_svreal_header
+from .common import *
+from svreal import real2fixed, real2recfn, DEF_HARD_FLOAT_WIDTH
 
 def pytest_generate_tests(metafunc):
     pytest_sim_params(metafunc)
-    metafunc.parametrize('defines', [{}, {'FLOAT_REAL': None}])
+    pytest_real_type_params(metafunc)
 
-def test_sync_ram(simulator, defines, width=18, exponent=-12):
+def test_sync_ram(simulator, real_type):
+    # determine formatting
+    if real_type == RealType.HardFloat:
+        width = DEF_HARD_FLOAT_WIDTH
+        conv_func = real2recfn
+    else:
+        width = 18
+        exponent = -12
+        def conv_func(x):
+            return real2fixed(x, exp=exponent)
+
     # declare circuit
     class dut(m.Circuit):
         name = 'test_sync_ram'
@@ -24,7 +34,7 @@ def test_sync_ram(simulator, defines, width=18, exponent=-12):
         )
 
     # define the test
-    t = fault.Tester(dut, dut.clk)
+    t = SvrealTester(dut, dut.clk)
 
     # initialize
     t.zero_inputs()
@@ -39,7 +49,7 @@ def test_sync_ram(simulator, defines, width=18, exponent=-12):
     t.poke(dut.we, 1)
     for addr in write_order:
         t.poke(dut.addr, addr)
-        t.poke(dut.din, int(round(write_data[addr]*(2**(-exponent)))))
+        t.poke(dut.din, conv_func(write_data[addr]))
         t.step(2)
 
     # read data
@@ -52,15 +62,10 @@ def test_sync_ram(simulator, defines, width=18, exponent=-12):
         t.step(2)
         t.expect(dut.out, write_data[addr], abs_tol=0.001)
 
-    # update defines
-    defines.update(dict(WIDTH=width, EXPONENT=exponent))
-
     # run the test
     t.compile_and_run(
-        target='system-verilog',
         simulator=simulator,
         ext_srcs=[get_file('test_sync_ram.sv')],
-        inc_dirs=[get_svreal_header().parent],
-        defines=defines,
-        ext_model_file=True
+        real_type=real_type,
+        defines={'WIDTH': width}
     )
