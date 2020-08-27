@@ -696,6 +696,36 @@ endfunction
     `INT_TO_REAL(``in_name``, ``int_width_expr``, zzz_tmp_``out_name``); \
     `ASSIGN_REAL(zzz_tmp_``out_name``, ``out_name``)
 
+// get the width of an integer
+
+`define MEAS_UINT_WIDTH_INTO(in_name, in_width_expr, out_name, out_width_expr) \
+    meas_uint_width #( \
+        .in_width(``in_width_expr``), \
+        .out_width(``out_width_expr``) \
+    ) meas_uint_width_``out_name`` ( \
+        .in(``in_name``), \
+        .out(``out_name``) \
+    )
+
+`define MEAS_UINT_WIDTH(in_name, in_width_expr, out_name, out_width_expr) \
+    logic [((``out_width_expr)-1):0] out_name; \
+    `MEAS_UINT_WIDTH_INTO(``in_name``, ``in_width_expr``, ``out_name``, ``out_width_expr``)
+
+// compressing an integer into a real number using an approximately logarithmic mapping
+
+`define COMPRESS_UINT_INTO(in_name, in_width_expr, out_name) \
+    compress_uint #( \
+        .in_width(``in_width_expr``), \
+        `PASS_REAL(out, ``out_name``) \
+    ) compress_uint_``out_name``_i ( \
+        .in(``in_name``), \
+        .out(``out_name``) \
+    )
+
+`define COMPRESS_UINT(in_name, in_width_expr, out_name) \
+    `MAKE_REAL(``out_name``, ((``in_width_expr``)+1)); \
+    `COMPRESS_UINT_INTO(``in_name``, ``in_width_expr``, ``out_name``)
+
 // memory
 
 `define DFF_INTO_REAL(d_name, q_name, rst_name, clk_name, cke_name, init_expr) \
@@ -1242,6 +1272,104 @@ module sync_ram_real #(
         localparam `RANGE_PARAM_REAL(data) = 2.0**(data_bits+data_expt-1);
         localparam `WIDTH_PARAM_REAL(data) = data_bits;
         localparam `EXPONENT_PARAM_REAL(data) = data_expt;
+        `ASSIGN_REAL(data, out);
+    `endif
+endmodule
+
+// measuring the width of an integer
+
+module meas_uint_width #(
+    parameter integer in_width=1,
+    parameter integer out_width=1
+) (
+    input wire [(in_width-1):0] in,
+    output reg [(out_width-1):0] out
+);
+    integer i;
+    always @(*) begin
+        if (in == 0) begin
+            out = 0;
+        end else begin
+            for (i=0; i<in_width; i=i+1) begin
+                if (in[i]) begin
+                    out = i + 1;
+                end
+            end
+        end
+    end
+endmodule
+
+// Compressing an integer
+// TODO: handle "inf" case for HARD_FLOAT
+
+module compress_uint #(
+    parameter integer in_width=1,
+    `DECL_REAL(out)
+) (
+    input wire [(in_width-1):0] in,
+    `OUTPUT_REAL(out)
+);
+    `ifdef FLOAT_REAL
+        real x, y;
+        always @(in) begin
+            if (in == 0.0) begin
+                x = 0.0;
+                y = 0.0;
+            end else begin
+                x = $floor($ln(1.0*in)/$ln(2.0)) + 1.0;
+                y = ((1.0*in)/(2.0**(x-1.0))) - 1.0;
+            end
+        end
+        assign out = x + y;
+    `elsif HARD_FLOAT
+        // make signed version of the input, as needed by INT_TO_REAL
+        logic signed [in_width:0] in_signed;
+        assign in_signed = {1'b0, in};
+        `INT_TO_REAL(in_signed, (in_width+1), in_as_float);
+
+        // extract exponent and significand (the sign is unused)
+        logic sign;
+        logic [(`HARD_FLOAT_EXP_WIDTH):0] exp;
+        logic [((`HARD_FLOAT_SIG_WIDTH)-2):0] fract;
+        assign {sign, exp, fract} = in_as_float;
+
+        // represent the width as a floating-point number
+        localparam integer count_width = $clog2(in_width+1);
+        localparam [(`HARD_FLOAT_EXP_WIDTH):0] exp_bias =
+            ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+1) +  // recoding bias
+            ((2**((`HARD_FLOAT_EXP_WIDTH)-1))-1);   // exponent bias
+        logic signed [count_width:0] count_signed;
+        assign count_signed = exp - exp_bias;
+        `INT_TO_REAL(count_signed, (count_width+1), exp_as_float);
+
+        // convert the fractional part to a floating-point number
+        `MAKE_REAL(fract_as_float, in_width+1);
+        assign fract_as_float = {1'b0, exp_bias, fract};
+
+        // add the two together
+        `ADD_REAL(exp_as_float, fract_as_float, result);
+
+        // special handling for zero
+        assign out = (in==0) ? 0 : result;
+    `else
+        // numbers of bits needed to represent the input width
+        localparam integer count_width = $clog2(in_width+1);
+
+        // number of bits needed to represent the output
+        localparam integer data_width = 1 + count_width + (in_width-1);
+
+        // measure the input width, which can be 0 through in_width, inclusive
+        `MEAS_UINT_WIDTH(in, in_width, count, count_width);
+
+        // re-align input
+        logic [(in_width-2):0] aligned;
+        assign aligned = in << (in_width-count);
+
+        // format signals into a fixed-point signal
+        `MAKE_FORMAT_REAL(data, (in_width+1), data_width, (-in_width+1));
+        assign data = {1'b0, count, aligned};
+
+        // assign output
         `ASSIGN_REAL(data, out);
     `endif
 endmodule
