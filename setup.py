@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 name = 'svreal'
-version = '0.2.6.dev1'
+version = '0.2.6'
 
 DESCRIPTION = '''\
 Library for working with fixed-point numbers in SystemVerilog\
