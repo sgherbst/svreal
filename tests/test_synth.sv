@@ -31,6 +31,9 @@ module test_synth (
     output wire logic le_ext,
     output wire logic gt_ext,
     output wire logic ge_ext,
+    // compression I/O
+    input wire logic [31:0] compress_i_ext,
+    output wire logic [((`LONG_WIDTH_REAL)-1):0] compress_o_ext,
     // control I/O
     input wire logic sel_ext,
     input wire logic rst_ext,
@@ -92,4 +95,8 @@ module test_synth (
     `LE_INTO_REAL(a, b, le_ext);
     `GT_INTO_REAL(a, b, gt_ext);
     `GE_INTO_REAL(a, b, ge_ext);
+
+    // uint compression
+    `COMPRESS_UINT(compress_i_ext, $size(compress_i_ext), compress_o);
+    assign compress_o_ext = compress_o;
 endmodule
