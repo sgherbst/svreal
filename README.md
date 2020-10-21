@@ -4,6 +4,7 @@
 [![Code Coverage](https://codecov.io/gh/sgherbst/svreal/branch/master/graph/badge.svg)](https://codecov.io/gh/sgherbst/svreal)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/svreal.svg)](https://badge.fury.io/py/svreal)
+[![Join the chat at https://gitter.im/sgherbst/svreal](https://badges.gitter.im/sgherbst/svreal.svg)](https://gitter.im/sgherbst/svreal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 **svreal** is a SystemVerilog library that makes it easy to perform real-number operations in a synthesizable fashion in SystemVerilog.  Both fixed-point and floating-point representations are supported.  
 
