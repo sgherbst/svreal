@@ -72,8 +72,8 @@ def test_compress_uint(simulator, real_type, width, test_vec):
         t.expect(dut.out, model_func(in_), abs_tol=1e-5)
 
     t.compile_and_run(
+        get_file('test_compress_uint.sv'),
         simulator=simulator,
-        ext_srcs=[get_file('test_compress_uint.sv')],
         defines={'WIDTH': width},
         real_type=real_type
     )

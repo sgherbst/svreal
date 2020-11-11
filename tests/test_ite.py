@@ -53,7 +53,7 @@ def test_ite(simulator, real_type):
 
     # run the test
     tester.compile_and_run(
+        get_file('test_ite.sv'),
         simulator=simulator,
-        ext_srcs=[get_file('test_ite.sv')],
         real_type=real_type
     )

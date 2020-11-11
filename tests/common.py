@@ -1,5 +1,6 @@
 # generic imports
-from shutil import which
+from copy import deepcopy
+from shutil import which, copyfile
 from pathlib import Path
 
 # AHA imports
@@ -27,15 +28,19 @@ def get_dirs(*args):
     # alias for get_files
     return get_files(*args)
 
-def pytest_sim_params(metafunc, simulators=None):
+def pytest_sim_params(metafunc, simulators=None, skip=None):
+    # set defaults
+    if skip is None:
+        skip = []
     if simulators is None:
-        simulators = ['vcs', 'vivado', 'ncsim', 'iverilog']
+        #simulators = ['vcs', 'vivado', 'ncsim', 'iverilog']
+        simulators = ['verilator']
 
     # parameterize with the simulators available
     if 'simulator' in metafunc.fixturenames:
         targets = []
         for simulator in simulators:
-            if which(simulator):
+            if (simulator not in skip) and which(simulator):
                 targets.append(simulator)
 
         metafunc.parametrize('simulator', targets)
@@ -148,26 +153,32 @@ def run_vivado_tcl(tcl_file, cwd=None, err_str=None, disp_type='realtime'):
     return subprocess_run(cmd, cwd=cwd, err_str=err_str, disp_type=disp_type)
 
 class SvrealTester(fault.Tester):
-    def __init__(self, circuit, clock=None, expect_strict_default=True, debug_mode=False):
-        super().__init__(circuit=circuit, clock=clock,
-                         expect_strict_default=expect_strict_default)
-        self.debug_mode = debug_mode
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def compile_and_run(self, target='system-verilog', ext_srcs=None,
-                        inc_dirs=None, ext_model_file=True, tmp_dir=None,
-                        disp_type=None, real_type=RealType.FixedPoint,
-                        defines=None, **kwargs):
+    def compile_and_run(self, ext_model_file, simulator='iverilog',
+                        ext_srcs=None, inc_dirs=None, disp_type='on_error',
+                        real_type=RealType.FixedPoint, defines=None,
+                        directory='build', **kwargs):
+        # copy kwargs
+        kwargs = deepcopy(kwargs)
+        if 'flags' not in kwargs:
+            kwargs['flags'] = []
+
         # set defaults
         if ext_srcs is None:
             ext_srcs = []
         if inc_dirs is None:
             inc_dirs = []
-        if tmp_dir is None:
-            tmp_dir = not self.debug_mode
-        if disp_type is None:
-            disp_type = 'on_error' if (not self.debug_mode) else 'realtime'
         if defines is None:
             defines = {}
+
+        # set the target type
+        if simulator == 'verilator':
+            target = 'verilator'
+        else:
+            target = 'system-verilog'
+            kwargs['simulator'] = simulator
 
         # add to ext_srcs
         if real_type == RealType.HardFloat:
@@ -179,7 +190,7 @@ class SvrealTester(fault.Tester):
             inc_dirs = get_hard_float_inc_dirs() + inc_dirs
 
         # add defines as needed for the real number type
-        defines = defines.copy()
+        defines = deepcopy(defines)
         if real_type == RealType.FixedPoint:
             pass
         elif real_type == RealType.FloatReal:
@@ -187,14 +198,36 @@ class SvrealTester(fault.Tester):
         elif real_type == RealType.HardFloat:
             defines['HARD_FLOAT'] = None
 
+        # map arguments depending on simulator type
+        if target == 'verilator':
+            # prepare arguments lists
+            for k, v in defines.items():
+                if v is not None:
+                    kwargs['flags'] += [f'-D{k}={v}']
+                else:
+                    kwargs['flags'] += [f'-D{k}']
+            kwargs['include_directories'] = inc_dirs
+            kwargs['include_verilog_libraries'] = ext_srcs
+            kwargs['skip_compile'] = True
+
+            # determine file extension
+            if Path(ext_model_file).suffix == '.sv':
+                kwargs['magma_opts'] = {'sv': None}
+
+            # copy in files
+            Path(directory).mkdir(exist_ok=True, parents=True)
+            copyfile(str(ext_model_file), str(Path(directory) / Path(ext_model_file).name))
+        else:
+            kwargs['defines'] = defines
+            kwargs['inc_dirs'] = inc_dirs
+            kwargs['ext_srcs'] = ext_srcs + [ext_model_file]
+            kwargs['ext_model_file'] = True
+
         # call the command
         super().compile_and_run(
-            target='system-verilog',
-            ext_srcs=ext_srcs,
-            inc_dirs=inc_dirs,
-            defines=defines,
-            ext_model_file=ext_model_file,
-            tmp_dir=tmp_dir,
+            target=target,
+            directory=directory,
+            tmp_dir=False,
             disp_type=disp_type,
             **kwargs
         )

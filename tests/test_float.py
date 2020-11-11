@@ -5,7 +5,7 @@ import magma as m
 from .common import *
 
 def pytest_generate_tests(metafunc):
-    pytest_sim_params(metafunc)
+    pytest_sim_params(metafunc, skip=['verilator'])
 
 def test_float(simulator):
     # declare circuit
@@ -20,8 +20,8 @@ def test_float(simulator):
     t.eval()
 
     t.compile_and_run(
+        get_file('test_float.sv'),
         simulator=simulator,
-        ext_srcs=[get_file('test_float.sv')],
         ext_test_bench=True,
         real_type=RealType.HardFloat
     )

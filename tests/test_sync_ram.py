@@ -64,8 +64,8 @@ def test_sync_ram(simulator, real_type):
 
     # run the test
     t.compile_and_run(
+        get_file('test_sync_ram.sv'),
         simulator=simulator,
-        ext_srcs=[get_file('test_sync_ram.sv')],
         real_type=real_type,
         defines={'WIDTH': width}
     )

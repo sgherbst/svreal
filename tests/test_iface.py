@@ -31,9 +31,9 @@ def test_iface(simulator, real_type, defines):
 
     # run the test
     tester.compile_and_run(
+        get_file('test_iface.sv'),
         simulator=simulator,
-        ext_srcs=[get_file('test_iface_core.sv'),
-                  get_file('test_iface.sv')],
+        ext_srcs=[get_file('test_iface_core.sv')],
         real_type=real_type,
         defines=defines
     )

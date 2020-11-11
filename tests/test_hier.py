@@ -30,7 +30,7 @@ def test_hier(simulator, real_type):
 
     # run the test
     tester.compile_and_run(
+        get_file('test_hier.sv'),
         simulator=simulator,
-        ext_srcs=[get_file('test_hier.sv')],
         real_type=real_type
     )
