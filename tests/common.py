@@ -210,6 +210,10 @@ class SvrealTester(fault.Tester):
             kwargs['include_verilog_libraries'] = ext_srcs
             kwargs['skip_compile'] = True
 
+            # disable some warnings
+            kwargs['flags'] += ['-Wno-WIDTH']
+            kwargs['flags'] += ['-Wno-REALCVT']
+
             # determine file extension
             if Path(ext_model_file).suffix == '.sv':
                 kwargs['magma_opts'] = {'sv': None}
