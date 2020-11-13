@@ -9,7 +9,7 @@ import magma as m
 from .common import *
 
 def pytest_generate_tests(metafunc):
-    pytest_sim_params(metafunc)
+    pytest_sim_params(metafunc, skip=['verilator'])
     pytest_real_type_params(metafunc)
 
     # set up test vectors

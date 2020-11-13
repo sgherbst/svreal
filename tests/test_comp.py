@@ -6,7 +6,7 @@ import fault
 from .common import *
 
 def pytest_generate_tests(metafunc):
-    pytest_sim_params(metafunc)
+    pytest_sim_params(metafunc, skip=['verilator'])
     pytest_real_type_params(metafunc)
 
 def model_func(a_i, b_i):
