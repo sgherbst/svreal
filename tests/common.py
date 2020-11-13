@@ -33,8 +33,7 @@ def pytest_sim_params(metafunc, simulators=None, skip=None):
     if skip is None:
         skip = []
     if simulators is None:
-        #simulators = ['vcs', 'vivado', 'ncsim', 'iverilog']
-        simulators = ['verilator']
+        simulators = ['vcs', 'vivado', 'ncsim', 'iverilog', 'verilator']
 
     # parameterize with the simulators available
     if 'simulator' in metafunc.fixturenames:
@@ -159,7 +158,7 @@ class SvrealTester(fault.Tester):
     def compile_and_run(self, ext_model_file, simulator='iverilog',
                         ext_srcs=None, inc_dirs=None, disp_type='on_error',
                         real_type=RealType.FixedPoint, defines=None,
-                        directory='build', **kwargs):
+                        directory='build', tmp_dir=True, **kwargs):
         # copy kwargs
         kwargs = deepcopy(kwargs)
         if 'flags' not in kwargs:
@@ -201,28 +200,14 @@ class SvrealTester(fault.Tester):
         # map arguments depending on simulator type
         if target == 'verilator':
             # prepare arguments lists
-            for k, v in defines.items():
-                if v is not None:
-                    kwargs['flags'] += [f'-D{k}={v}']
-                else:
-                    kwargs['flags'] += [f'-D{k}']
             kwargs['include_directories'] = inc_dirs
             kwargs['include_verilog_libraries'] = ext_srcs
-            kwargs['skip_compile'] = True
+            kwargs['ext_model_file'] = ext_model_file
 
-            # disable some warnings
-            kwargs['flags'] += ['-Wno-WIDTH']
-            kwargs['flags'] += ['-Wno-REALCVT']
-
-            # determine file extension
-            if Path(ext_model_file).suffix == '.sv':
-                kwargs['magma_opts'] = {'sv': None}
-
-            # copy in files
-            Path(directory).mkdir(exist_ok=True, parents=True)
-            copyfile(str(ext_model_file), str(Path(directory) / Path(ext_model_file).name))
+            # warnings should not be errors
+            kwargs['flags'] += ['-Wno-fatal']
+            kwargs['flags'] += ['--trace']
         else:
-            kwargs['defines'] = defines
             kwargs['inc_dirs'] = inc_dirs
             kwargs['ext_srcs'] = ext_srcs + [ext_model_file]
             kwargs['ext_model_file'] = True
@@ -231,7 +216,8 @@ class SvrealTester(fault.Tester):
         super().compile_and_run(
             target=target,
             directory=directory,
-            tmp_dir=False,
+            defines=defines,
             disp_type=disp_type,
+            tmp_dir=tmp_dir,
             **kwargs
         )

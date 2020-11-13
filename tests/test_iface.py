@@ -6,7 +6,7 @@ import fault
 from .common import *
 
 def pytest_generate_tests(metafunc):
-    pytest_sim_params(metafunc, simulators=['ncsim', 'vcs', 'vivado'])
+    pytest_sim_params(metafunc, skip=['iverilog', 'verilator'])
     pytest_real_type_params(metafunc)
     metafunc.parametrize('defines', [None, {'INTF_USE_LOCAL': None}])
 
