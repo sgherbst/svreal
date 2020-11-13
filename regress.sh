@@ -9,7 +9,7 @@ pip install -e .
 pip install pysmt==0.9.0
 
 # install testing dependencies
-pip install pytest pytest-cov magma-lang==2.1.20 coreir==2.0.120 mantle==2.0.15 hwtypes==1.4.4 ast_tools==0.0.30 kratos==0.0.31.2
+pip install pytest pytest-cov magma-lang==2.1.20 coreir==2.0.128 mantle==2.0.15 hwtypes==1.4.4 ast_tools==0.0.30 kratos==0.0.31.2
 
 # install fault
 git clone https://github.com/leonardt/fault.git
