@@ -46,6 +46,6 @@ def test_clog2(simulator):
         run_iteration(1.1**e)
 
     tester.compile_and_run(
-        simulator=simulator,
-        ext_srcs=[get_file('test_clog2.sv')]
+        get_file('test_clog2.sv'),
+        simulator=simulator
     )

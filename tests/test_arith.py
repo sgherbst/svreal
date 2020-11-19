@@ -68,7 +68,7 @@ def test_arith(simulator, real_type):
 
     # run the test
     tester.compile_and_run(
+        get_file('test_arith.sv'),
         simulator=simulator,
-        ext_srcs=[get_file('test_arith.sv')],
         real_type=real_type
     )

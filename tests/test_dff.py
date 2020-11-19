@@ -72,8 +72,8 @@ def test_dff(simulator, real_type):
 
     # run the test
     tester.compile_and_run(
+        get_file('test_dff.sv'),
         simulator=simulator,
-        ext_srcs=[get_file('test_dff.sv')],
         real_type=real_type,
         parameters={'init': 1.23}
     )

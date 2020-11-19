@@ -335,6 +335,7 @@ To test **svreal**, please make sure that at least one of the following simulato
 2. ncsim
 3. vcs
 4. iverilog
+5. verilator
 
 Then make sure that **pytest** is installed.  If it's not, run the following command:
 ```shell

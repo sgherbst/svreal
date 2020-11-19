@@ -34,6 +34,6 @@ def test_meas_width(simulator):
         t.expect(dut.out, model_func(in_))
 
     t.compile_and_run(
-        simulator=simulator,
-        ext_srcs=[get_file('test_meas_width.sv')]
+        get_file('test_meas_width.sv'),
+        simulator=simulator
     )

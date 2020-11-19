@@ -82,8 +82,8 @@ def test_sync_rom(simulator, real_type, abs_tol=0.001):
 
     # run the test
     t.compile_and_run(
+        get_file('test_sync_rom.sv'),
         simulator=simulator,
-        ext_srcs=[get_file('test_sync_rom.sv')],
         real_type=real_type,
         defines={'PATH_TO_MEM': f'"{path_to_mem}"'}
     )

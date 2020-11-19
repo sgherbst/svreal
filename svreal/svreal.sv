@@ -54,23 +54,22 @@ function int clog2_math(input real x);
     end
 endfunction
 
-`define CALC_EXP(range, width) \
-    (clog2_math((real'(``range``))/((2.0**((``width``)-1))-1.0)))
+`define CALC_EXP(range, width) (clog2_math((real'(range))/((2.0**((width)-1))-1.0)))
 
 `define MAX_MATH(a, b) \
-    (((``a``) > (``b``)) ? (``a``) : (``b``))
+    (((a) > (b)) ? (a) : (b))
 
 `define MIN_MATH(a, b) \
-    (((``a``) < (``b``)) ? (``a``) : (``b``))
+    (((a) < (b)) ? (a) : (b))
 
 `define ABS_MATH(a) \
-    (((``a``) > 0) ? (``a``) : (-(``a``)))
+    (((a) > 0) ? (a) : (-(a)))
 
 `define FIXED_TO_FLOAT(significand, exponent) \
-    ((``significand``)*(2.0**(``exponent``)))
+    ((significand)*(2.0**(exponent)))
 
 `define FLOAT_TO_FIXED(value, exponent) \
-    ((real'(``value``))*(2.0**(-(``exponent``))))
+    ((real'(value))*(2.0**(-(exponent))))
 
 // convert the HardFloat recoded format to a real number
 function real recfn2real(input logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] in);
@@ -219,7 +218,7 @@ endfunction
 `define EXPONENT_PARAM_REAL(name) ``name``_exponent_val
 
 `define PRINT_FORMAT_REAL(name) \
-    $display(`"``name``: {width=%0d, exponent=%0d, range=%0f}`", `WIDTH_PARAM_REAL(``name``), `EXPONENT_PARAM_REAL(``name``), `RANGE_PARAM_REAL(``name``))
+    $display(`"``name``: {width=%0d, exponent=%0d, range=%0f}`", `WIDTH_PARAM_REAL(name), `EXPONENT_PARAM_REAL(name), `RANGE_PARAM_REAL(name))
 
 // real number representation type
 
@@ -229,70 +228,68 @@ endfunction
     `elsif HARD_FLOAT \
         logic [(`HARD_FLOAT_SIGN_BIT):0] \
     `else \
-        logic signed [((``width_expr``)-1):0] \
+        logic signed [((width_expr)-1):0] \
     `endif
             
 // module ports
 
 `define DECL_REAL(port) \
-    parameter real `RANGE_PARAM_REAL(``port``) = 0, \
-    parameter integer `WIDTH_PARAM_REAL(``port``) = 0, \
-    parameter integer `EXPONENT_PARAM_REAL(``port``) = 0
+    parameter real `RANGE_PARAM_REAL(port) = 0, \
+    parameter integer `WIDTH_PARAM_REAL(port) = 0, \
+    parameter integer `EXPONENT_PARAM_REAL(port) = 0
 
 `define PASS_REAL(port, name) \
-    .`RANGE_PARAM_REAL(``port``)(`RANGE_PARAM_REAL(``name``)), \
-    .`WIDTH_PARAM_REAL(``port``)(`WIDTH_PARAM_REAL(``name``)), \
-    .`EXPONENT_PARAM_REAL(``port``)(`EXPONENT_PARAM_REAL(``name``))
+    .`RANGE_PARAM_REAL(port)(`RANGE_PARAM_REAL(name)), \
+    .`WIDTH_PARAM_REAL(port)(`WIDTH_PARAM_REAL(name)), \
+    .`EXPONENT_PARAM_REAL(port)(`EXPONENT_PARAM_REAL(name))
 
 `define PORT_REAL(port) \
     `ifdef FLOAT_REAL \
-        `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(``port``)) ``port`` \
+        `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(port)) port \
     `else \
-        wire `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(``port``)) ``port`` \
+        wire `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(port)) port \
     `endif
 
-`define INPUT_REAL(port) \
-    input `PORT_REAL(``port``)
+`define INPUT_REAL(port) input `PORT_REAL(port)
 
-`define OUTPUT_REAL(port) \
-    output `PORT_REAL(``port``)
+`define OUTPUT_REAL(port) output `PORT_REAL(port)
 
 // Displaying real number signals
 
 `define TO_REAL(name) \
     `ifdef FLOAT_REAL \
-        (``name``) \
+        (name) \
     `elsif HARD_FLOAT \
-        (`REC_FN_TO_REAL(``name``)) \
+        (`REC_FN_TO_REAL(name)) \
     `else \
-		(`FIXED_TO_FLOAT((``name``), (`EXPONENT_PARAM_REAL(``name``)))) \
+		(`FIXED_TO_FLOAT((name), (`EXPONENT_PARAM_REAL(name)))) \
     `endif
 
 `define PRINT_REAL(name) \
-    $display(`"``name``=%0f`", `TO_REAL(``name``))
+    $display(`"``name``=%0f`", `TO_REAL(name))
 
 // force a real number
 
 `define FROM_REAL(expr, name) \
     `ifdef FLOAT_REAL \
-        (``expr``) \
+        (expr) \
     `elsif HARD_FLOAT \
-        (`REAL_TO_REC_FN(``expr``)) \
+        (`REAL_TO_REC_FN(expr)) \
     `else \
-		(`FLOAT_TO_FIXED((``expr``), (`EXPONENT_PARAM_REAL(``name``)))) \
+		(`FLOAT_TO_FIXED((expr), (`EXPONENT_PARAM_REAL(name)))) \
     `endif
 
 `define FORCE_REAL(expr, name) \
-    ``name`` = `FROM_REAL(``expr``, ``name``)
+    name = `FROM_REAL(expr, name)
 
 // assert that real number is within specified range
 
 `define ASSERTION_REAL(in_name) \
     assertion_real #( \
-        `PASS_REAL(in, ``in_name``), \
+        `PASS_REAL(in, in_name), \
         .name(`"``in_name```") \
     ) assertion_real_``in_name``_i ( \
-        .in(``in_name``) \
+        .in(in_name) \
     )
 
 // creating real numbers
@@ -300,24 +297,24 @@ endfunction
 // and dont_touch can be used
 
 `define MAKE_FORMAT_REAL(name, range_expr, width_expr, exponent_expr) \
-    `DATA_TYPE_REAL(``width_expr``) ``name``; \
-    localparam real `RANGE_PARAM_REAL(``name``) = ``range_expr``; \
-    localparam integer `WIDTH_PARAM_REAL(``name``) = ``width_expr``; \
-    localparam integer `EXPONENT_PARAM_REAL(``name``) = ``exponent_expr`` \
+    `DATA_TYPE_REAL(width_expr) name; \
+    localparam real `RANGE_PARAM_REAL(name) = range_expr; \
+    localparam integer `WIDTH_PARAM_REAL(name) = width_expr; \
+    localparam integer `EXPONENT_PARAM_REAL(name) = exponent_expr \
     `ifdef RANGE_ASSERTIONS \
-        ; `ASSERTION_REAL(``name``) \
+        ; `ASSERTION_REAL(name) \
     `endif
 
 `define REAL_FROM_WIDTH_EXP(name, width_expr, exponent_expr) \
-    `MAKE_FORMAT_REAL(``name``, 2.0**((``width_expr``)+(``exponent_expr``)-1), ``width_expr``, ``exponent_expr``)
+    `MAKE_FORMAT_REAL(name, 2.0**((width_expr)+(exponent_expr)-1), width_expr, exponent_expr)
 
 // copying real number format
 
 `define GET_FORMAT_REAL(in_name) \
-    `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(``in_name``))
+    `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(in_name))
 
 `define COPY_FORMAT_REAL(in_name, out_name) \
-    `MAKE_FORMAT_REAL(``out_name``, `RANGE_PARAM_REAL(``in_name``), `WIDTH_PARAM_REAL(``in_name``), `EXPONENT_PARAM_REAL(``in_name``))
+    `MAKE_FORMAT_REAL(out_name, `RANGE_PARAM_REAL(in_name), `WIDTH_PARAM_REAL(in_name), `EXPONENT_PARAM_REAL(in_name))
 
 // negation
 // note that since the range of a fixed-point number is defined as +/- |range|, the negation of 
@@ -325,46 +322,46 @@ endfunction
 
 `define NEGATE_INTO_REAL(in_name, out_name) \
     negate_real #( \
-        `PASS_REAL(in, ``in_name``), \
-        `PASS_REAL(out, ``out_name``) \
+        `PASS_REAL(in, in_name), \
+        `PASS_REAL(out, out_name) \
     ) negate_real_``out_name``_i ( \
-        .in(``in_name``), \
-        .out(``out_name``) \
+        .in(in_name), \
+        .out(out_name) \
     ) 
 
 `define NEGATE_REAL(in_name, out_name) \
-    `COPY_FORMAT_REAL(``in_name``, ``out_name``); \
-    `NEGATE_INTO_REAL(``in_name``, ``out_name``)
+    `COPY_FORMAT_REAL(in_name, out_name); \
+    `NEGATE_INTO_REAL(in_name, out_name)
 
 // absolute value
 
 `define ABS_INTO_REAL(in_name, out_name) \
     abs_real #( \
-        `PASS_REAL(in, ``in_name``), \
-        `PASS_REAL(out, ``out_name``) \
+        `PASS_REAL(in, in_name), \
+        `PASS_REAL(out, out_name) \
     ) abs_real_``out_name``_i ( \
-        .in(``in_name``), \
-        .out(``out_name``) \
+        .in(in_name), \
+        .out(out_name) \
     ) 
 
 `define ABS_REAL(in_name, out_name) \
-    `COPY_FORMAT_REAL(``in_name``, ``out_name``); \
-    `ABS_INTO_REAL(``in_name``, ``out_name``)
+    `COPY_FORMAT_REAL(in_name, out_name); \
+    `ABS_INTO_REAL(in_name, out_name)
 
 // construct real number from range
 // the following four macros depend on clog2_math
 
 `define MAKE_GENERIC_REAL(name, range_expr, width_expr) \
-    `MAKE_FORMAT_REAL(``name``, ``range_expr``, ``width_expr``, `CALC_EXP(``range_expr``, ``width_expr``))
+    `MAKE_FORMAT_REAL(name, range_expr, width_expr, `CALC_EXP(range_expr, width_expr))
 
 `define MAKE_SHORT_REAL(name, range_expr) \
-    `MAKE_GENERIC_REAL(``name``, ``range_expr``, `SHORT_WIDTH_REAL)
+    `MAKE_GENERIC_REAL(name, range_expr, `SHORT_WIDTH_REAL)
 
 `define MAKE_LONG_REAL(name, range_expr) \
-    `MAKE_GENERIC_REAL(``name``, ``range_expr``, `LONG_WIDTH_REAL)
+    `MAKE_GENERIC_REAL(name, range_expr, `LONG_WIDTH_REAL)
 
 `define MAKE_REAL(name, range_expr) \
-    `MAKE_LONG_REAL(``name``, ``range_expr``)
+    `MAKE_LONG_REAL(name, range_expr)
     
 // assigning real numbers
 // note that the negative version of each number will already have be assigned when
@@ -372,11 +369,11 @@ endfunction
 
 `define ASSIGN_REAL(in_name, out_name) \
     assign_real #( \
-        `PASS_REAL(in, ``in_name``), \
-        `PASS_REAL(out, ``out_name``) \
+        `PASS_REAL(in, in_name), \
+        `PASS_REAL(out, out_name) \
     ) assign_real_``out_name``_i ( \
-        .in(``in_name``), \
-        .out(``out_name``) \
+        .in(in_name), \
+        .out(out_name) \
     ) 
 
 // real constants
@@ -384,72 +381,72 @@ endfunction
 // fixed-point representation falls within the range
 
 `define ASSIGN_CONST_REAL(const_expr, name) \
-    assign ``name`` = `FROM_REAL(``const_expr``, ``name``)
+    assign name = `FROM_REAL(const_expr, name)
 
 `define CONST_RANGE_REAL(const_expr) \
-    (1.01*`ABS_MATH(``const_expr``))
+    (1.01*`ABS_MATH(const_expr))
 
 `define MAKE_GENERIC_CONST_REAL(const_expr, name, width_expr) \
-    `MAKE_GENERIC_REAL(``name``, `CONST_RANGE_REAL(``const_expr``), ``width_expr``); \
-    `ASSIGN_CONST_REAL(``const_expr``, ``name``)
+    `MAKE_GENERIC_REAL(name, `CONST_RANGE_REAL(const_expr), width_expr); \
+    `ASSIGN_CONST_REAL(const_expr, name)
 
 `define MAKE_SHORT_CONST_REAL(const_expr, name) \
-    `MAKE_GENERIC_CONST_REAL(``const_expr``, ``name``, `SHORT_WIDTH_REAL)
+    `MAKE_GENERIC_CONST_REAL(const_expr, name, `SHORT_WIDTH_REAL)
 
 `define MAKE_LONG_CONST_REAL(const_expr, name) \
-    `MAKE_GENERIC_CONST_REAL(``const_expr``, ``name``, `LONG_WIDTH_REAL)
+    `MAKE_GENERIC_CONST_REAL(const_expr, name, `LONG_WIDTH_REAL)
 
 `define MAKE_CONST_REAL(const_expr, name) \
-    `MAKE_LONG_CONST_REAL(``const_expr``, ``name``)
+    `MAKE_LONG_CONST_REAL(const_expr, name)
 
 // multiplication of two variables
 
 `define MUL_INTO_REAL(a_name, b_name, c_name) \
     mul_real #( \
-        `PASS_REAL(a, ``a_name``), \
-        `PASS_REAL(b, ``b_name``), \
-        `PASS_REAL(c, ``c_name``) \
+        `PASS_REAL(a, a_name), \
+        `PASS_REAL(b, b_name), \
+        `PASS_REAL(c, c_name) \
     ) mul_real_``c_name``_i ( \
-        .a(``a_name``), \
-        .b(``b_name``), \
-        .c(``c_name``) \
+        .a(a_name), \
+        .b(b_name), \
+        .c(c_name) \
     )
         
 `define MUL_REAL_GENERIC(a_name, b_name, c_name, c_width) \
-    `MAKE_GENERIC_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``)*`RANGE_PARAM_REAL(``b_name``), ``c_width``); \
-    `MUL_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    `MAKE_GENERIC_REAL(c_name, `RANGE_PARAM_REAL(a_name)*`RANGE_PARAM_REAL(b_name), c_width); \
+    `MUL_INTO_REAL(a_name, b_name, c_name)
 
 `define MUL_REAL(a_name, b_name, c_name) \
-    `MUL_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
+    `MUL_REAL_GENERIC(a_name, b_name, c_name, `LONG_WIDTH_REAL)
 
 // multiplication of a constant and variable
 
 `define MUL_CONST_INTO_REAL_GENERIC(const_expr, in_name, out_name, const_width) \
-    `MAKE_GENERIC_CONST_REAL(``const_expr``, zzz_tmp_``out_name``, ``const_width``); \
-    `MUL_INTO_REAL(zzz_tmp_``out_name``, ``in_name``, ``out_name``)
+    `MAKE_GENERIC_CONST_REAL(const_expr, zzz_tmp_``out_name``, const_width); \
+    `MUL_INTO_REAL(zzz_tmp_``out_name``, in_name, out_name)
 
 `define MUL_CONST_INTO_REAL(const_expr, in_name, out_name) \
-    `MUL_CONST_INTO_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, `SHORT_WIDTH_REAL)
+    `MUL_CONST_INTO_REAL_GENERIC(const_expr, in_name, out_name, `SHORT_WIDTH_REAL)
 
 `define MUL_CONST_REAL_GENERIC(const_expr, in_name, out_name, const_width, out_width) \
-    `MAKE_GENERIC_REAL(``out_name``, `CONST_RANGE_REAL(``const_expr``)*`RANGE_PARAM_REAL(``in_name``), ``out_width``); \
-    `MUL_CONST_INTO_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, ``const_width``)
+    `MAKE_GENERIC_REAL(out_name, `CONST_RANGE_REAL(const_expr)*`RANGE_PARAM_REAL(in_name), out_width); \
+    `MUL_CONST_INTO_REAL_GENERIC(const_expr, in_name, out_name, const_width)
 
 `define MUL_CONST_REAL(const_expr, in_name, out_name) \
-    `MUL_CONST_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, `SHORT_WIDTH_REAL, `LONG_WIDTH_REAL)
+    `MUL_CONST_REAL_GENERIC(const_expr, in_name, out_name, `SHORT_WIDTH_REAL, `LONG_WIDTH_REAL)
 
 // generic addition or subtraction
 
 `define ADD_SUB_INTO_REAL(opcode_value, a_name, b_name, c_name) \
     add_sub_real #( \
-        `PASS_REAL(a, ``a_name``), \
-        `PASS_REAL(b, ``b_name``), \
-        `PASS_REAL(c, ``c_name``), \
-		.opcode(``opcode_value``) \
+        `PASS_REAL(a, a_name), \
+        `PASS_REAL(b, b_name), \
+        `PASS_REAL(c, c_name), \
+		.opcode(opcode_value) \
     ) add_sub_real_``c_name``_i ( \
-        .a(``a_name``), \
-        .b(``b_name``), \
-        .c(``c_name``) \
+        .a(a_name), \
+        .b(b_name), \
+        .c(c_name) \
     )
 
 // addition of two variables
@@ -457,93 +454,93 @@ endfunction
 `define ADD_OPCODE_REAL 0
 
 `define ADD_INTO_REAL(a_name, b_name, c_name) \
-    `ADD_SUB_INTO_REAL(`ADD_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
+    `ADD_SUB_INTO_REAL(`ADD_OPCODE_REAL, a_name, b_name, c_name)
 
 `define ADD_REAL_GENERIC(a_name, b_name, c_name, c_width) \
-    `MAKE_GENERIC_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``), ``c_width``); \
-    `ADD_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    `MAKE_GENERIC_REAL(c_name, `RANGE_PARAM_REAL(a_name) + `RANGE_PARAM_REAL(b_name), c_width); \
+    `ADD_INTO_REAL(a_name, b_name, c_name)
 
 `define ADD_REAL(a_name, b_name, c_name) \
-    `ADD_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
+    `ADD_REAL_GENERIC(a_name, b_name, c_name, `LONG_WIDTH_REAL)
     
 // addition of a constant and a variable
 
 `define ADD_CONST_INTO_REAL_GENERIC(const_expr, in_name, out_name, const_width) \
-    `MAKE_GENERIC_CONST_REAL(``const_expr``, zzz_tmp_``out_name``, ``const_width``); \
-    `ADD_INTO_REAL(zzz_tmp_``out_name``, ``in_name``, ``out_name``)
+    `MAKE_GENERIC_CONST_REAL(const_expr, zzz_tmp_``out_name``, const_width); \
+    `ADD_INTO_REAL(zzz_tmp_``out_name``, in_name, out_name)
 
 `define ADD_CONST_INTO_REAL(const_expr, in_name, out_name) \
-    `ADD_CONST_INTO_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, `LONG_WIDTH_REAL)
+    `ADD_CONST_INTO_REAL_GENERIC(const_expr, in_name, out_name, `LONG_WIDTH_REAL)
 
 `define ADD_CONST_REAL_GENERIC(const_expr, in_name, out_name, const_width, out_width) \
-    `MAKE_GENERIC_REAL(``out_name``, `CONST_RANGE_REAL(``const_expr``) + `RANGE_PARAM_REAL(``in_name``), ``out_width``); \
-    `ADD_CONST_INTO_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, ``const_width``)
+    `MAKE_GENERIC_REAL(out_name, `CONST_RANGE_REAL(const_expr) + `RANGE_PARAM_REAL(in_name), out_width); \
+    `ADD_CONST_INTO_REAL_GENERIC(const_expr, in_name, out_name, const_width)
 
 `define ADD_CONST_REAL(const_expr, in_name, out_name) \
-    `ADD_CONST_REAL_GENERIC(``const_expr``, ``in_name``, ``out_name``, `LONG_WIDTH_REAL, `LONG_WIDTH_REAL)
+    `ADD_CONST_REAL_GENERIC(const_expr, in_name, out_name, `LONG_WIDTH_REAL, `LONG_WIDTH_REAL)
 
 // addition of three variables
 
 `define ADD3_INTO_REAL_GENERIC(a_name, b_name, c_name, d_name, tmp_width) \
-    `ADD_REAL_GENERIC(``a_name``, ``b_name``, zzz_tmp_``d_name``, ``tmp_width``); \
-    `ADD_INTO_REAL(zzz_tmp_``d_name``, ``c_name``, ``d_name``)
+    `ADD_REAL_GENERIC(a_name, b_name, zzz_tmp_``d_name``, tmp_width); \
+    `ADD_INTO_REAL(zzz_tmp_``d_name``, c_name, d_name)
 
 `define ADD3_INTO_REAL(a_name, b_name, c_name, d_name) \
-    `ADD3_INTO_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, ``d_name``, `LONG_WIDTH_REAL)
+    `ADD3_INTO_REAL_GENERIC(a_name, b_name, c_name, d_name, `LONG_WIDTH_REAL)
 
 `define ADD3_REAL_GENERIC(a_name, b_name, c_name, d_name, tmp_width, d_width) \
-    `MAKE_GENERIC_REAL(``d_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``) + `RANGE_PARAM_REAL(``c_name``), ``d_width``); \
-    `ADD3_INTO_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, ``d_name``, ``tmp_width``)
+    `MAKE_GENERIC_REAL(d_name, `RANGE_PARAM_REAL(a_name) + `RANGE_PARAM_REAL(b_name) + `RANGE_PARAM_REAL(c_name), d_width); \
+    `ADD3_INTO_REAL_GENERIC(a_name, b_name, c_name, d_name, tmp_width)
 
 `define ADD3_REAL(a_name, b_name, c_name, d_name) \
-    `ADD3_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, ``d_name``, `LONG_WIDTH_REAL, `LONG_WIDTH_REAL)
+    `ADD3_REAL_GENERIC(a_name, b_name, c_name, d_name, `LONG_WIDTH_REAL, `LONG_WIDTH_REAL)
 
 // subtraction of two variables
 
 `define SUB_OPCODE_REAL 1
 
 `define SUB_INTO_REAL(a_name, b_name, c_name) \
-    `ADD_SUB_INTO_REAL(`SUB_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
+    `ADD_SUB_INTO_REAL(`SUB_OPCODE_REAL, a_name, b_name, c_name)
 
 `define SUB_REAL_GENERIC(a_name, b_name, c_name, c_width) \
-    `MAKE_GENERIC_REAL(``c_name``, `RANGE_PARAM_REAL(``a_name``) + `RANGE_PARAM_REAL(``b_name``), ``c_width``); \
-    `SUB_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    `MAKE_GENERIC_REAL(c_name, `RANGE_PARAM_REAL(a_name) + `RANGE_PARAM_REAL(b_name), c_width); \
+    `SUB_INTO_REAL(a_name, b_name, c_name)
 
 `define SUB_REAL(a_name, b_name, c_name) \
-    `SUB_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
+    `SUB_REAL_GENERIC(a_name, b_name, c_name, `LONG_WIDTH_REAL)
 
 // conditional assignment
 
 `define ITE_INTO_REAL(cond_name, true_name, false_name, out_name) \
     ite_real #( \
-        `PASS_REAL(true, ``true_name``), \
-        `PASS_REAL(false, ``false_name``), \
-        `PASS_REAL(out, ``out_name``) \
+        `PASS_REAL(true, true_name), \
+        `PASS_REAL(false, false_name), \
+        `PASS_REAL(out, out_name) \
     ) ite_real_``out_name``_i ( \
-        .cond(``cond_name``), \
-        .true(``true_name``), \
-        .false(``false_name``), \
-        .out(``out_name``) \
+        .cond(cond_name), \
+        .true(true_name), \
+        .false(false_name), \
+        .out(out_name) \
     )
 
 `define ITE_REAL_GENERIC(cond_name, true_name, false_name, out_name, out_width) \
-    `MAKE_GENERIC_REAL(``out_name``, `MAX_MATH(`RANGE_PARAM_REAL(``true_name``), `RANGE_PARAM_REAL(``false_name``)), ``out_width``); \
-    `ITE_INTO_REAL(``cond_name``, ``true_name``, ``false_name``, ``out_name``)
+    `MAKE_GENERIC_REAL(out_name, `MAX_MATH(`RANGE_PARAM_REAL(true_name), `RANGE_PARAM_REAL(false_name)), out_width); \
+    `ITE_INTO_REAL(cond_name, true_name, false_name, out_name)
 
 `define ITE_REAL(cond_name, true_name, false_name, out_name) \
-    `ITE_REAL_GENERIC(``cond_name``, ``true_name``, ``false_name``, ``out_name``, `LONG_WIDTH_REAL) \
+    `ITE_REAL_GENERIC(cond_name, true_name, false_name, out_name, `LONG_WIDTH_REAL) \
 
 // generic comparison
 
 `define COMP_INTO_REAL(opcode_value, a_name, b_name, c_name) \
     comp_real #( \
-        `PASS_REAL(a, ``a_name``), \
-        `PASS_REAL(b, ``b_name``), \
-        .opcode(``opcode_value``) \
+        `PASS_REAL(a, a_name), \
+        `PASS_REAL(b, b_name), \
+        .opcode(opcode_value) \
     ) comp_real_``c_name``_i ( \
-        .a(``a_name``), \
-        .b(``b_name``), \
-        .c(``c_name``) \
+        .a(a_name), \
+        .b(b_name), \
+        .c(c_name) \
     )
 
 // greater than
@@ -551,92 +548,92 @@ endfunction
 `define GT_OPCODE_REAL 0
 
 `define GT_INTO_REAL(a_name, b_name, c_name) \
-    `COMP_INTO_REAL(`GT_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
+    `COMP_INTO_REAL(`GT_OPCODE_REAL, a_name, b_name, c_name)
 
 `define GT_REAL(a_name, b_name, c_name) \
-    logic ``c_name``; \
-    `GT_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    logic c_name; \
+    `GT_INTO_REAL(a_name, b_name, c_name)
 
 // greater than or equal to
 
 `define GE_OPCODE_REAL 1
 
 `define GE_INTO_REAL(a_name, b_name, c_name) \
-    `COMP_INTO_REAL(`GE_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
+    `COMP_INTO_REAL(`GE_OPCODE_REAL, a_name, b_name, c_name)
 
 `define GE_REAL(a_name, b_name, c_name) \
-    logic ``c_name``; \
-    `GE_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    logic c_name; \
+    `GE_INTO_REAL(a_name, b_name, c_name)
 
 // less than
 
 `define LT_OPCODE_REAL 2
 
 `define LT_INTO_REAL(a_name, b_name, c_name) \
-    `COMP_INTO_REAL(`LT_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
+    `COMP_INTO_REAL(`LT_OPCODE_REAL, a_name, b_name, c_name)
 
 `define LT_REAL(a_name, b_name, c_name) \
-    logic ``c_name``; \
-    `LT_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    logic c_name; \
+    `LT_INTO_REAL(a_name, b_name, c_name)
 
 // less than or equal to
 
 `define LE_OPCODE_REAL 3
 
 `define LE_INTO_REAL(a_name, b_name, c_name) \
-    `COMP_INTO_REAL(`LE_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
+    `COMP_INTO_REAL(`LE_OPCODE_REAL, a_name, b_name, c_name)
 
 `define LE_REAL(a_name, b_name, c_name) \
-    logic ``c_name``; \
-    `LE_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    logic c_name; \
+    `LE_INTO_REAL(a_name, b_name, c_name)
 
 // equal to
 
 `define EQ_OPCODE_REAL 4
 
 `define EQ_INTO_REAL(a_name, b_name, c_name) \
-    `COMP_INTO_REAL(`EQ_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
+    `COMP_INTO_REAL(`EQ_OPCODE_REAL, a_name, b_name, c_name)
 
 `define EQ_REAL(a_name, b_name, c_name) \
-    logic ``c_name``; \
-    `EQ_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    logic c_name; \
+    `EQ_INTO_REAL(a_name, b_name, c_name)
 
 // not equal to
 
 `define NE_OPCODE_REAL 5
 
 `define NE_INTO_REAL(a_name, b_name, c_name) \
-    `COMP_INTO_REAL(`NE_OPCODE_REAL, ``a_name``, ``b_name``, ``c_name``)
+    `COMP_INTO_REAL(`NE_OPCODE_REAL, a_name, b_name, c_name)
 
 `define NE_REAL(a_name, b_name, c_name) \
-    logic ``c_name``; \
-    `NE_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    logic c_name; \
+    `NE_INTO_REAL(a_name, b_name, c_name)
 
 // max of two variables
 
 `define MAX_INTO_REAL(a_name, b_name, c_name) \
-    `GT_REAL(``a_name``, ``b_name``, zzz_tmp_``c_name``); \
-    `ITE_INTO_REAL(zzz_tmp_``c_name``, ``a_name``, ``b_name``, ``c_name``)
+    `GT_REAL(a_name, b_name, zzz_tmp_``c_name``); \
+    `ITE_INTO_REAL(zzz_tmp_``c_name``, a_name, b_name, c_name)
 
 `define MAX_REAL_GENERIC(a_name, b_name, c_name, c_width) \
-    `MAKE_GENERIC_REAL(``c_name``, `MAX_MATH(`RANGE_PARAM_REAL(``a_name``), `RANGE_PARAM_REAL(``b_name``)), ``c_width``); \
-    `MAX_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    `MAKE_GENERIC_REAL(c_name, `MAX_MATH(`RANGE_PARAM_REAL(a_name), `RANGE_PARAM_REAL(b_name)), c_width); \
+    `MAX_INTO_REAL(a_name, b_name, c_name)
 
 `define MAX_REAL(a_name, b_name, c_name) \
-    `MAX_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
+    `MAX_REAL_GENERIC(a_name, b_name, c_name, `LONG_WIDTH_REAL)
 
 // min of two variables
 
 `define MIN_INTO_REAL(a_name, b_name, c_name) \
-    `LT_REAL(``a_name``, ``b_name``, zzz_tmp_``c_name``); \
-    `ITE_INTO_REAL(zzz_tmp_``c_name``, ``a_name``, ``b_name``, ``c_name``)
+    `LT_REAL(a_name, b_name, zzz_tmp_``c_name``); \
+    `ITE_INTO_REAL(zzz_tmp_``c_name``, a_name, b_name, c_name)
 
 `define MIN_REAL_GENERIC(a_name, b_name, c_name, c_width) \
-    `MAKE_GENERIC_REAL(``c_name``, `MAX_MATH(`RANGE_PARAM_REAL(``a_name``), `RANGE_PARAM_REAL(``b_name``)), ``c_width``); \
-    `MIN_INTO_REAL(``a_name``, ``b_name``, ``c_name``)
+    `MAKE_GENERIC_REAL(c_name, `MAX_MATH(`RANGE_PARAM_REAL(a_name), `RANGE_PARAM_REAL(b_name)), c_width); \
+    `MIN_INTO_REAL(a_name, b_name, c_name)
 
 `define MIN_REAL(a_name, b_name, c_name) \
-    `MIN_REAL_GENERIC(``a_name``, ``b_name``, ``c_name``, `LONG_WIDTH_REAL)
+    `MIN_REAL_GENERIC(a_name, b_name, c_name, `LONG_WIDTH_REAL)
 
 // conversion from real number to integer
 // note that this always rounds down, regardless of whether HARD_FLOAT
@@ -644,106 +641,106 @@ endfunction
 
 `define REAL_TO_INT(in_name, int_width_expr, out_name) \
     `ifdef FLOAT_REAL \
-        logic signed[((``int_width_expr``)-1):0] ``out_name``; \
-        assign ``out_name`` = $floor(``in_name``) \
+        logic signed[((int_width_expr)-1):0] out_name; \
+        assign out_name = $floor(in_name) \
     `elsif HARD_FLOAT \
-        logic signed[((``int_width_expr``)-1):0] ``out_name``; \
+        logic signed[((int_width_expr)-1):0] out_name; \
         recFNToIN #( \
             .expWidth(`HARD_FLOAT_EXP_WIDTH), \
             .sigWidth(`HARD_FLOAT_SIG_WIDTH), \
-            .intWidth(``int_width_expr``) \
+            .intWidth(int_width_expr) \
         ) recFNToIN_``out_name``_i ( \
             .control(`HARD_FLOAT_CONTROL), \
-            .in(``in_name``), \
+            .in(in_name), \
             .roundingMode(`round_min), \
             .signedOut(1'b1), \
-            .out(``out_name``), \
+            .out(out_name), \
             .intExceptionFlags() \
         ) \
     `else \
-        `REAL_FROM_WIDTH_EXP(``out_name``, ``int_width_expr``, 0); \
-        `ASSIGN_REAL(``in_name``, ``out_name``) \
+        `REAL_FROM_WIDTH_EXP(out_name, int_width_expr, 0); \
+        `ASSIGN_REAL(in_name, out_name) \
     `endif
 
 `define REAL_INTO_INT(in_name, int_width_expr, out_name) \
-    `REAL_TO_INT(``in_name``, ``int_width_expr``, zzz_tmp_``out_name``); \
-    assign ``out_name`` = zzz_tmp_``out_name``
+    `REAL_TO_INT(in_name, int_width_expr, zzz_tmp_``out_name``); \
+    assign out_name = zzz_tmp_``out_name``
     
 // conversion from integer to real number
 
 `define INT_TO_REAL(in_name, int_width_expr, out_name) \
-    `REAL_FROM_WIDTH_EXP(``out_name``, ``int_width_expr``, 0); \
+    `REAL_FROM_WIDTH_EXP(out_name, int_width_expr, 0); \
     `ifdef FLOAT_REAL \
-        assign ``out_name`` = 1.0*(``in_name``) \
+        assign out_name = 1.0*(in_name) \
     `elsif HARD_FLOAT \
         iNToRecFN #( \
-            .intWidth(``int_width_expr``), \
+            .intWidth(int_width_expr), \
             .expWidth(`HARD_FLOAT_EXP_WIDTH), \
             .sigWidth(`HARD_FLOAT_SIG_WIDTH) \
         ) iNToRecFN_``out_name``_i ( \
             .control(`HARD_FLOAT_CONTROL), \
             .signedIn(1'b1), \
-            .in(``in_name``), \
+            .in(in_name), \
             .roundingMode(`HARD_FLOAT_ROUNDING), \
-            .out(``out_name``), \
+            .out(out_name), \
             .exceptionFlags() \
         ) \
     `else \
-        assign ``out_name`` = ``in_name`` \
+        assign out_name = in_name \
     `endif
     
 `define INT_INTO_REAL(in_name, int_width_expr, out_name) \
-    `INT_TO_REAL(``in_name``, ``int_width_expr``, zzz_tmp_``out_name``); \
-    `ASSIGN_REAL(zzz_tmp_``out_name``, ``out_name``)
+    `INT_TO_REAL(in_name, int_width_expr, zzz_tmp_``out_name``); \
+    `ASSIGN_REAL(zzz_tmp_``out_name``, out_name)
 
 // get the width of an integer
 
 `define MEAS_UINT_WIDTH_INTO(in_name, in_width_expr, out_name, out_width_expr) \
     meas_uint_width #( \
-        .in_width(``in_width_expr``), \
-        .out_width(``out_width_expr``) \
+        .in_width(in_width_expr), \
+        .out_width(out_width_expr) \
     ) meas_uint_width_``out_name`` ( \
-        .in(``in_name``), \
-        .out(``out_name``) \
+        .in(in_name), \
+        .out(out_name) \
     )
 
 `define MEAS_UINT_WIDTH(in_name, in_width_expr, out_name, out_width_expr) \
-    logic [((``out_width_expr)-1):0] out_name; \
-    `MEAS_UINT_WIDTH_INTO(``in_name``, ``in_width_expr``, ``out_name``, ``out_width_expr``)
+    logic [((out_width_expr)-1):0] out_name; \
+    `MEAS_UINT_WIDTH_INTO(in_name, in_width_expr, out_name, out_width_expr)
 
 // compressing an integer into a real number using an approximately logarithmic mapping
 
 `define COMPRESS_UINT_INTO(in_name, in_width_expr, out_name) \
     compress_uint #( \
-        .in_width(``in_width_expr``), \
-        `PASS_REAL(out, ``out_name``) \
+        .in_width(in_width_expr), \
+        `PASS_REAL(out, out_name) \
     ) compress_uint_``out_name``_i ( \
-        .in(``in_name``), \
-        .out(``out_name``) \
+        .in(in_name), \
+        .out(out_name) \
     )
 
 `define COMPRESS_UINT(in_name, in_width_expr, out_name) \
-    `MAKE_REAL(``out_name``, ((``in_width_expr``)+1)); \
-    `COMPRESS_UINT_INTO(``in_name``, ``in_width_expr``, ``out_name``)
+    `MAKE_REAL(out_name, ((in_width_expr)+1)); \
+    `COMPRESS_UINT_INTO(in_name, in_width_expr, out_name)
 
 // memory
 
 `define DFF_INTO_REAL(d_name, q_name, rst_name, clk_name, cke_name, init_expr) \
     dff_real #( \
-        `PASS_REAL(d, ``d_name``), \
-        `PASS_REAL(q, ``q_name``), \
-        .init(``init_expr``) \
+        `PASS_REAL(d, d_name), \
+        `PASS_REAL(q, q_name), \
+        .init(init_expr) \
     ) dff_real_``q_name``_i ( \
-        .d(``d_name``), \
-        .q(``q_name``), \
-        .rst(``rst_name``), \
-        .clk(``clk_name``), \
-        .cke(``cke_name``) \
+        .d(d_name), \
+        .q(q_name), \
+        .rst(rst_name), \
+        .clk(clk_name), \
+        .cke(cke_name) \
     )
 
 `define DFF_REAL(d_name, q_name, rst_name, clk_name, cke_name, init_expr) \
-    `COPY_FORMAT_REAL(``d_name``, ``q_name``); \
-    `DFF_INTO_REAL(``d_name``, ``q_name``, ``rst_name``, ``clk_name``, ``cke_name``, ``init_expr``)
+    `COPY_FORMAT_REAL(d_name, q_name); \
+    `DFF_INTO_REAL(d_name, q_name, rst_name, clk_name, cke_name, init_expr)
 
 // synchronous ROM
 // note that the data_bits_expr input is ignored when HARD_FLOAT is defined, because HARD_FLOAT
@@ -813,78 +810,78 @@ endfunction
 // maximum range for the width and exponent must be used
 
 `define INTF_DECL_REAL(name) \
-    parameter integer `WIDTH_PARAM_REAL(``name``)=0, \
-    parameter integer `EXPONENT_PARAM_REAL(``name``)=0
+    parameter integer `WIDTH_PARAM_REAL(name)=0, \
+    parameter integer `EXPONENT_PARAM_REAL(name)=0
 
 `define REAL_INTF_PARAMS(name, width_expr, exponent_expr) \
-    .`WIDTH_PARAM_REAL(``name``)(``width_expr``), \
-    .`EXPONENT_PARAM_REAL(``name``)(``exponent_expr``)
+    .`WIDTH_PARAM_REAL(name)(width_expr), \
+    .`EXPONENT_PARAM_REAL(name)(exponent_expr)
 
 `define INTF_FORMAT_REAL(name) ``name``_format_signal
 
  `define INTF_MAKE_REAL(name) \
-     `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(``name``)) ``name``; \
-     logic [((`WIDTH_PARAM_REAL(``name``))+(`EXPONENT_PARAM_REAL(``name``))-1):(`EXPONENT_PARAM_REAL(``name``))] `INTF_FORMAT_REAL(``name``)
+     `DATA_TYPE_REAL(`WIDTH_PARAM_REAL(name)) name; \
+     logic [((`WIDTH_PARAM_REAL(name))+(`EXPONENT_PARAM_REAL(name))-1):(`EXPONENT_PARAM_REAL(name))] `INTF_FORMAT_REAL(name)
  
-`define INTF_WIDTH_REAL(name) ($size(`INTF_FORMAT_REAL(``name``)))
+`define INTF_WIDTH_REAL(name) ($size(`INTF_FORMAT_REAL(name)))
 
-`define INTF_EXPONENT_REAL(name) ($low(`INTF_FORMAT_REAL(``name``)))
+`define INTF_EXPONENT_REAL(name) ($low(`INTF_FORMAT_REAL(name)))
 
-`define INTF_RANGE_REAL(name) (2.0**($high(`INTF_FORMAT_REAL(``name``))))
+`define INTF_RANGE_REAL(name) (2.0**($high(`INTF_FORMAT_REAL(name))))
 
 `define INTF_PASS_REAL(port, name) \
-    .`WIDTH_PARAM_REAL(``port``)(`INTF_WIDTH_REAL(``name``)), \
-    .`EXPONENT_PARAM_REAL(``port``)(`INTF_EXPONENT_REAL(``name``)), \
-    .`RANGE_PARAM_REAL(``port``)(`INTF_RANGE_REAL(``name``))
+    .`WIDTH_PARAM_REAL(port)(`INTF_WIDTH_REAL(name)), \
+    .`EXPONENT_PARAM_REAL(port)(`INTF_EXPONENT_REAL(name)), \
+    .`RANGE_PARAM_REAL(port)(`INTF_RANGE_REAL(name))
 
 `define INTF_ALIAS_REAL(path, name) \
-    `MAKE_FORMAT_REAL(``name``, `INTF_RANGE_REAL(``path``), `INTF_WIDTH_REAL(``path``), `INTF_EXPONENT_REAL(``path``))
+    `MAKE_FORMAT_REAL(name, `INTF_RANGE_REAL(path), `INTF_WIDTH_REAL(path), `INTF_EXPONENT_REAL(path))
 
 `define INTF_INPUT_TO_REAL(path, name) \
-    `INTF_ALIAS_REAL(``path``, ``name``); \
-    assign ``name`` = ``path``
+    `INTF_ALIAS_REAL(path, name); \
+    assign name = path
 
 `define INTF_OUTPUT_TO_REAL(path, name) \
-    `INTF_ALIAS_REAL(``path``, ``name``); \
-    assign ``path`` = ``name``
+    `INTF_ALIAS_REAL(path, name); \
+    assign path = name
 
 // modport-related functions
 
 `define MODPORT_IN_REAL(name) \
-    input ``name``, \
-    input `INTF_FORMAT_REAL(``name``)
+    input name, \
+    input `INTF_FORMAT_REAL(name)
 
 `define MODPORT_OUT_REAL(name) \
-    output ``name``, \
-    input `INTF_FORMAT_REAL(``name``)
+    output name, \
+    input `INTF_FORMAT_REAL(name)
 
 // print a real number (interface version)
 
 `define INTF_TO_REAL(name) \
     `ifdef FLOAT_REAL \
-        (``name``) \
+        (name) \
     `elsif HARD_FLOAT \
-        (`REC_FN_TO_REAL(``name``)) \
+        (`REC_FN_TO_REAL(name)) \
     `else \
-        (`FIXED_TO_FLOAT((``name``), `INTF_EXPONENT_REAL(``name``))) \
+        (`FIXED_TO_FLOAT((name), `INTF_EXPONENT_REAL(name))) \
     `endif
  
 `define INTF_PRINT_REAL(name) \
-    $display(`"``name``=%0f`", `INTF_TO_REAL(``name``))
+    $display(`"``name``=%0f`", `INTF_TO_REAL(name))
 
 // force a real number (interface version)
 
 `define INTF_FROM_REAL(expr, name) \
     `ifdef FLOAT_REAL \
-        (``expr``) \
+        (expr) \
     `elsif HARD_FLOAT \
-        (`REAL_TO_REC_FN(``expr``)) \
+        (`REAL_TO_REC_FN(expr)) \
     `else \
-		(`FLOAT_TO_FIXED((``expr``), `INTF_EXPONENT_REAL(``name``))) \
+		(`FLOAT_TO_FIXED((expr), `INTF_EXPONENT_REAL(name))) \
     `endif
 
 `define INTF_FORCE_REAL(expr, name) \
-    ``name`` = `INTF_FROM_REAL(``expr``, ``name``)
+    name = `INTF_FROM_REAL(expr, name)
 
 // module definitions
 

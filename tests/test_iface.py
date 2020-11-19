@@ -6,7 +6,7 @@ import fault
 from .common import *
 
 def pytest_generate_tests(metafunc):
-    pytest_sim_params(metafunc, simulators=['ncsim', 'vcs', 'vivado'])
+    pytest_sim_params(metafunc, skip=['iverilog', 'verilator'])
     pytest_real_type_params(metafunc)
     metafunc.parametrize('defines', [None, {'INTF_USE_LOCAL': None}])
 
@@ -31,9 +31,9 @@ def test_iface(simulator, real_type, defines):
 
     # run the test
     tester.compile_and_run(
+        get_file('test_iface.sv'),
         simulator=simulator,
-        ext_srcs=[get_file('test_iface_core.sv'),
-                  get_file('test_iface.sv')],
+        ext_srcs=[get_file('test_iface_core.sv')],
         real_type=real_type,
         defines=defines
     )
