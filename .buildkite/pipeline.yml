@@ -2,7 +2,7 @@ steps:
   - command: |
       # set up environment
       source /cad/modules/tcl/init/bash
-      module load base xcelium vcs
+      module load base xcelium/19.03.003 vcs
       /usr/local/miniconda/bin/python3.7 -m venv venv
       source venv/bin/activate
       printenv
