@@ -38,7 +38,7 @@ def pytest_generate_tests(metafunc):
     # consistent result in regression testing
     np.random.seed(1)
     rand_pts = 2**(np.random.uniform(0, N, 100))
-    rand_pts = np.floor(rand_pts).astype(np.int)
+    rand_pts = np.floor(rand_pts).astype(int)
     rand_pts = [int(elem) for elem in rand_pts]
     vec += rand_pts
 
