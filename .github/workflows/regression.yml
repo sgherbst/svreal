@@ -11,34 +11,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
+      uses: actions/checkout@v4
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v5
       with:
-        python-version: 3.7
+        python-version: "3.14"
     - name: Update pip
       run: python -m pip install --upgrade pip
     - name: Install dependencies
-      run: sudo apt-get install g++-7 libgmp-dev libmpfr-dev libmpc-dev iverilog verilator
+      run: sudo apt-get update && sudo apt-get install -y iverilog verilator
     - name: Run regression test
-      env:
-        CC: gcc-7
-        CXX: g++-7
       run: source regress.sh
-    - name: Upload coverage
-      uses: codecov/codecov-action@v1.0.5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
 
   mac:
     runs-on: macOS-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
+      uses: actions/checkout@v4
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v5
       with:
-        python-version: 3.7
+        python-version: "3.14"
     - name: Update pip
       run: python -m pip install --upgrade pip
     - name: Install dependencies
@@ -46,7 +39,3 @@ jobs:
         brew install icarus-verilog verilator wget coreutils
     - name: Run regression test
       run: source regress.sh
-    - name: Upload coverage
-      uses: codecov/codecov-action@v1.0.5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
